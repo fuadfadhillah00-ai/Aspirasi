@@ -1,728 +1,414 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>EDUSTELLAR</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://unpkg.com/lucide@latest"></script>
-    <style>
-        body { font-family: 'Inter', sans-serif; background-color: #f1f5f9; }
-        
-        /* Main page visibility */
-        .main-content > .page { display: none; }
-        .main-content > .page.active { display: block; }
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>📦 Kotak Aspirasi — FEB UNRI</title>
+  <style>
+    :root {
+      --merah: #c00;
+      --putih: #fff;
+      --hitam: #000;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Segoe UI', Tahoma, sans-serif;
+    }
+    body {
+      background-color: #f8f9fa;
+      color: var(--hitam);
+      line-height: 1.6;
+    }
+    header {
+      background-color: var(--merah);
+      color: var(--putih);
+      padding: 1rem;
+      text-align: center;
+    }
+    nav {
+      background: #eee;
+      padding: 0.8rem;
+      text-align: center;
+    }
+    nav a {
+      margin: 0 1rem;
+      text-decoration: none;
+      color: var(--merah);
+      font-weight: 600;
+    }
+    nav a.active {
+      color: var(--hitam);
+      text-decoration: underline;
+    }
+    .container {
+      max-width: 900px;
+      margin: 1.5rem auto;
+      padding: 0 1rem;
+    }
+    .page { display: none; }
+    .page.active { display: block; }
+    .card {
+      background: var(--putih);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      margin-bottom: 1.5rem;
+    }
+    h1, h2 { margin-bottom: 1rem; }
+    h1 { font-size: 1.8rem; }
+    h2 { font-size: 1.5rem; }
 
-        /* New Auth Page Transition Styles */
-        #authContainer { position: relative; width: 100vw; height: 100vh; }
-        .auth-page {
-            position: absolute;
-            top: 0; left: 0;
-            width: 100%; height: 100%;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.3s ease-in-out;
-            visibility: hidden;
-        }
-        .auth-page.active {
-            opacity: 1;
-            pointer-events: auto;
-            visibility: visible;
-        }
+    /* Form */
+    label {
+      display: block;
+      margin: 1rem 0 0.4rem;
+      font-weight: 600;
+    }
+    input, textarea, select {
+      width: 100%;
+      padding: 0.75rem;
+      margin-bottom: 1rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 1rem;
+    }
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      margin: 1rem 0;
+    }
+    .checkbox-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 0.5rem;
+      margin-bottom: 0;
+    }
+    button {
+      background-color: var(--merah);
+      color: var(--putih);
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background-color 0.2s;
+    }
+    button:hover { background-color: #a00; }
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
 
-        .sidebar-link.active { background-color: #0ea5e9; color: white; font-weight: 600; }
-        .sidebar-link.active i { color: white; }
-        .form-select {
-            -webkit-appearance: none; -moz-appearance: none; appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat; background-position: right 0.75rem center; background-size: 1.25em;
-        }
-        .feature-card { transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out; }
-        .feature-card:hover { transform: translateY(-5px); box-shadow: 0 10px 15px -3px rgba(14, 165, 233, 0.1), 0 4px 6px -2px rgba(14, 165, 233, 0.05); }
-        #app-wrapper.feature-view nav { display: none; }
-        #app-wrapper.feature-view main { padding: 0; }
-        .custom-notification { transition: opacity 0.3s, transform 0.3s; }
-        #shareModal, #profileModal { transition: opacity 0.3s ease; }
-        .modal-content { transition: transform 0.3s ease; }
-    </style>
+    /* Daftar Aspirasi */
+    .filters {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin: 1rem 0;
+    }
+    .filters button {
+      background: #eee;
+      color: var(--hitam);
+    }
+    .filters button.active {
+      background: var(--merah);
+      color: var(--putih);
+    }
+    .aspirasi-item {
+      border-left: 4px solid var(--merah);
+      padding: 1rem;
+      margin-bottom: 1rem;
+      background-color: #fafafa;
+    }
+    .aspirasi-header {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.9rem;
+      color: #555;
+    }
+    .aspirasi-kategori {
+      background: var(--merah);
+      color: white;
+      padding: 0.15rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.8rem;
+    }
+    .badge-anonim {
+      background: #666;
+      color: white;
+      padding: 0.1rem 0.4rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      margin-left: 0.3rem;
+    }
+
+    /* Status */
+    .status {
+      padding: 1rem;
+      border-radius: 4px;
+      margin: 1rem 0;
+      display: none;
+    }
+    .status.success { display: block; background: #d4edda; color: #155724; }
+    .status.error { display: block; background: #f8d7da; color: #721c24; }
+
+    /* Loading & Empty */
+    .loading, .empty {
+      text-align: center;
+      padding: 2rem;
+      color: #777;
+    }
+  </style>
 </head>
-<body class="bg-slate-100">
+<body>
+  <header>
+    <h1>📦 Kotak Aspirasi Mahasiswa</h1>
+    <p>Fakultas Ekonomi dan Bisnis — Universitas Riau</p>
+  </header>
 
-    <!-- Auth Pages -->
-    <div id="authContainer">
-        <!-- Halaman Register -->
-        <div id="registerPage" class="auth-page active grid lg:grid-cols-2 h-screen w-full">
-             <div class="flex items-center justify-center bg-slate-50 p-4">
-                <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Buat Akun Baru</h1>
-                    <p class="text-slate-500 mb-6">Gabung dan mulai perjalanan belajarmu!</p>
-                    <form id="registerForm" class="space-y-4">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div><label class="block text-sm font-medium text-slate-600">Nama Depan</label><input type="text" id="firstName" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"></div>
-                            <div><label class="block text-sm font-medium text-slate-600">Nama Belakang</label><input type="text" id="lastName" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"></div>
-                        </div>
-                        <div><label class="block text-sm font-medium text-slate-600">Alamat Email</label><input type="email" id="email" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"></div>
-                        <div><label class="block text-sm font-medium text-slate-600">Buat Sandi</label><input type="password" id="password" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"></div>
-                        <div><label class="block text-sm font-medium text-slate-600">Konfirmasi Sandi</label><input type="password" id="confirmPassword" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500"></div>
-                        <button type="submit" class="w-full bg-sky-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-sky-600">Daftar</button>
-                    </form>
-                     <p class="text-center text-sm text-slate-500 mt-6">Sudah punya akun? <a href="#" onclick="showAuthPage('loginPage')" class="font-semibold text-sky-500 hover:text-sky-600">Masuk di sini</a></p>
-                </div>
-            </div>
-             <div class="hidden lg:flex flex-col items-center justify-center bg-blue-800 text-white p-12 text-center">
-                 <h1 class="text-6xl font-extrabold tracking-wider">EDUSTELLAR</h1>
-                 <p class="mt-4 text-lg text-blue-200">Satu Akun untuk Semua Kebutuhan Belajarmu.</p>
-                 <i data-lucide="rocket" class="w-48 h-48 mt-12 text-blue-600"></i>
-            </div>
+  <nav id="nav">
+    <a href="#/" id="nav-lihat" class="active">Lihat Aspirasi</a>
+    <a href="#/kirim" id="nav-kirim">Kirim Aspirasi</a>
+  </nav>
+
+  <div class="container">
+    <!-- HALAMAN: LIHAT -->
+    <div id="page-lihat" class="page active">
+      <div class="card">
+        <h2>📬 Daftar Aspirasi</h2>
+        <div class="filters">
+          <button class="filter-btn active" data-filter="semua">Semua</button>
+          <button class="filter-btn" data-filter="dosen">Dosen</button>
+          <button class="filter-btn" data-filter="tendik">Tendik</button>
+          <button class="filter-btn" data-filter="fasilitas">Fasilitas</button>
+          <button class="filter-btn" data-filter="kurikulum">Kurikulum</button>
+          <button class="filter-btn" data-filter="lainnya">Lainnya</button>
         </div>
-        <!-- Halaman Login -->
-        <div id="loginPage" class="auth-page grid lg:grid-cols-2 h-screen w-full">
-            <div class="hidden lg:flex flex-col items-center justify-center bg-blue-800 text-white p-12 text-center">
-                 <h1 class="text-6xl font-extrabold tracking-wider">EDUSTELLAR</h1>
-                 <p class="mt-4 text-lg text-blue-200">Gerbang Menuju Potensi Akademik Terbaikmu.</p>
-                 <i data-lucide="graduation-cap" class="w-48 h-48 mt-12 text-blue-600"></i>
-            </div>
-            <div class="flex items-center justify-center bg-slate-50 p-4">
-                <div class="w-full max-w-md bg-white shadow-xl rounded-2xl p-8">
-                    <h1 class="text-3xl font-bold text-gray-800 mb-2">Selamat Datang Kembali</h1>
-                    <p class="text-slate-500 mb-8">Mulai langkahmu, temukan solusi terbaik.</p>
-                    <form id="loginForm" class="space-y-4">
-                        <div>
-                            <label for="login-email" class="block text-sm font-medium text-slate-600">Alamat Email</label>
-                            <input type="email" id="login-email" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500">
-                        </div>
-                        <div>
-                            <label for="login-password" class="block text-sm font-medium text-slate-600">Kata Sandi</label>
-                            <input type="password" id="login-password" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-sky-500 focus:border-sky-500">
-                        </div>
-                        <button type="submit" class="w-full bg-sky-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-sky-600 transition-transform hover:scale-[1.02]">Masuk</button>
-                    </form>
-                    <p class="text-center text-sm text-slate-500 mt-6">
-                        Belum punya akun? <a href="#" onclick="showAuthPage('registerPage')" class="font-semibold text-sky-500 hover:text-sky-600">Daftar di sini</a>
-                    </p>
-                </div>
-            </div>
+
+        <div id="aspirasi-container">
+          <div class="loading">Memuat data dari spreadsheet…</div>
         </div>
+      </div>
     </div>
 
-    <!-- App Wrapper -->
-    <div id="app-wrapper" class="flex h-screen hidden">
-        <!-- Sidebar -->
-        <nav class="w-64 bg-white shadow-lg flex-col hidden md:flex">
-            <div class="p-6 text-center border-b"><h1 class="text-3xl font-extrabold tracking-wider text-blue-800">EDUSTELLAR</h1></div>
-            <div class="flex-grow p-4 space-y-2">
-                <a href="#" onclick="showPage('berandaPage', this)" class="sidebar-link flex items-center p-3 rounded-lg text-slate-600 hover:bg-sky-100 transition-colors active"><i data-lucide="layout-dashboard" class="w-5 h-5 mr-3 text-slate-500"></i> Beranda</a>
-                <a href="#" onclick="showPage('chatPage', this)" class="sidebar-link flex items-center p-3 rounded-lg text-slate-600 hover:bg-sky-100 transition-colors"><i data-lucide="message-circle" class="w-5 h-5 mr-3 text-slate-500"></i> Chat</a>
-                <a href="#" onclick="showPage('langgananPage', this)" class="sidebar-link flex items-center p-3 rounded-lg text-slate-600 hover:bg-sky-100 transition-colors"><i data-lucide="gem" class="w-5 h-5 mr-3 text-slate-500"></i> Langganan</a>
-                <a href="#" onclick="showPage('promoPage', this)" class="sidebar-link flex items-center p-3 rounded-lg text-slate-600 hover:bg-sky-100 transition-colors"><i data-lucide="ticket" class="w-5 h-5 mr-3 text-slate-500"></i> Promo</a>
-                <a href="#" onclick="showPage('favoritPage', this)" class="sidebar-link flex items-center p-3 rounded-lg text-slate-600 hover:bg-sky-100 transition-colors"><i data-lucide="heart" class="w-5 h-5 mr-3 text-slate-500"></i> Favorit</a>
-                <a href="#" onclick="showPage('mentorRegisterPage', this)" class="sidebar-link flex items-center p-3 rounded-lg text-slate-600 hover:bg-sky-100 transition-colors"><i data-lucide="user-plus" class="w-5 h-5 mr-3 text-slate-500"></i> Daftar Jadi Mentor</a>
-                <a href="#" onclick="showPage('faqPage', this)" class="sidebar-link flex items-center p-3 rounded-lg text-slate-600 hover:bg-sky-100 transition-colors"><i data-lucide="help-circle" class="w-5 h-5 mr-3 text-slate-500"></i> FAQ</a>
-            </div>
-            <div class="p-4 border-t"><a href="#" onclick="logout()" class="flex items-center p-3 rounded-lg text-slate-600 hover:bg-red-50 transition-colors"><i data-lucide="log-out" class="w-5 h-5 mr-3 text-red-500"></i> Logout</a></div>
-        </nav>
+    <!-- HALAMAN: KIRIM -->
+    <div id="page-kirim" class="page">
+      <div class="card">
+        <h2>📨 Kirim Aspirasi</h2>
+        <form id="form-aspirasi">
+          <label for="nama">Nama Lengkap</label>
+          <input type="text" id="nama" required placeholder="Contoh: Ahmad Fauzi">
 
-        <!-- Main Content -->
-        <main class="flex-1 p-8 overflow-y-auto main-content">
-            <div id="berandaPage" class="page active">
-                <h1 class="text-3xl font-bold text-gray-800 mb-8" id="welcomeMessage">Selamat Datang!</h1>
-                <div class="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                     <div onclick="setupFeaturePage('consulink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border"><div class="bg-emerald-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="messages-square" class="w-10 h-10 text-emerald-500"></i></div><h3 class="text-xl font-bold text-blue-800">Consulink</h3></div>
-                    <div onclick="setupFeaturePage('riselink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border"><div class="bg-violet-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="file-text" class="w-10 h-10 text-violet-500"></i></div><h3 class="text-xl font-bold text-blue-800">Riselink</h3></div>
-                    <div onclick="setupFeaturePage('courselink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border"><div class="bg-amber-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="book-open" class="w-10 h-10 text-amber-500"></i></div><h3 class="text-xl font-bold text-blue-800">Courselink</h3></div>
-                    <div onclick="setupFeaturePage('complink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border"><div class="bg-rose-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="trophy" class="w-10 h-10 text-rose-500"></i></div><h3 class="text-xl font-bold text-blue-800">Complink</h3></div>
-                </div>
-                 <div id="hot-services-container" class="mt-10 bg-white p-6 rounded-xl border"></div>
-            </div>
+          <label for="nim">NIM</label>
+          <input type="text" id="nim" required placeholder="Contoh: 123456789">
 
-            <div id="chatPage" class="page">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Riwayat Chat Mentor</h1>
-                <div class="bg-white p-6 rounded-xl border space-y-4">
-                    <div onclick="showNotification('Layanan chat dengan mentor ini telah berakhir', 'info')" class="flex items-center p-3 rounded-lg hover:bg-slate-50 cursor-pointer"><img src="https://placehold.co/48x48/fecaca/b91c1c?text=A" class="rounded-full w-12 h-12 mr-4"><div class="flex-grow"><p class="font-semibold">Anisa Putri</p><p class="text-sm text-slate-500">Bisa tolong review bagian pendahuluan...</p></div><span class="text-xs text-slate-400">2 hari lalu</span></div>
-                    <div onclick="showNotification('Layanan chat dengan mentor ini telah berakhir', 'info')" class="flex items-center p-3 rounded-lg hover:bg-slate-50 cursor-pointer"><img src="https://placehold.co/48x48/bae6fd/1e3a8a?text=B" class="rounded-full w-12 h-12 mr-4"><div class="flex-grow"><p class="font-semibold">Budi Santoso</p><p class="text-sm text-slate-500">Oke, terima kasih atas bantuannya!</p></div><span class="text-xs text-slate-400">5 hari lalu</span></div>
-                    <div onclick="showNotification('Layanan chat dengan mentor ini telah berakhir', 'info')" class="flex items-center p-3 rounded-lg hover:bg-slate-50 cursor-pointer"><img src="https://placehold.co/48x48/d8b4fe/7e22ce?text=C" class="rounded-full w-12 h-12 mr-4"><div class="flex-grow"><p class="font-semibold">Citra Lestari</p><p class="text-sm text-slate-500">Untuk soal ONMIPA, kita bisa mulai...</p></div><span class="text-xs text-slate-400">1 minggu lalu</span></div>
-                    <div onclick="showNotification('Layanan chat dengan mentor ini telah berakhir', 'info')" class="flex items-center p-3 rounded-lg hover:bg-slate-50 cursor-pointer"><img src="https://placehold.co/48x48/a5f3fc/0e7490?text=D" class="rounded-full w-12 h-12 mr-4"><div class="flex-grow"><p class="font-semibold">Dewi Anggraini</p><p class="text-sm text-slate-500">Tentu, saya siap membantu soal manajemen...</p></div><span class="text-xs text-slate-400">2 minggu lalu</span></div>
-                </div>
-            </div>
+          <label for="kategori">Kategori Aspirasi</label>
+          <select id="kategori" required>
+            <option value="">— Pilih —</option>
+            <option value="dosen">Dosen</option>
+            <option value="tendik">Tenaga Kependidikan (Tendik)</option>
+            <option value="fasilitas">Fasilitas Kampus</option>
+            <option value="kurikulum">Kurikulum & Akademik</option>
+            <option value="lainnya">Lainnya</option>
+          </select>
 
-            <div id="langgananPage" class="page">
-                 <h1 class="text-3xl font-bold text-gray-800 mb-2">Paket Langganan</h1>
-                <p class="text-slate-500 mb-6">Pilih paket terbaik untuk memaksimalkan potensimu!</p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-                    <div class="border-2 border-slate-200 bg-white rounded-xl p-6 text-center flex flex-col"><h3 class="text-xl font-bold">Paket Hemat</h3><p class="text-sm text-slate-500 mb-4">5x Transaksi (1 Fitur)</p><p class="text-lg font-medium text-slate-400 line-through">Rp 30.000</p><p class="text-4xl font-extrabold text-blue-800 mb-6">Rp 24.000</p><button onclick="showPaymentPage({type: 'Paket', name: 'Paket Hemat', price: '24000'})" class="mt-auto w-full bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Pilih Paket</button></div>
-                    <div class="border-2 border-sky-500 bg-white rounded-xl p-6 text-center relative flex flex-col"><div class="absolute top-0 -translate-y-1/2 left-1/2 -translate-x-1/2 bg-sky-500 text-white text-xs font-bold px-3 py-1 rounded-full">PALING LARIS</div><h3 class="text-xl font-bold">Paket Puas</h3><p class="text-sm text-slate-500 mb-4">10x Transaksi (1 Fitur)</p><p class="text-lg font-medium text-slate-400 line-through">Rp 60.000</p><p class="text-4xl font-extrabold text-blue-800 mb-6">Rp 45.000</p><button onclick="showPaymentPage({type: 'Paket', name: 'Paket Puas', price: '45000'})" class="mt-auto w-full bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg hover:bg-sky-600">Pilih Paket</button></div>
-                    <div class="border-2 border-slate-200 bg-white rounded-xl p-6 text-center flex flex-col"><h3 class="text-xl font-bold">Paket Sultan</h3><p class="text-sm text-slate-500 mb-4">20x Transaksi (Bebas pilih Fitur)</p><p class="text-lg font-medium text-slate-400 line-through">Rp 121.000</p><p class="text-4xl font-extrabold text-blue-800 mb-6">Rp 85.000</p><button onclick="showPaymentPage({type: 'Paket', name: 'Paket Sultan', price: '85000'})" class="mt-auto w-full bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Pilih Paket</button></div>
-                </div>
-            </div>
+          <label for="isi">Isi Aspirasi</label>
+          <textarea id="isi" rows="6" required placeholder="Tulis aspirasimu di sini..."></textarea>
 
-            <div id="promoPage" class="page">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Promo Spesial Untukmu</h1>
-                <div class="space-y-6">
-                    <div class="bg-gradient-to-r from-blue-800 to-sky-500 text-white p-8 rounded-xl flex justify-between items-center"><div><h3 class="text-2xl font-bold">Diskon Pengguna Pertama!</h3><p class="opacity-80">Dapatkan potongan 50% untuk transaksi pertamamu.</p></div><button onclick="showNotification('Diskon didapatkan!', 'success')" class="bg-white text-blue-800 font-bold py-2 px-6 rounded-lg">Klaim</button></div>
-                    <div class="bg-white border p-6 rounded-xl flex justify-between items-center"><div><h3 class="text-xl font-bold">Ajak Teman, Dapat Cuan!</h3><p class="text-slate-500">Bagikan kode referral dan dapatkan diskon 25%.</p></div><button onclick="openShareModal()" class="bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Bagikan</button></div>
-                    <div class="bg-white border p-6 rounded-xl flex justify-between items-center"><div><h3 class="text-xl font-bold">Promo Hari Pendidikan</h3><p class="text-slate-500">Diskon 20% untuk semua layanan Riselink. Terbatas!</p></div><button onclick="showNotification('Promo berhasil diklaim!', 'success')" class="bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Klaim</button></div>
-                    <div class="bg-white border p-6 rounded-xl flex justify-between items-center"><div><h3 class="text-xl font-bold">Cashback E-Wallet</h3><p class="text-slate-500">Dapatkan cashback 10% untuk pembayaran via GoPay/OVO.</p></div><button onclick="showPage('promoDetailPage')" class="bg-slate-200 text-slate-700 font-semibold py-2 px-4 rounded-lg hover:bg-slate-300">Lihat Detail</button></div>
-                </div>
-            </div>
+          <div class="checkbox-group">
+            <input type="checkbox" id="anonymous">
+            <label for="anonymous" style="display:inline;font-weight:normal;">
+              Kirim secara <strong>anonymous</strong> (nama & NIM tidak ditampilkan publik)
+            </label>
+          </div>
 
-            <div id="favoritPage" class="page">
-                <h1 class="text-3xl font-bold text-gray-800 mb-6">Layanan Favorit</h1>
-                <div class="bg-white p-12 rounded-xl border text-center"><i data-lucide="folder-heart" class="w-16 h-16 mx-auto text-slate-300 mb-4"></i><h3 class="text-xl font-semibold">Belum Ada Favorit</h3><p class="text-slate-500 mt-1">Tandai layanan yang kamu sukai untuk akses lebih cepat!</p></div>
-            </div>
+          <button type="submit" id="submit-btn">Kirim Aspirasi</button>
+        </form>
 
-            <div id="mentorRegisterPage" class="page">
-                 <div id="mentorRegisterSelection">
-                     <h1 class="text-3xl font-bold text-gray-800 mb-2">Daftar Menjadi Mitra Mentor</h1>
-                     <p class="text-slate-500 mb-6">Pilih kategori yang paling sesuai dengan keahlianmu.</p>
-                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div onclick="showMentorRegisterForm('Consulink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border">
-                            <div class="bg-emerald-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="messages-square" class="w-10 h-10 text-emerald-500"></i></div>
-                            <h3 class="text-xl font-bold text-blue-800">Mentor Consulink</h3>
-                            <p class="text-sm text-slate-500 mt-2">Bimbingan akademik, tugas, ujian, dan kehidupan kampus.</p>
-                            <p class="text-xs font-semibold text-sky-600 mt-2">Syarat: Minimal semester 5</p>
-                        </div>
-                        <div onclick="showMentorRegisterForm('Riselink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border">
-                            <div class="bg-violet-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="file-text" class="w-10 h-10 text-violet-500"></i></div>
-                            <h3 class="text-xl font-bold text-blue-800">Mentor Riselink</h3>
-                            <p class="text-sm text-slate-500 mt-2">Bimbingan karya tulis ilmiah, metodologi, analisis data, dan publikasi.</p>
-                             <p class="text-xs font-semibold text-sky-600 mt-2">Syarat: Minimal S1</p>
-                        </div>
-                        <div onclick="showMentorRegisterForm('Courselink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border">
-                            <div class="bg-amber-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="book-open" class="w-10 h-10 text-amber-500"></i></div>
-                            <h3 class="text-xl font-bold text-blue-800">Mentor Courselink</h3>
-                            <p class="text-sm text-slate-500 mt-2">Les privat atau kolektif untuk mata kuliah spesifik.</p>
-                            <p class="text-xs font-semibold text-sky-600 mt-2">Syarat: Minimal semester 5</p>
-                        </div>
-                        <div onclick="showMentorRegisterForm('Complink')" class="feature-card bg-white p-6 rounded-xl text-center cursor-pointer border">
-                            <div class="bg-rose-100 rounded-full w-20 h-20 flex items-center justify-center mx-auto mb-4"><i data-lucide="trophy" class="w-10 h-10 text-rose-500"></i></div>
-                            <h3 class="text-xl font-bold text-blue-800">Mentor Complink</h3>
-                             <p class="text-sm text-slate-500 mt-2">Mentoring persiapan berbagai macam lomba akademik.</p>
-                             <p class="text-xs font-semibold text-sky-600 mt-2">Syarat: Minimal semester 5</p>
-                        </div>
-                     </div>
-                 </div>
-
-                <div id="mentorRegisterFormContainer" class="hidden">
-                    <header class="flex items-center mb-6">
-                        <button onclick="showMentorRegisterSelection()" class="text-slate-500 hover:text-sky-500 mr-4 p-2 rounded-full hover:bg-slate-200"><i data-lucide="arrow-left" class="w-6 h-6"></i></button>
-                        <h1 id="mentorRegisterFormTitle" class="text-3xl font-bold text-gray-800">Formulir Pendaftaran Mentor</h1>
-                    </header>
-                    <div class="bg-white border p-8 rounded-xl">
-                        <form onsubmit="event.preventDefault(); submitMentorForm()" class="space-y-6">
-                             <p class="text-sm text-slate-500 bg-slate-100 p-4 rounded-lg">Lengkapi data dirimu dengan benar. Tim kami akan meninjau pendaftaranmu dan memberikan status pendaftaran melalui email.</p>
-                            <div class="grid md:grid-cols-2 gap-6">
-                                <div><label class="block text-sm font-medium text-slate-700">Nama Lengkap</label><input type="text" required class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                                <div><label class="block text-sm font-medium text-slate-700">Email</label><input type="email" required class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                                <div><label class="block text-sm font-medium text-slate-700">Asal Universitas</label><input type="text" required class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                                <div><label class="block text-sm font-medium text-slate-700">Jurusan</label><input type="text" required class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                            </div>
-                            <div><label class="block text-sm font-medium text-slate-700">Link Portofolio (LinkedIn, Google Drive, dll)</label><input type="url" placeholder="https://..." required class="mt-1 w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                             <div><label class="block text-sm font-medium text-slate-700">Unggah CV (PDF, maks 2MB)</label><input type="file" accept=".pdf" required class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sky-50 file:text-sky-700 hover:file:bg-sky-100"/></div>
-                            <div class="pt-4">
-                                <button type="submit" class="w-full bg-sky-500 text-white font-semibold py-3 rounded-lg hover:bg-sky-600">Kirim Pendaftaran</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-                
-                <div id="mentorRegisterSuccess" class="hidden text-center bg-white p-12 rounded-xl border">
-                    <i data-lucide="check-circle-2" class="w-16 h-16 mx-auto text-green-500 mb-4"></i>
-                    <h2 class="text-2xl font-bold">Pendaftaran Terkirim!</h2>
-                    <p class="text-slate-500 mt-2 max-w-xl mx-auto">Pendaftaran mitra mentor telah kami terima. Tim EDUSTELLAR akan meninjau datamu dan menghubungimu segera melalui email untuk memberikan status pendaftaran.</p>
-                    <button onclick="showPage('berandaPage')" class="mt-6 bg-sky-500 text-white font-semibold py-2 px-6 rounded-lg">Kembali ke Beranda</button>
-                </div>
-            </div>
-            
-            <div id="faqPage" class="page">
-                 <h1 class="text-3xl font-bold text-gray-800 mb-6">Pusat Bantuan (FAQ)</h1>
-                <div class="bg-white p-6 rounded-xl border divide-y">
-                    <a href="#" onclick="showPage('csChatPage')" class="block py-4 font-semibold cursor-pointer hover:text-sky-500">Bagaimana cara memesan layanan mentor?</a>
-                    <a href="#" onclick="showPage('csChatPage')" class="block py-4 font-semibold cursor-pointer hover:text-sky-500">Apa saja metode pembayaran yang tersedia?</a>
-                    <a href="#" onclick="showPage('csChatPage')" class="block py-4 font-semibold cursor-pointer hover:text-sky-500">Bagaimana jika saya tidak puas dengan mentor?</a>
-                    <a href="#" onclick="showPage('csChatPage')" class="block py-4 font-semibold cursor-pointer hover:text-sky-500">Apakah saya bisa mengubah jadwal sesi?</a>
-                    <a href="#" onclick="showPage('csChatPage')" class="block py-4 font-semibold cursor-pointer hover:text-sky-500">Saya memiliki kendala pada transaksi.</a>
-                     <a href="#" onclick="showPage('csChatPage')" class="block py-4 font-semibold cursor-pointer hover:text-sky-500">Bagaimana cara menjadi mentor di EDUSTELLAR?</a>
-                    <a href="#" onclick="showPage('csChatPage')" class="block py-4 font-semibold cursor-pointer hover:text-sky-500">Saya ingin mengajukan keluhan lain.</a>
-                </div>
-            </div>
-            
-            <div id="featurePage" class="page p-8">
-                 <header class="flex items-center mb-6 max-w-6xl mx-auto"><button onclick="showPage('berandaPage')" class="text-slate-500 hover:text-sky-500 mr-4 p-2 rounded-full hover:bg-slate-200"><i data-lucide="arrow-left" class="w-6 h-6"></i></button><h1 id="featureTitle" class="text-3xl font-bold text-gray-800"></h1></header>
-                <div class="w-full max-w-6xl mx-auto">
-                    <div id="featureFormContainer" class="bg-white p-8 rounded-xl border shadow-sm"><h2 class="text-2xl font-bold text-blue-800 mb-6 text-center">Cari Mentor Terbaikmu</h2><form id="featureForm" class="space-y-4"></form><button id="searchMentorBtn" class="mt-6 w-full bg-sky-500 text-white font-semibold py-3 px-4 rounded-lg hover:bg-sky-600 transition-transform hover:scale-[1.02]">Cari Mentor</button></div>
-                    <div id="mentorResults" class="hidden"><h2 class="text-2xl font-bold text-gray-800 mb-4">Hasil Pencarian Mentor</h2><div id="mentorList" class="space-y-4"></div></div>
-                </div>
-            </div>
-            
-            <div id="paymentPage" class="page">
-                <header class="flex items-center mb-6"><button onclick="showPage('langgananPage')" class="text-slate-500 hover:text-sky-500 mr-4 p-2 rounded-full hover:bg-slate-200"><i data-lucide="arrow-left" class="w-6 h-6"></i></button><h1 class="text-3xl font-bold text-gray-800">Pembayaran</h1></header>
-                <div class="bg-white p-8 rounded-xl border shadow-sm max-w-2xl">
-                    <div id="paymentDetails" class="mb-8 p-4 bg-slate-50 rounded-lg"><h2 class="text-xl font-bold text-blue-800 mb-2">Detail Pembelian</h2><p id="paymentItem" class="text-lg font-semibold"></p><p id="paymentPrice" class="text-2xl font-bold text-sky-500"></p></div>
-                    <form class="space-y-6">
-                        <div><label class="block text-sm font-medium text-slate-700">Metode Pembayaran</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md shadow-sm form-select"><option>Transfer Bank (BCA, Mandiri, BRI)</option><option>E-Wallet (GoPay, OVO, Dana)</option><option>Kartu Kredit</option></select></div>
-                        <div><label class="block text-sm font-medium text-slate-700">Nomor Telepon (untuk konfirmasi)</label><input type="tel" placeholder="08xxxxxxxxxx" required class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                        <div class="pt-4"><button type="button" onclick="processPayment()" class="w-full bg-sky-500 text-white font-semibold py-3 rounded-lg hover:bg-sky-600">Bayar Sekarang</button></div>
-                    </form>
-                </div>
-            </div>
-            
-            <div id="csChatPage" class="page">
-                <header class="flex items-center mb-6"><button onclick="showPage('faqPage')" class="text-slate-500 hover:text-sky-500 mr-4 p-2 rounded-full hover:bg-slate-200"><i data-lucide="arrow-left" class="w-6 h-6"></i></button><h1 class="text-3xl font-bold text-gray-800">Layanan Pelanggan</h1></header>
-                <div class="bg-white p-8 rounded-xl border shadow-sm max-w-4xl">
-                    <div class="flex items-start space-x-4">
-                        <div class="flex-shrink-0"><img src="https://placehold.co/64x64/bfdbfe/1e3a8a?text=CS" class="rounded-full w-16 h-16"></div>
-                        <div class="flex-grow"><h3 class="text-xl font-bold">Customer Service EDUSTELLAR</h3><p class="text-slate-500">Halo! Ada yang bisa kami bantu?</p></div>
-                    </div>
-                    <div class="mt-6 space-y-4">
-                        <div class="bg-slate-100 p-4 rounded-lg"><p class="font-medium">Pertanyaan Umum:</p><ul class="mt-2 space-y-2"><li><a href="#" class="text-sky-500 hover:underline">Bagaimana cara memesan layanan?</a></li><li><a href="#" class="text-sky-500 hover:underline">Metode pembayaran apa saja yang tersedia?</a></li><li><a href="#" class="text-sky-500 hover:underline">Bagaimana cara mengubah jadwal sesi?</a></li></ul></div>
-                        <div><label class="block text-sm font-medium text-slate-700">Tulis pertanyaanmu di sini</label><textarea rows="4" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></textarea><button onclick="showNotification('Pesan telah dikirim ke customer service.', 'success')" class="mt-2 bg-sky-500 text-white font-semibold py-2 px-6 rounded-lg">Kirim</button></div>
-                    </div>
-                </div>
-            </div>
-        </main>
+        <div id="status" class="status"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- Notification -->
-    <div id="notification" class="custom-notification fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 hidden">
-        <div class="flex items-center">
-            <i id="notificationIcon" class="w-6 h-6 mr-2"></i>
-            <span id="notificationMessage"></span>
-        </div>
-    </div>
+  <script>
+    // === KONFIGURASI (SUDAH DIISI SESUAI MILIKMU) ===
+    const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec";
+    const SPREADSHEET_ID = "18NOJRSCqMbQYQ_gmZZnfmdJw0HSvgcMdePseilG2bGE";
+    const SHEET_NAME = "Sheet1";
 
-    <!-- Share Modal -->
-    <div id="shareModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
-        <div class="modal-content bg-white p-6 rounded-xl max-w-md w-full">
-            <h3 class="text-xl font-bold mb-4">Bagikan Kode Referral</h3>
-            <p class="text-slate-600 mb-4">Bagikan kode ini ke temanmu dan dapatkan diskon 25% untuk transaksi berikutnya!</p>
-            <div class="flex items-center mb-4"><input type="text" value="EDUSTELLAR25" readonly class="flex-grow bg-slate-100 p-2 rounded-lg"><button onclick="copyReferralCode()" class="ml-2 bg-sky-500 text-white px-4 py-2 rounded-lg">Salin</button></div>
-            <div class="flex justify-end"><button onclick="closeShareModal()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg">Tutup</button></div>
-        </div>
-    </div>
+    // === STATE ===
+    let currentRoute = '/';
+    let aspirasiData = [];
+    let currentFilter = 'semua';
 
-    <!-- Profile Modal -->
-    <div id="profileModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-40 hidden">
-        <div class="modal-content bg-white p-6 rounded-xl max-w-md w-full">
-            <h3 class="text-xl font-bold mb-4">Profil Pengguna</h3>
-            <div class="space-y-4">
-                <div><label class="block text-sm font-medium text-slate-700">Nama Lengkap</label><p id="profileName" class="mt-1 text-lg font-medium"></p></div>
-                <div><label class="block text-sm font-medium text-slate-700">Email</label><p id="profileEmail" class="mt-1 text-lg font-medium"></p></div>
-                <div><label class="block text-sm font-medium text-slate-700">Sisa Kuota</label><p id="profileQuota" class="mt-1 text-lg font-medium text-sky-500"></p></div>
-            </div>
-            <div class="flex justify-end mt-6"><button onclick="closeProfileModal()" class="bg-slate-200 text-slate-700 px-4 py-2 rounded-lg">Tutup</button></div>
-        </div>
-    </div>
+    // === ROUTING ===
+    function navigate(path) {
+      history.pushState({ path }, '', path);
+      renderRoute(path);
+    }
 
-    <script>
-        // Initialize Lucide icons
-        lucide.createIcons();
+    function renderRoute(path) {
+      currentRoute = path || '/';
+      document.querySelectorAll('#nav a').forEach(a => a.classList.remove('active'));
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
 
-        // Initialize localStorage for users if not exists
-        if (!localStorage.getItem('edustellar_users')) {
-            localStorage.setItem('edustellar_users', JSON.stringify([]));
+      if (path === '/' || path === '#/' || path === '' || path === '#') {
+        document.getElementById('nav-lihat').classList.add('active');
+        document.getElementById('page-lihat').classList.add('active');
+        if (aspirasiData.length === 0) {
+          fetchData();
+        } else {
+          renderAspirasi(currentFilter);
         }
+      } else if (path.includes('/kirim')) {
+        document.getElementById('nav-kirim').classList.add('active');
+        document.getElementById('page-kirim').classList.add('active');
+      }
+    }
 
-        // Initialize current user data
-        let currentUser = null;
+    window.addEventListener('popstate', () => renderRoute(location.hash || '/'));
+    document.getElementById('nav-lihat').addEventListener('click', e => { e.preventDefault(); navigate('/'); });
+    document.getElementById('nav-kirim').addEventListener('click', e => { e.preventDefault(); navigate('/kirim'); });
 
-        // Show notification function
-        function showNotification(message, type = 'info') {
-            const notification = document.getElementById('notification');
-            const icon = document.getElementById('notificationIcon');
-            const messageEl = document.getElementById('notificationMessage');
-            
-            // Set notification style based on type
-            notification.className = 'custom-notification fixed top-4 right-4 p-4 rounded-lg shadow-lg z-50 flex items-center';
-            if (type === 'success') {
-                notification.classList.add('bg-green-100', 'text-green-800');
-                icon.setAttribute('data-lucide', 'check-circle');
-            } else if (type === 'error') {
-                notification.classList.add('bg-red-100', 'text-red-800');
-                icon.setAttribute('data-lucide', 'x-circle');
-            } else {
-                notification.classList.add('bg-blue-100', 'text-blue-800');
-                icon.setAttribute('data-lucide', 'info');
-            }
-            
-            messageEl.textContent = message;
-            notification.classList.remove('hidden');
-            lucide.createIcons();
-            
-            // Auto hide after 3 seconds
-            setTimeout(() => {
-                notification.classList.add('hidden');
-            }, 3000);
-        }
+    // === KIRIM DATA ===
+    document.getElementById('form-aspirasi').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submit-btn');
+      const statusDiv = document.getElementById('status');
 
-        // Auth page navigation
-        function showAuthPage(pageId) {
-            document.querySelectorAll('.auth-page').forEach(page => {
-                page.classList.remove('active');
-            });
-            document.getElementById(pageId).classList.add('active');
-        }
+      btn.disabled = true;
+      statusDiv.textContent = 'Mengirim…';
+      statusDiv.className = 'status';
 
-        // Register function
-        function register(event) {
-            event.preventDefault();
-            
-            // Get form values
-            const firstName = document.getElementById('firstName').value;
-            const lastName = document.getElementById('lastName').value;
-            const email = document.getElementById('email').value;
-            const password = document.getElementById('password').value;
-            const confirmPassword = document.getElementById('confirmPassword').value;
-            
-            // Validate passwords match
-            if (password !== confirmPassword) {
-                showNotification('Konfirmasi kata sandi tidak cocok', 'error');
-                return;
-            }
-            
-            // Check if user already exists
-            const users = JSON.parse(localStorage.getItem('edustellar_users'));
-            const existingUser = users.find(user => user.email === email);
-            
-            if (existingUser) {
-                showNotification('Email sudah terdaftar. Silakan gunakan email lain.', 'error');
-                return;
-            }
-            
-            // Create new user
-            const newUser = {
-                id: Date.now(),
-                firstName,
-                lastName,
-                email,
-                password, // In a real app, this should be hashed
-                quota: 0,
-                createdAt: new Date().toISOString()
-            };
-            
-            // Save user to localStorage
-            users.push(newUser);
-            localStorage.setItem('edustellar_users', JSON.stringify(users));
-            
-            // Show success message
-            showNotification('Pendaftaran berhasil! Silakan masuk dengan akun Anda.', 'success');
-            
-            // Redirect to login page after a short delay
-            setTimeout(() => {
-                showAuthPage('loginPage');
-            }, 1500);
-        }
+      const data = {
+        nama: document.getElementById('nama').value.trim(),
+        nim: document.getElementById('nim').value.trim(),
+        kategori: document.getElementById('kategori').value,
+        isi: document.getElementById('isi').value.trim(),
+        anonymous: document.getElementById('anonymous').checked
+      };
 
-        // Login function
-        function login(event) {
-            event.preventDefault();
-            
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            // Check credentials
-            const users = JSON.parse(localStorage.getItem('edustellar_users'));
-            const user = users.find(u => u.email === email && u.password === password);
-            
-            if (user) {
-                // Set current user
-                currentUser = user;
-                localStorage.setItem('edustellar_current_user', JSON.stringify(user));
-                
-                // Show success message
-                showNotification('Login berhasil!', 'success');
-                
-                // Show app and hide auth
-                setTimeout(() => {
-                    document.getElementById('authContainer').classList.add('hidden');
-                    document.getElementById('app-wrapper').classList.remove('hidden');
-                    
-                    // Update welcome message
-                    document.getElementById('welcomeMessage').textContent = `Selamat Datang, ${user.firstName}!`;
-                    
-                    // Load hot services
-                    loadHotServices();
-                }, 1000);
-            } else {
-                showNotification('Email atau kata sandi salah', 'error');
-            }
-        }
-
-        // Logout function
-        function logout() {
-            currentUser = null;
-            localStorage.removeItem('edustellar_current_user');
-            
-            // Show auth and hide app
-            document.getElementById('authContainer').classList.remove('hidden');
-            document.getElementById('app-wrapper').classList.add('hidden');
-            
-            // Reset to login page
-            showAuthPage('loginPage');
-            
-            // Clear forms
-            document.getElementById('loginForm').reset();
-            document.getElementById('registerForm').reset();
-            
-            showNotification('Anda telah logout', 'info');
-        }
-
-        // Check if user is already logged in
-        function checkLoginStatus() {
-            const storedUser = localStorage.getItem('edustellar_current_user');
-            if (storedUser) {
-                currentUser = JSON.parse(storedUser);
-                document.getElementById('authContainer').classList.add('hidden');
-                document.getElementById('app-wrapper').classList.remove('hidden');
-                document.getElementById('welcomeMessage').textContent = `Selamat Datang, ${currentUser.firstName}!`;
-                loadHotServices();
-            }
-        }
-
-        // Page navigation
-        function showPage(pageId, clickedElement = null) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(page => {
-                page.classList.remove('active');
-            });
-            
-            // Show selected page
-            document.getElementById(pageId).classList.add('active');
-            
-            // Update active sidebar link
-            if (clickedElement) {
-                document.querySelectorAll('.sidebar-link').forEach(link => {
-                    link.classList.remove('active');
-                });
-                clickedElement.classList.add('active');
-            }
-            
-            // Reset feature view if needed
-            if (pageId === 'berandaPage') {
-                document.getElementById('app-wrapper').classList.remove('feature-view');
-            }
-        }
-
-        // Feature page setup
-        function setupFeaturePage(feature) {
-            const featureTitles = {
-                'consulink': 'Consulink - Konsultasi Akademik',
-                'riselink': 'Riselink - Bimbingan Riset',
-                'courselink': 'Courselink - Les Privat',
-                'complink': 'Complink - Persiapan Kompetisi'
-            };
-            
-            const featureForms = {
-                'consulink': `
-                    <div><label class="block text-sm font-medium text-slate-700">Topik Konsultasi</label><input type="text" placeholder="Misal: Kalkulus, Fisika Dasar, dll" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Tingkat Kesulitan</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>Pemula</option><option>Menengah</option><option>Lanjutan</option></select></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Jenis Bimbingan</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>Konsultasi Singkat (30 menit)</option><option>Bimbingan Intensif (1 jam)</option><option>Paket 5x Pertemuan</option></select></div>
-                `,
-                'riselink': `
-                    <div><label class="block text-sm font-medium text-slate-700">Jenis Karya Tulis</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>Skripsi</option><option>Tesis</option><option>Jurnal</option><option>Paper Kompetisi</option></select></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Bidang Ilmu</label><input type="text" placeholder="Misal: Teknik Informatika, Manajemen, dll" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Tahapan</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>Pemilihan Topik</option><option>Penulisan Proposal</option><option>Analisis Data</option><option>Penulisan Bab</option><option>Revisi</option></select></div>
-                `,
-                'courselink': `
-                    <div><label class="block text-sm font-medium text-slate-700">Mata Kuliah</label><input type="text" placeholder="Misal: Kalkulus, Pemrograman, dll" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Tingkat</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>Semester 1-2</option><option>Semester 3-4</option><option>Semester 5-6</option><option>Semester 7-8</option></select></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Jenis Les</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>Privat (1-on-1)</option><option>Kolektif (max 5 orang)</option></select></div>
-                `,
-                'complink': `
-                    <div><label class="block text-sm font-medium text-slate-700">Jenis Kompetisi</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>ONMIPA</option><option>Debat</option><option>Business Case</option><option>Programming</option><option>Lainnya</option></select></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Tingkat</label><select class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md form-select"><option>Universitas</option><option>Regional</option><option>Nasional</option><option>Internasional</option></select></div>
-                    <div><label class="block text-sm font-medium text-slate-700">Bidang</label><input type="text" placeholder="Misal: Matematika, Fisika, dll" class="mt-1 block w-full px-3 py-2 bg-white border border-slate-300 rounded-md"></div>
-                `
-            };
-            
-            document.getElementById('featureTitle').textContent = featureTitles[feature];
-            document.getElementById('featureForm').innerHTML = featureForms[feature];
-            
-            // Set up search button
-            document.getElementById('searchMentorBtn').onclick = function() {
-                searchMentors(feature);
-            };
-            
-            // Show feature page
-            document.getElementById('app-wrapper').classList.add('feature-view');
-            showPage('featurePage');
-        }
-
-        // Search mentors function
-        function searchMentors(feature) {
-            // In a real app, this would be an API call
-            // For demo, we'll use mock data
-            const mockMentors = {
-                'consulink': [
-                    { name: 'Anisa Putri', university: 'Universitas Indonesia', rating: 4.9, price: '50.000', specialty: 'Matematika & Fisika', image: 'A' },
-                    { name: 'Budi Santoso', university: 'Institut Teknologi Bandung', rating: 4.8, price: '45.000', specialty: 'Kimia & Biologi', image: 'B' },
-                    { name: 'Citra Lestari', university: 'Universitas Gadjah Mada', rating: 4.7, price: '55.000', specialty: 'Ekonomi & Manajemen', image: 'C' }
-                ],
-                'riselink': [
-                    { name: 'Dewi Anggraini', university: 'Universitas Indonesia', rating: 4.9, price: '75.000', specialty: 'Penulisan Jurnal', image: 'D' },
-                    { name: 'Eko Prasetyo', university: 'Institut Teknologi Bandung', rating: 4.8, price: '70.000', specialty: 'Analisis Data', image: 'E' },
-                    { name: 'Fitri Handayani', university: 'Universitas Gadjah Mada', rating: 4.7, price: '80.000', specialty: 'Metodologi Penelitian', image: 'F' }
-                ],
-                'courselink': [
-                    { name: 'Gunawan Setiawan', university: 'Universitas Indonesia', rating: 4.9, price: '60.000', specialty: 'Pemrograman', image: 'G' },
-                    { name: 'Hana Wijaya', university: 'Institut Teknologi Bandung', rating: 4.8, price: '55.000', specialty: 'Kalkulus & Aljabar', image: 'H' },
-                    { name: 'Indra Kurniawan', university: 'Universitas Gadjah Mada', rating: 4.7, price: '65.000', specialty: 'Statistika', image: 'I' }
-                ],
-                'complink': [
-                    { name: 'Joko Susilo', university: 'Universitas Indonesia', rating: 4.9, price: '90.000', specialty: 'ONMIPA Matematika', image: 'J' },
-                    { name: 'Kartika Sari', university: 'Institut Teknologi Bandung', rating: 4.8, price: '85.000', specialty: 'Debat Bahasa Inggris', image: 'K' },
-                    { name: 'Luki Hermawan', university: 'Universitas Gadjah Mada', rating: 4.7, price: '95.000', specialty: 'Business Case', image: 'L' }
-                ]
-            };
-            
-            const mentors = mockMentors[feature];
-            const mentorList = document.getElementById('mentorList');
-            mentorList.innerHTML = '';
-            
-            mentors.forEach(mentor => {
-                const mentorEl = document.createElement('div');
-                mentorEl.className = 'bg-white p-4 rounded-lg border flex items-center';
-                mentorEl.innerHTML = `
-                    <img src="https://placehold.co/64x64/bfdbfe/1e3a8a?text=${mentor.image}" class="rounded-full w-16 h-16 mr-4">
-                    <div class="flex-grow">
-                        <h3 class="font-bold text-lg">${mentor.name}</h3>
-                        <p class="text-slate-600">${mentor.university} • ${mentor.specialty}</p>
-                        <div class="flex items-center mt-1">
-                            <i data-lucide="star" class="w-4 h-4 text-amber-500 fill-amber-500 mr-1"></i>
-                            <span class="font-medium">${mentor.rating}</span>
-                        </div>
-                    </div>
-                    <div class="text-right">
-                        <p class="font-bold text-sky-500">Rp ${mentor.price}</p>
-                        <button onclick="showNotification('Fitur pemesanan mentor akan segera hadir!', 'info')" class="mt-2 bg-sky-500 text-white font-semibold py-2 px-4 rounded-lg text-sm">Pilih Mentor</button>
-                    </div>
-                `;
-                mentorList.appendChild(mentorEl);
-            });
-            
-            document.getElementById('featureFormContainer').classList.add('hidden');
-            document.getElementById('mentorResults').classList.remove('hidden');
-            lucide.createIcons();
-        }
-
-        // Load hot services
-        function loadHotServices() {
-            const container = document.getElementById('hot-services-container');
-            container.innerHTML = `
-                <h2 class="text-2xl font-bold text-gray-800 mb-4">Layanan Terpopuler</h2>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div class="flex items-center p-4 bg-slate-50 rounded-lg">
-                        <div class="bg-emerald-100 rounded-lg w-16 h-16 flex items-center justify-center mr-4">
-                            <i data-lucide="messages-square" class="w-8 h-8 text-emerald-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Konsultasi Skripsi</h3>
-                            <p class="text-sm text-slate-500">Bimbingan intensif bab 1-5</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center p-4 bg-slate-50 rounded-lg">
-                        <div class="bg-violet-100 rounded-lg w-16 h-16 flex items-center justify-center mr-4">
-                            <i data-lucide="file-text" class="w-8 h-8 text-violet-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Review Jurnal</h3>
-                            <p class="text-sm text-slate-500">Proofreading & formatting</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center p-4 bg-slate-50 rounded-lg">
-                        <div class="bg-amber-100 rounded-lg w-16 h-16 flex items-center justify-center mr-4">
-                            <i data-lucide="book-open" class="w-8 h-8 text-amber-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Les Kalkulus</h3>
-                            <p class="text-sm text-slate-500">Persiapan UTS & UAS</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center p-4 bg-slate-50 rounded-lg">
-                        <div class="bg-rose-100 rounded-lg w-16 h-16 flex items-center justify-center mr-4">
-                            <i data-lucide="trophy" class="w-8 h-8 text-rose-500"></i>
-                        </div>
-                        <div>
-                            <h3 class="font-bold">Persiapan ONMIPA</h3>
-                            <p class="text-sm text-slate-500">Latihan soal tingkat nasional</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-            lucide.createIcons();
-        }
-
-        // Mentor registration functions
-        function showMentorRegisterForm(category) {
-            document.getElementById('mentorRegisterSelection').classList.add('hidden');
-            document.getElementById('mentorRegisterFormContainer').classList.remove('hidden');
-            document.getElementById('mentorRegisterFormTitle').textContent = `Formulir Pendaftaran Mentor ${category}`;
-        }
-
-        function showMentorRegisterSelection() {
-            document.getElementById('mentorRegisterSelection').classList.remove('hidden');
-            document.getElementById('mentorRegisterFormContainer').classList.add('hidden');
-            document.getElementById('mentorRegisterSuccess').classList.add('hidden');
-        }
-
-        function submitMentorForm() {
-            // In a real app, this would submit to a server
-            document.getElementById('mentorRegisterFormContainer').classList.add('hidden');
-            document.getElementById('mentorRegisterSuccess').classList.remove('hidden');
-            showNotification('Pendaftaran mentor berhasil dikirim!', 'success');
-        }
-
-        // Payment functions
-        function showPaymentPage(item) {
-            document.getElementById('paymentItem').textContent = `${item.type}: ${item.name}`;
-            document.getElementById('paymentPrice').textContent = `Rp ${parseInt(item.price).toLocaleString('id-ID')}`;
-            showPage('paymentPage');
-        }
-
-        function processPayment() {
-            showNotification('Pembayaran berhasil! Layanan telah ditambahkan ke akun Anda.', 'success');
-            setTimeout(() => {
-                showPage('berandaPage');
-            }, 2000);
-        }
-
-        // Share modal functions
-        function openShareModal() {
-            document.getElementById('shareModal').classList.remove('hidden');
-        }
-
-        function closeShareModal() {
-            document.getElementById('shareModal').classList.add('hidden');
-        }
-
-        function copyReferralCode() {
-            navigator.clipboard.writeText('EDUSTELLAR25');
-            showNotification('Kode referral disalin!', 'success');
-        }
-
-        // Profile modal functions
-        function openProfileModal() {
-            if (currentUser) {
-                document.getElementById('profileName').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
-                document.getElementById('profileEmail').textContent = currentUser.email;
-                document.getElementById('profileQuota').textContent = `${currentUser.quota} transaksi tersisa`;
-                document.getElementById('profileModal').classList.remove('hidden');
-            }
-        }
-
-        function closeProfileModal() {
-            document.getElementById('profileModal').classList.add('hidden');
-        }
-
-        // Event listeners
-        document.getElementById('registerForm').addEventListener('submit', register);
-        document.getElementById('loginForm').addEventListener('submit', login);
-
-        // Initialize app
-        document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
-            lucide.createIcons();
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
         });
-    </script>
+
+        const result = await response.json();
+
+        if (result.status === 'success') {
+          statusDiv.textContent = '✅ Aspirasi berhasil dikirim! Terima kasih.';
+          statusDiv.className = 'status success';
+          this.reset();
+          document.getElementById('anonymous').checked = false;
+        } else {
+          throw new Error(result.message || 'Gagal mengirim.');
+        }
+      } catch (err) {
+        statusDiv.textContent = `❌ Gagal: ${err.message}`;
+        statusDiv.className = 'status error';
+      } finally {
+        btn.disabled = false;
+      }
+    });
+
+    // === BACA DATA DARI SPREADSHEET ===
+    async function fetchData() {
+      const container = document.getElementById('aspirasi-container');
+      container.innerHTML = '<div class="loading">Memuat data dari spreadsheet…</div>';
+
+      try {
+        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+        const response = await fetch(url);
+        const csvText = await response.text();
+
+        const rows = csvText.trim()
+          .split('\n')
+          .map(row => 
+            row.split(',').map(cell => 
+              cell.startsWith('"') && cell.endsWith('"') 
+                ? cell.slice(1, -1).replace(/""/g, '"')
+                : cell
+            )
+          );
+
+        const aspirasiList = [];
+        for (let i = 1; i < rows.length; i++) {
+          const [ts, nama, nim, kategori, isi, anon] = rows[i];
+          if (!ts || !isi) continue;
+
+          const date = new Date(ts);
+          if (isNaN(date)) continue;
+
+          aspirasiList.push({
+            timestamp: date,
+            nama: nama || '',
+            nim: nim || '',
+            kategori: (kategori || 'lainnya').toLowerCase(),
+            isi: isi || '',
+            anonymous: (anon || '').trim().toLowerCase() === 'ya'
+          });
+        }
+
+        aspirasiData = aspirasiList;
+        renderAspirasi(currentFilter);
+      } catch (err) {
+        container.innerHTML = `<div class="empty">❌ Gagal memuat data.<br>Pastikan spreadsheet:<br>• Di-set sebagai 'Siapa saja dengan link'<br>• Sheet bernama 'Sheet1'</div>`;
+        console.error('[Fetch Error]', err);
+      }
+    }
+
+    function renderAspirasi(filter) {
+      currentFilter = filter;
+      const container = document.getElementById('aspirasi-container');
+      let filtered = filter === 'semua' 
+        ? [...aspirasiData] 
+        : aspirasiData.filter(item => item.kategori === filter);
+
+      filtered.sort((a, b) => b.timestamp - a.timestamp);
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty">Belum ada aspirasi di kategori ini.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(item => {
+        const tgl = item.timestamp.toLocaleDateString('id-ID');
+        const jam = item.timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        let namaTampil = item.anonymous ? '👤 Anonim' : `${item.nama} (${item.nim})`;
+        if (item.anonymous) namaTampil += ` <span class="badge-anonim">anonim</span>`;
+
+        let kategoriLabel = item.kategori;
+        if (item.kategori === 'tendik') kategoriLabel = 'Tenaga Kependidikan';
+        else if (item.kategori === 'fasilitas') kategoriLabel = 'Fasilitas';
+        else kategoriLabel = kategoriLabel.charAt(0).toUpperCase() + kategoriLabel.slice(1);
+
+        return `
+          <div class="aspirasi-item">
+            <div class="aspirasi-header">
+              <strong>${namaTampil}</strong>
+              <span>${tgl}, ${jam}</span>
+            </div>
+            <div class="aspirasi-kategori">${kategoriLabel}</div>
+            <p>${item.isi.replace(/\n/g, '<br>')}</p>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        renderAspirasi(this.dataset.filter);
+      });
+    });
+
+    // Mulai
+    renderRoute(location.hash || '/');
+  </script>
 </body>
 </html>
