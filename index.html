@@ -359,7 +359,7 @@
       <h2>ℹ️ Fitur</h2>
       <p>• Nama ditampilkan sebagai <strong>B***</strong><br>
       • Upload gambar langsung (JPG, PNG, GIF)<br>
-      • Gambar disimpan di server eksternal (aman & cepat)
+      • Gambar disimpan di spreadsheet (preview)
       </p>
     </div>
   </div>
@@ -413,7 +413,6 @@
   </div>
 
   <script>
-    // === KONFIG ===
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec";
     let aspirasiList = [];
     let komentarList = [];
@@ -421,7 +420,6 @@
     let currentTimeFilter = 'all';
     let currentSearch = '';
 
-    // === UTILS ===
     function maskName(nama) {
       if (!nama) return 'Anonim';
       const first = nama.trim().charAt(0).toUpperCase();
@@ -437,7 +435,6 @@
       return 'lainnya';
     }
 
-    // === LOAD DATA ===
     async function loadData() {
       try {
         const res = await fetch(`${SCRIPT_URL}?action=ambil_data`);
@@ -452,7 +449,7 @@
       }
     }
 
-    // === DRAG & DROP ===
+    // Drag & Drop
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('file-input');
     const preview = document.getElementById('preview');
@@ -510,7 +507,7 @@
       reader.readAsDataURL(file);
     }
 
-    // === KIRIM ASPIRASI (POST ke Apps Script) ===
+    // ✅ SUBMIT VIA GET (TANPA CORS ERROR)
     document.getElementById('form-aspirasi').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit');
@@ -521,40 +518,47 @@
       status.className = 'status';
       status.style.display = 'block';
 
-      let base64Image = '';
+      let gambarB64 = '';
       const file = fileInput.files[0];
 
       if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          status.textContent = '❌ Gambar maks. 5 MB';
+          status.className = 'status error';
+          btn.disabled = false;
+          return;
+        }
+
         status.textContent = '🖼️ Memproses gambar…';
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        await new Promise((resolve) => {
-          reader.onload = () => {
-            base64Image = reader.result;
-            resolve();
-          };
-          reader.onerror = () => {
-            alert('❌ Gagal membaca gambar.');
-            resolve();
-          };
-        });
+        try {
+          const reader = new FileReader();
+          gambarB64 = await new Promise((resolve, reject) => {
+            reader.onload = () => {
+              const base64 = reader.result.split(',')[1];
+              // Potong agar tidak melebihi batas URL/Sheet
+              resolve(base64.substring(0, 40000));
+            };
+            reader.onerror = () => reject('Gagal baca gambar');
+            reader.readAsDataURL(file);
+          });
+        } catch (err) {
+          status.textContent = `❌ ${err}`;
+          status.className = 'status error';
+          btn.disabled = false;
+          return;
+        }
       }
 
-      const payload = {
+      const params = new URLSearchParams({
         action: 'kirim_aspirasi',
         nama: document.getElementById('nama').value.trim(),
         nim: document.getElementById('nim').value.trim(),
         isi: document.getElementById('isi').value.trim(),
-        base64Image: base64Image
-      };
+        gambar_b64: gambarB64
+      });
 
       try {
-        const res = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(payload)
-        });
-
+        const res = await fetch(`${SCRIPT_URL}?${params}`);
         const data = await res.json();
         if (data.status === 'success') {
           status.textContent = '✅ Berhasil diposting!';
@@ -565,7 +569,7 @@
           setTimeout(() => status.style.display = 'none', 2000);
           await loadData();
         } else {
-          throw new Error(data.message || 'Server error');
+          throw new Error(data.message || 'Gagal mengirim');
         }
       } catch (err) {
         status.textContent = `❌ ${err.message}`;
@@ -575,7 +579,7 @@
       }
     });
 
-    // === MODAL ===
+    // Modal
     function openKomentar(idAspirasi) {
       document.getElementById('modal-id-aspirasi').value = idAspirasi;
       document.getElementById('modal-nama').value = '';
@@ -638,7 +642,7 @@
       if (e.target === document.getElementById('modal-komentar')) closeModal();
     };
 
-    // === FILTER ===
+    // Filter
     function applyFilters() {
       const now = new Date();
       let filtered = [...aspirasiList];
@@ -726,7 +730,6 @@
       }).join('');
     }
 
-    // Event listeners
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
@@ -750,7 +753,6 @@
       applyFilters();
     });
 
-    // Mulai
     loadData();
   </script>
 </body>
