@@ -22,7 +22,6 @@
       overflow: hidden;
     }
 
-    /* KIRI: Form */
     .panel-left {
       width: 420px;
       background: white;
@@ -78,24 +77,28 @@
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
     .btn-outline {
       background: transparent;
-      border: 1px dashed var(--abu-border);
+      border: 2px dashed var(--abu-border);
       color: var(--abu-teks);
       text-align: center;
       padding: 1.5rem;
       margin: 0.5rem 0;
       cursor: pointer;
       position: relative;
+      transition: all 0.2s;
     }
-    .btn-outline:hover { background: #f9f9f9; }
+    .btn-outline.dragover {
+      border-color: var(--biru);
+      background: #f0f9ff;
+    }
     .upload-preview {
       max-width: 100%;
       max-height: 200px;
       border-radius: 8px;
       margin: 0.5rem 0;
       display: none;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
 
-    /* KANAN: Postingan */
     .panel-right {
       flex: 1;
       overflow-y: auto;
@@ -147,7 +150,6 @@
       color: var(--abu-teks);
     }
 
-    /* Postingan */
     .post {
       background: white;
       border-radius: 16px;
@@ -222,7 +224,6 @@
     }
     .reply-btn:hover { color: var(--biru); }
 
-    /* Komentar */
     .replies {
       margin-top: 1rem;
       padding-top: 1rem;
@@ -265,7 +266,6 @@
       line-height: 1.4;
     }
 
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -326,7 +326,6 @@
   </style>
 </head>
 <body>
-  <!-- PANEL KIRI: FORM -->
   <div class="panel-left">
     <div class="logo">
       <span>🐦</span>
@@ -346,7 +345,7 @@
         <textarea id="isi" rows="4" required placeholder="Ceritakan aspirasimu..."></textarea>
 
         <div class="btn-outline" id="upload-area">
-          📎 Seret gambar ke sini atau klik untuk upload
+          📎 Seret gambar ke sini atau klik untuk upload (maks. 5 MB)
           <input type="file" id="file-input" accept="image/*" style="display:none;">
         </div>
         <img id="preview" class="upload-preview">
@@ -359,13 +358,12 @@
     <div class="card">
       <h2>ℹ️ Fitur</h2>
       <p>• Nama ditampilkan sebagai <strong>B***</strong><br>
-      • Upload gambar langsung (maks. 5 MB)<br>
-      • Filter: kategori, waktu, atau cari teks
+      • Upload gambar langsung (JPG, PNG, GIF)<br>
+      • Gambar disimpan di server eksternal (aman & cepat)
       </p>
     </div>
   </div>
 
-  <!-- PANEL KANAN: POSTINGAN -->
   <div class="panel-right">
     <div class="card">
       <div class="toolbar">
@@ -395,7 +393,6 @@
     </div>
   </div>
 
-  <!-- MODAL: KIRIM KOMENTAR -->
   <div id="modal-komentar" class="modal">
     <div class="modal-content">
       <h3>💬 Balas Aspirasi</h3>
@@ -424,14 +421,13 @@
     let currentTimeFilter = 'all';
     let currentSearch = '';
 
-    // === MASKING NAMA ===
+    // === UTILS ===
     function maskName(nama) {
       if (!nama) return 'Anonim';
       const first = nama.trim().charAt(0).toUpperCase();
       return first + '***';
     }
 
-    // === INFER KATEGORI ===
     function inferKategori(isi) {
       isi = isi.toLowerCase();
       if (isi.includes('dosen') || isi.includes('mengajar') || isi.includes('kuliah') || isi.includes('materi')) return 'dosen';
@@ -447,7 +443,6 @@
         const res = await fetch(`${SCRIPT_URL}?action=ambil_data`);
         const data = await res.json();
         if (data.error) throw new Error(data.error);
-        
         aspirasiList = data.aspirasi || [];
         komentarList = data.komentar || [];
         applyFilters();
@@ -457,24 +452,11 @@
       }
     }
 
-    // === UPLOAD GAMBAR: BASE64 (no external API) ===
-    function getBase64(file) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = error => reject(error);
-      });
-    }
-
-    // === UPLOAD UI (perbaikan drag & drop) ===
+    // === DRAG & DROP ===
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('file-input');
     const preview = document.getElementById('preview');
 
-    uploadArea.addEventListener('click', () => fileInput.click());
-
-    // Drag & Drop: cegah aksi default browser
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
       uploadArea.addEventListener(eventName, preventDefaults, false);
     });
@@ -485,24 +467,15 @@
     }
 
     ['dragenter', 'dragover'].forEach(eventName => {
-      uploadArea.addEventListener(eventName, highlight, false);
+      uploadArea.addEventListener(eventName, () => uploadArea.classList.add('dragover'), false);
     });
-
     ['dragleave', 'drop'].forEach(eventName => {
-      uploadArea.addEventListener(eventName, unhighlight, false);
+      uploadArea.addEventListener(eventName, () => uploadArea.classList.remove('dragover'), false);
     });
-
-    function highlight() {
-      uploadArea.style.borderColor = '#1da1f2';
-      uploadArea.style.backgroundColor = '#f0f9ff';
-    }
-
-    function unhighlight() {
-      uploadArea.style.borderColor = '';
-      uploadArea.style.backgroundColor = '';
-    }
 
     uploadArea.addEventListener('drop', handleDrop, false);
+    uploadArea.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', handleFileSelect);
 
     function handleDrop(e) {
       const dt = e.dataTransfer;
@@ -513,9 +486,7 @@
       }
     }
 
-    fileInput.addEventListener('change', handleFileSelect);
-
-    async function handleFileSelect() {
+    function handleFileSelect() {
       const file = fileInput.files[0];
       if (!file) return;
       
@@ -531,17 +502,15 @@
         return;
       }
 
-      try {
-        const base64 = await getBase64(file);
-        preview.src = base64;
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
         preview.style.display = 'block';
-      } catch (err) {
-        alert('❌ Gagal memuat gambar.');
-        console.error(err);
-      }
+      };
+      reader.readAsDataURL(file);
     }
 
-    // === KIRIM ASPIRASI ===
+    // === KIRIM ASPIRASI (POST ke Apps Script) ===
     document.getElementById('form-aspirasi').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = document.getElementById('btn-submit');
@@ -552,41 +521,44 @@
       status.className = 'status';
       status.style.display = 'block';
 
-      let gambarData = '';
+      let base64Image = '';
       const file = fileInput.files[0];
 
       if (file) {
         status.textContent = '🖼️ Memproses gambar…';
-        try {
-          gambarData = await getBase64(file);
-          // Batasi panjang (Google Sheets punya limit ~50KB per cell)
-          if (gambarData.length > 50000) {
-            status.textContent = '⚠️ Gambar terlalu besar. Akan dikirim tanpa gambar.';
-            gambarData = '';
-          }
-        } catch (err) {
-          status.textContent = `❌ Gagal proses gambar: ${err.message}`;
-          status.className = 'status error';
-          btn.disabled = false;
-          return;
-        }
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        await new Promise((resolve) => {
+          reader.onload = () => {
+            base64Image = reader.result;
+            resolve();
+          };
+          reader.onerror = () => {
+            alert('❌ Gagal membaca gambar.');
+            resolve();
+          };
+        });
       }
 
-      const params = new URLSearchParams({
+      const payload = {
         action: 'kirim_aspirasi',
         nama: document.getElementById('nama').value.trim(),
         nim: document.getElementById('nim').value.trim(),
         isi: document.getElementById('isi').value.trim(),
-        gambar_url: gambarData
-      });
+        base64Image: base64Image
+      };
 
       try {
-        const res = await fetch(`${SCRIPT_URL}?${params}`);
+        const res = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
         const data = await res.json();
         if (data.status === 'success') {
           status.textContent = '✅ Berhasil diposting!';
           status.className = 'status success';
-          // Reset form
           document.getElementById('form-aspirasi').reset();
           fileInput.value = '';
           preview.style.display = 'none';
@@ -666,46 +638,39 @@
       if (e.target === document.getElementById('modal-komentar')) closeModal();
     };
 
-    // === FILTER LOGIC ===
+    // === FILTER ===
     function applyFilters() {
       const now = new Date();
       let filtered = [...aspirasiList];
 
-      // Filter kategori
       if (currentFilter !== 'semua') {
         filtered = filtered.filter(a => inferKategori(a.isi) === currentFilter);
       }
 
-      // Filter waktu
       if (currentTimeFilter !== 'all') {
         filtered = filtered.filter(a => {
           const t = new Date(a.waktu);
-          if (currentTimeFilter === 'hari') {
-            return t.toDateString() === now.toDateString();
-          } else if (currentTimeFilter === 'minggu') {
+          if (currentTimeFilter === 'hari') return t.toDateString() === now.toDateString();
+          if (currentTimeFilter === 'minggu') {
             const diff = Math.floor((now - t) / (1000 * 60 * 60 * 24));
             return diff >= 0 && diff <= 6;
-          } else if (currentTimeFilter === 'bulan') {
+          }
+          if (currentTimeFilter === 'bulan') {
             return t.getMonth() === now.getMonth() && t.getFullYear() === now.getFullYear();
           }
           return true;
         });
       }
 
-      // Filter pencarian
       if (currentSearch) {
         const term = currentSearch.toLowerCase();
         filtered = filtered.filter(a => 
           a.isi.toLowerCase().includes(term) ||
-          komentarList
-            .filter(k => k.id_aspirasi === a.id)
-            .some(k => k.isi.toLowerCase().includes(term))
+          komentarList.some(k => k.id_aspirasi === a.id && k.isi.toLowerCase().includes(term))
         );
       }
 
-      // Sort terbaru
       filtered.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
-
       renderPosts(filtered);
     }
 
@@ -723,19 +688,12 @@
         const namaTampil = maskName(aspirasi.nama);
         const inisial = namaTampil.charAt(0);
         const kategori = inferKategori(aspirasi.isi);
-        const kategoriLabel = {
-          dosen: 'Dosen', tendik: 'Tendik', fasilitas: 'Fasilitas', 
-          kurikulum: 'Kurikulum', lainnya: 'Lainnya'
-        }[kategori];
+        const kategoriLabel = { dosen: 'Dosen', tendik: 'Tendik', fasilitas: 'Fasilitas', kurikulum: 'Kurikulum', lainnya: 'Lainnya' }[kategori];
 
         const replies = komentarList
           .filter(k => k.id_aspirasi === aspirasi.id)
           .sort((a, b) => new Date(a.waktu) - new Date(b.waktu))
-          .map(k => ({
-            ...k,
-            namaTampil: maskName(k.nama),
-            inisial: maskName(k.nama).charAt(0)
-          }));
+          .map(k => ({ ...k, namaTampil: maskName(k.nama), inisial: maskName(k.nama).charAt(0) }));
 
         const repliesHtml = replies.map(k => `
           <div class="reply">
@@ -748,29 +706,20 @@
           </div>
         `).join('');
 
-        // Potong base64 jika terlalu panjang untuk preview (opsional)
-        const gambar = aspirasi.gambar && aspirasi.gambar.length < 10000 ? aspirasi.gambar : '';
-
         return `
           <div class="post">
             <div class="post-header">
               <div class="avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')}">${inisial}</div>
               <div class="post-info">
                 <div class="post-name">${namaTampil}</div>
-                <div class="post-meta">${tgl}, ${jam} 
-                  <span class="post-tag">${kategoriLabel}</span>
-                </div>
+                <div class="post-meta">${tgl}, ${jam} <span class="post-tag">${kategoriLabel}</span></div>
               </div>
             </div>
             <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
-            ${gambar ? `<img src="${gambar}" class="post-image" onerror="this.style.display='none'">` : ''}
-            
+            ${aspirasi.gambar ? `<img src="${aspirasi.gambar}" class="post-image">` : ''}
             <div class="post-footer">
-              <button class="reply-btn" onclick="openKomentar('${aspirasi.id}')">
-                💬 Balas · ${replies.length}
-              </button>
+              <button class="reply-btn" onclick="openKomentar('${aspirasi.id}')">💬 Balas · ${replies.length}</button>
             </div>
-
             ${replies.length > 0 ? `<div class="replies">${repliesHtml}</div>` : ''}
           </div>
         `;
