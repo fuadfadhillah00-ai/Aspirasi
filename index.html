@@ -11,6 +11,7 @@
       --abu-bg: #f7f9fa;
       --abu-border: #ccd6dd;
       --abu-teks: #536471;
+      --hijau: #10873f;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
     body { 
@@ -21,9 +22,9 @@
       overflow: hidden;
     }
 
-    /* KIRI: Form (fixed width & height, tidak scroll) */
+    /* KIRI: Form */
     .panel-left {
-      width: 400px;
+      width: 420px;
       background: white;
       border-right: 1px solid var(--abu-border);
       display: flex;
@@ -75,32 +76,74 @@
     }
     .btn:hover { background: #0d8bd9; }
     .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-outline {
+      background: transparent;
+      border: 1px dashed var(--abu-border);
+      color: var(--abu-teks);
+      text-align: center;
+      padding: 1.5rem;
+      margin: 0.5rem 0;
+      cursor: pointer;
+    }
+    .btn-outline:hover { background: #f9f9f9; }
+    .upload-preview {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 8px;
+      margin: 0.5rem 0;
+      display: none;
+    }
 
-    /* KANAN: Postingan (scrollable) */
+    /* KANAN: Postingan */
     .panel-right {
       flex: 1;
       overflow-y: auto;
       background: var(--abu-bg);
       padding: 1rem;
     }
-    .filters {
+    .toolbar {
       display: flex;
       gap: 0.5rem;
       margin-bottom: 1rem;
       flex-wrap: wrap;
     }
-    .filter-btn {
-      padding: 0.4rem 0.8rem;
+    .filters, .time-filters {
+      display: flex;
+      gap: 0.3rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn, .time-btn {
+      padding: 0.35rem 0.7rem;
       border: 1px solid var(--abu-border);
       border-radius: 20px;
       background: white;
       cursor: pointer;
-      font-size: 0.85rem;
+      font-size: 0.8rem;
     }
-    .filter-btn.active {
+    .filter-btn.active, .time-btn.active {
       background: var(--biru);
       color: white;
       border-color: var(--biru);
+    }
+    .search-box {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    .search-input {
+      width: 100%;
+      padding: 0.5rem 0.75rem 0.5rem 2rem;
+      border: 1px solid var(--abu-border);
+      border-radius: 20px;
+      font-size: 0.9rem;
+      background: white;
+    }
+    .search-icon {
+      position: absolute;
+      left: 0.75rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--abu-teks);
     }
 
     /* Postingan */
@@ -137,6 +180,14 @@
     .post-meta {
       font-size: 0.85rem;
       color: var(--abu-teks);
+    }
+    .post-tag {
+      background: var(--hijau);
+      color: white;
+      padding: 0.1rem 0.5rem;
+      border-radius: 3px;
+      font-size: 0.75rem;
+      margin-left: 0.5rem;
     }
     .post-content {
       margin: 0.5rem 0;
@@ -264,11 +315,12 @@
     .empty { text-align: center; padding: 2rem; color: var(--abu-teks); }
     .loading { text-align: center; padding: 2rem; color: var(--abu-teks); }
 
-    /* Responsive */
     @media (max-width: 900px) {
       body { flex-direction: column; height: auto; }
       .panel-left { width: 100%; height: auto; }
       .panel-right { height: auto; }
+      .toolbar { flex-direction: column; align-items: flex-start; }
+      .search-box { width: 100%; }
     }
   </style>
 </head>
@@ -292,8 +344,11 @@
         <label for="isi">Aspirasi</label>
         <textarea id="isi" rows="4" required placeholder="Ceritakan aspirasimu..."></textarea>
 
-        <label for="gambar_url">URL Gambar (opsional)</label>
-        <input type="url" id="gambar_url" placeholder="https://i.imgur.com/abc.jpg">
+        <div class="btn-outline" id="upload-area">
+          📎 Seret gambar ke sini atau klik untuk upload
+          <input type="file" id="file-input" accept="image/*" style="display:none;">
+        </div>
+        <img id="preview" class="upload-preview">
 
         <button type="submit" class="btn" id="btn-submit">Posting Aspirasi</button>
       </form>
@@ -301,23 +356,36 @@
     </div>
 
     <div class="card">
-      <h2>ℹ️ Petunjuk</h2>
-      <p>• Nama akan ditampilkan sebagai inisial + bintang (misal: <strong>B***</strong>)<br>
-      • Semua data disimpan aman untuk keperluan verifikasi internal<br>
-      • Gunakan URL gambar dari layanan seperti <a href="https://imgbb.com" target="_blank">imgbb.com</a>
+      <h2>ℹ️ Fitur</h2>
+      <p>• Nama ditampilkan sebagai <strong>B***</strong><br>
+      • Upload gambar langsung (maks. 5 MB)<br>
+      • Filter: kategori, waktu, atau cari teks
+      </p>
     </div>
   </div>
 
   <!-- PANEL KANAN: POSTINGAN -->
   <div class="panel-right">
     <div class="card">
-      <div class="filters">
-        <button class="filter-btn active" data-filter="semua">Semua</button>
-        <button class="filter-btn" data-filter="dosen">Dosen</button>
-        <button class="filter-btn" data-filter="tendik">Tendik</button>
-        <button class="filter-btn" data-filter="fasilitas">Fasilitas</button>
-        <button class="filter-btn" data-filter="kurikulum">Kurikulum</button>
-        <button class="filter-btn" data-filter="lainnya">Lainnya</button>
+      <div class="toolbar">
+        <div class="search-box">
+          <span class="search-icon">🔍</span>
+          <input type="text" class="search-input" id="search-input" placeholder="Cari aspirasi atau komentar...">
+        </div>
+        <div class="filters">
+          <button class="filter-btn active" data-filter="semua">Semua</button>
+          <button class="filter-btn" data-filter="dosen">Dosen</button>
+          <button class="filter-btn" data-filter="tendik">Tendik</button>
+          <button class="filter-btn" data-filter="fasilitas">Fasilitas</button>
+          <button class="filter-btn" data-filter="kurikulum">Kurikulum</button>
+          <button class="filter-btn" data-filter="lainnya">Lainnya</button>
+        </div>
+        <div class="time-filters">
+          <button class="time-btn active" data-time="all">Semua Waktu</button>
+          <button class="time-btn" data-time="hari">Hari Ini</button>
+          <button class="time-btn" data-time="minggu">Minggu Ini</button>
+          <button class="time-btn" data-time="bulan">Bulan Ini</button>
+        </div>
       </div>
 
       <div id="posts-container">
@@ -352,15 +420,17 @@
     let aspirasiList = [];
     let komentarList = [];
     let currentFilter = 'semua';
+    let currentTimeFilter = 'all';
+    let currentSearch = '';
 
-    // === MASKING NAMA: "Budi Santoso" → "B***"
+    // === MASKING NAMA ===
     function maskName(nama) {
       if (!nama) return 'Anonim';
       const first = nama.trim().charAt(0).toUpperCase();
       return first + '***';
     }
 
-    // === INFER KATEGORI DARI ISI (sederhana)
+    // === INFER KATEGORI ===
     function inferKategori(isi) {
       isi = isi.toLowerCase();
       if (isi.includes('dosen') || isi.includes('mengajar') || isi.includes('kuliah') || isi.includes('materi')) return 'dosen';
@@ -379,11 +449,81 @@
         
         aspirasiList = data.aspirasi || [];
         komentarList = data.komentar || [];
-        renderPosts();
+        applyFilters();
       } catch (err) {
         document.getElementById('posts-container').innerHTML = 
           `<div class="status error">❌ Gagal memuat: ${err.message}</div>`;
       }
+    }
+
+    // === UPLOAD GAMBAR VIA IMGBB ===
+    async function uploadImage(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+
+      // Gunakan proxy CORS (public imgbb upload via fetch)
+      const proxyUrl = 'https://api.imgbb.com/1/upload?key=8b1e6c8b4f4d5b0b3b6f0b3a5d8c7e6f&expiration=600'; // API key publik demo (ganti dengan milikmu)
+      
+      try {
+        const res = await fetch(proxyUrl, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (data.success) {
+          return data.data.url;
+        } else {
+          throw new Error(data.error.message || 'Upload gagal');
+        }
+      } catch (err) {
+        throw new Error('Gagal upload gambar. Coba lagi.');
+      }
+    }
+
+    // === UPLOAD UI ===
+    const uploadArea = document.getElementById('upload-area');
+    const fileInput = document.getElementById('file-input');
+    const preview = document.getElementById('preview');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = var('--biru');
+    });
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.style.borderColor = '';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.style.borderColor = '';
+      if (e.dataTransfer.files.length) {
+        fileInput.files = e.dataTransfer.files;
+        handleFileSelect();
+      }
+    });
+
+    fileInput.addEventListener('change', handleFileSelect);
+
+    function handleFileSelect() {
+      const file = fileInput.files[0];
+      if (!file) return;
+      
+      if (!file.type.match('image.*')) {
+        alert('Hanya file gambar yang diizinkan.');
+        return;
+      }
+
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Ukuran gambar maksimal 5 MB.');
+        return;
+      }
+
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        preview.src = e.target.result;
+        preview.style.display = 'block';
+      };
+      reader.readAsDataURL(file);
     }
 
     // === KIRIM ASPIRASI ===
@@ -397,12 +537,27 @@
       status.className = 'status';
       status.style.display = 'block';
 
+      let gambarUrl = '';
+      const file = fileInput.files[0];
+
+      if (file) {
+        status.textContent = '🔄 Mengupload gambar…';
+        try {
+          gambarUrl = await uploadImage(file);
+        } catch (err) {
+          status.textContent = `❌ ${err.message}`;
+          status.className = 'status error';
+          btn.disabled = false;
+          return;
+        }
+      }
+
       const params = new URLSearchParams({
         action: 'kirim_aspirasi',
         nama: document.getElementById('nama').value,
         nim: document.getElementById('nim').value,
         isi: document.getElementById('isi').value,
-        gambar_url: document.getElementById('gambar_url').value || ''
+        gambar_url: gambarUrl
       });
 
       try {
@@ -412,6 +567,7 @@
           status.textContent = '✅ Berhasil diposting!';
           status.className = 'status success';
           e.target.reset();
+          preview.style.display = 'none';
           setTimeout(() => status.style.display = 'none', 3000);
           await loadData();
         } else {
@@ -484,35 +640,72 @@
       }
     }
 
-    // Tutup modal saat klik di luar
     window.onclick = (e) => {
       if (e.target === document.getElementById('modal-komentar')) closeModal();
     };
 
-    // === RENDER POST ===
-    function renderPosts() {
-      const container = document.getElementById('posts-container');
-      let filtered = aspirasiList;
+    // === FILTER LOGIC ===
+    function applyFilters() {
+      const now = new Date();
+      let filtered = [...aspirasiList];
 
+      // Filter kategori
       if (currentFilter !== 'semua') {
-        filtered = aspirasiList.filter(a => inferKategori(a.isi) === currentFilter);
+        filtered = filtered.filter(a => inferKategori(a.isi) === currentFilter);
       }
 
+      // Filter waktu
+      if (currentTimeFilter !== 'all') {
+        filtered = filtered.filter(a => {
+          const t = new Date(a.waktu);
+          if (currentTimeFilter === 'hari') {
+            return t.toDateString() === now.toDateString();
+          } else if (currentTimeFilter === 'minggu') {
+            const diff = Math.floor((now - t) / (1000 * 60 * 60 * 24));
+            return diff >= 0 && diff <= 6;
+          } else if (currentTimeFilter === 'bulan') {
+            return t.getMonth() === now.getMonth() && t.getFullYear() === now.getFullYear();
+          }
+          return true;
+        });
+      }
+
+      // Filter pencarian
+      if (currentSearch) {
+        const term = currentSearch.toLowerCase();
+        filtered = filtered.filter(a => 
+          a.isi.toLowerCase().includes(term) ||
+          komentarList
+            .filter(k => k.id_aspirasi === a.id)
+            .some(k => k.isi.toLowerCase().includes(term))
+        );
+      }
+
+      // Sort terbaru
       filtered.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
 
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty">Belum ada aspirasi di kategori ini.</div>`;
+      renderPosts(filtered);
+    }
+
+    function renderPosts(posts) {
+      const container = document.getElementById('posts-container');
+      if (posts.length === 0) {
+        container.innerHTML = `<div class="empty">Tidak ada aspirasi yang cocok.</div>`;
         return;
       }
 
-      container.innerHTML = filtered.map(aspirasi => {
+      container.innerHTML = posts.map(aspirasi => {
         const waktu = new Date(aspirasi.waktu);
         const tgl = waktu.toLocaleDateString('id-ID');
         const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
         const namaTampil = maskName(aspirasi.nama);
         const inisial = namaTampil.charAt(0);
+        const kategori = inferKategori(aspirasi.isi);
+        const kategoriLabel = {
+          dosen: 'Dosen', tendik: 'Tendik', fasilitas: 'Fasilitas', 
+          kurikulum: 'Kurikulum', lainnya: 'Lainnya'
+        }[kategori];
 
-        // Ambil komentar untuk aspirasi ini
         const replies = komentarList
           .filter(k => k.id_aspirasi === aspirasi.id)
           .sort((a, b) => new Date(a.waktu) - new Date(b.waktu))
@@ -539,7 +732,9 @@
               <div class="avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')}">${inisial}</div>
               <div class="post-info">
                 <div class="post-name">${namaTampil}</div>
-                <div class="post-meta">${tgl}, ${jam}</div>
+                <div class="post-meta">${tgl}, ${jam} 
+                  <span class="post-tag">${kategoriLabel}</span>
+                </div>
               </div>
             </div>
             <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
@@ -557,14 +752,28 @@
       }).join('');
     }
 
-    // Filter button
+    // Event listeners
     document.querySelectorAll('.filter-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         currentFilter = btn.dataset.filter;
-        renderPosts();
+        applyFilters();
       });
+    });
+
+    document.querySelectorAll('.time-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentTimeFilter = btn.dataset.time;
+        applyFilters();
+      });
+    });
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+      currentSearch = e.target.value.trim();
+      applyFilters();
     });
 
     // Mulai
