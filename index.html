@@ -13,27 +13,32 @@
       --abu-teks: #536471;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
-    body { background: var(--abu-bg); color: var(--hitam); line-height: 1.5; }
-    header {
+    body { 
+      background: var(--abu-bg); 
+      color: var(--hitam); 
+      display: flex;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* KIRI: Form (fixed width & height, tidak scroll) */
+    .panel-left {
+      width: 400px;
       background: white;
-      border-bottom: 1px solid var(--abu-border);
-      padding: 0.75rem 1rem;
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      border-right: 1px solid var(--abu-border);
+      display: flex;
+      flex-direction: column;
+      padding: 1.5rem;
+      overflow-y: auto;
     }
     .logo {
       font-size: 1.5rem;
       font-weight: bold;
       color: var(--biru);
+      margin-bottom: 1.5rem;
       display: flex;
       align-items: center;
       gap: 0.5rem;
-    }
-    .container {
-      max-width: 700px;
-      margin: 0 auto;
-      padding: 0 1rem;
     }
     .card {
       background: white;
@@ -42,18 +47,14 @@
       margin-bottom: 1rem;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    h2 {
-      font-size: 1.25rem;
-      margin-bottom: 1rem;
-      font-weight: bold;
-    }
+    h2 { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
     label {
       display: block;
       margin: 0.75rem 0 0.3rem;
       font-size: 0.9rem;
       font-weight: 600;
     }
-    input, textarea, select {
+    input, textarea {
       width: 100%;
       padding: 0.75rem;
       border: 1px solid var(--abu-border);
@@ -61,44 +62,59 @@
       font-size: 1rem;
       background: #f5f8fa;
     }
-    .checkbox-group {
-      display: flex;
-      align-items: center;
-      margin: 0.75rem 0;
-    }
-    .checkbox-group input { width: auto; margin-right: 0.5rem; }
-    
-    .post-actions {
-      display: flex;
-      gap: 1rem;
-      margin-top: 1rem;
-    }
     .btn {
-      flex: 1;
+      width: 100%;
       padding: 0.75rem;
       border: none;
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
-      transition: background 0.2s;
+      background: var(--biru);
+      color: white;
+      margin-top: 1rem;
     }
-    .btn-primary { background: var(--biru); color: white; }
-    .btn-primary:hover { background: #0d8bd9; }
-    .btn-outline { background: transparent; border: 1px solid var(--abu-border); color: var(--hitam); }
-    .btn-outline:hover { background: #f0f3f5; }
+    .btn:hover { background: #0d8bd9; }
+    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    /* KANAN: Postingan (scrollable) */
+    .panel-right {
+      flex: 1;
+      overflow-y: auto;
+      background: var(--abu-bg);
+      padding: 1rem;
+    }
+    .filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .filter-btn {
+      padding: 0.4rem 0.8rem;
+      border: 1px solid var(--abu-border);
+      border-radius: 20px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .filter-btn.active {
+      background: var(--biru);
+      color: white;
+      border-color: var(--biru);
+    }
 
     /* Postingan */
     .post {
       background: white;
       border-radius: 16px;
-      padding: 1rem;
-      margin-bottom: 1rem;
+      padding: 1.25rem;
+      margin-bottom: 1.25rem;
       border: 1px solid var(--abu-border);
     }
     .post-header {
       display: flex;
       gap: 0.75rem;
-      margin-bottom: 0.5rem;
+      margin-bottom: 0.75rem;
     }
     .avatar {
       width: 40px;
@@ -125,17 +141,18 @@
     .post-content {
       margin: 0.5rem 0;
       word-break: break-word;
+      line-height: 1.5;
     }
     .post-image {
       width: 100%;
       border-radius: 12px;
-      margin: 0.5rem 0;
-      max-height: 500px;
+      margin: 0.75rem 0;
+      max-height: 400px;
       object-fit: cover;
     }
     .post-footer {
       display: flex;
-      justify-content: space-between;
+      justify-content: flex-end;
       margin-top: 0.75rem;
       padding-top: 0.75rem;
       border-top: 1px solid #eee;
@@ -149,6 +166,7 @@
       display: flex;
       align-items: center;
       gap: 0.25rem;
+      font-size: 0.9rem;
     }
     .reply-btn:hover { color: var(--biru); }
 
@@ -156,14 +174,25 @@
     .replies {
       margin-top: 1rem;
       padding-top: 1rem;
-      border-top: 2px solid #f0f3f5;
+      border-top: 1px dashed #eee;
     }
     .reply {
       display: flex;
       gap: 0.75rem;
       margin-bottom: 1rem;
     }
-    .reply-avatar { width: 32px; height: 32px; border-radius: 50%; background: #ccc; }
+    .reply-avatar { 
+      width: 32px; 
+      height: 32px; 
+      border-radius: 50%; 
+      background: #999; 
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: bold;
+    }
     .reply-content {
       flex: 1;
       background: #f7f9fa;
@@ -172,147 +201,219 @@
     }
     .reply-name {
       font-weight: 600;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
     }
     .reply-meta {
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       color: var(--abu-teks);
     }
     .reply-text {
       margin-top: 0.25rem;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
+      line-height: 1.4;
     }
+
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.5);
+      z-index: 1000;
+    }
+    .modal-content {
+      background: white;
+      width: 90%;
+      max-width: 500px;
+      margin: 10% auto;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .modal h3 {
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
+    .modal-footer {
+      display: flex;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+    .modal-btn {
+      flex: 1;
+      padding: 0.6rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    .btn-cancel { background: #eee; color: var(--hitam); }
+    .btn-submit { background: var(--biru); color: white; }
+    .btn-cancel:hover { background: #ddd; }
+    .btn-submit:hover { background: #0d8bd9; }
 
     .status {
-      padding: 1rem;
-      border-radius: 8px;
-      margin: 1rem 0;
-      display: none;
+      padding: 0.75rem;
+      border-radius: 6px;
+      margin: 0.75rem 0;
+      font-size: 0.9rem;
     }
-    .status.success { display: block; background: #d4edda; color: #155724; }
-    .status.error { display: block; background: #f8d7da; color: #721c24; }
+    .status.success { background: #d4edda; color: #155724; }
+    .status.error { background: #f8d7da; color: #721c24; }
 
-    .loading {
-      text-align: center;
-      padding: 2rem;
-      color: var(--abu-teks);
-    }
+    .empty { text-align: center; padding: 2rem; color: var(--abu-teks); }
+    .loading { text-align: center; padding: 2rem; color: var(--abu-teks); }
 
     /* Responsive */
-    @media (max-width: 600px) {
-      .post-actions { flex-direction: column; }
-      .btn { width: 100%; }
+    @media (max-width: 900px) {
+      body { flex-direction: column; height: auto; }
+      .panel-left { width: 100%; height: auto; }
+      .panel-right { height: auto; }
     }
   </style>
 </head>
 <body>
-  <header>
+  <!-- PANEL KIRI: FORM -->
+  <div class="panel-left">
     <div class="logo">
       <span>🐦</span>
       <span>AspirasiFEB</span>
     </div>
-  </header>
 
-  <div class="container">
-    <!-- Form Kirim Aspirasi -->
     <div class="card">
-      <h2>Apa aspirasimu hari ini?</h2>
+      <h2>📢 Tulis Aspirasimu</h2>
       <form id="form-aspirasi">
-        <label for="nama">Nama</label>
+        <label for="nama">Nama Lengkap</label>
         <input type="text" id="nama" required placeholder="Contoh: Budi Santoso">
 
         <label for="nim">NIM</label>
         <input type="text" id="nim" required placeholder="123456789">
 
-        <label for="kategori">Kategori</label>
-        <select id="kategori">
-          <option value="dosen">Dosen</option>
-          <option value="tendik">Tendik</option>
-          <option value="fasilitas">Fasilitas</option>
-          <option value="kurikulum">Kurikulum</option>
-          <option value="lainnya">Lainnya</option>
-        </select>
-
         <label for="isi">Aspirasi</label>
-        <textarea id="isi" rows="3" required placeholder="Ceritakan aspirasimu..."></textarea>
+        <textarea id="isi" rows="4" required placeholder="Ceritakan aspirasimu..."></textarea>
 
         <label for="gambar_url">URL Gambar (opsional)</label>
         <input type="url" id="gambar_url" placeholder="https://i.imgur.com/abc.jpg">
 
-        <div class="checkbox-group">
-          <input type="checkbox" id="anonymous">
-          <label for="anonymous" style="font-weight: normal;">Kirim secara anonymous</label>
-        </div>
-
-        <div class="post-actions">
-          <button type="button" class="btn btn-outline" onclick="location.reload()">Batal</button>
-          <button type="submit" class="btn btn-primary">Posting</button>
-        </div>
+        <button type="submit" class="btn" id="btn-submit">Posting Aspirasi</button>
       </form>
-      <div id="status-aspirasi" class="status"></div>
+      <div id="status-form" class="status" style="display:none;"></div>
     </div>
 
-    <!-- Daftar Aspirasi -->
-    <div id="aspirasi-container">
-      <div class="loading">Memuat aspirasi…</div>
+    <div class="card">
+      <h2>ℹ️ Petunjuk</h2>
+      <p>• Nama akan ditampilkan sebagai inisial + bintang (misal: <strong>B***</strong>)<br>
+      • Semua data disimpan aman untuk keperluan verifikasi internal<br>
+      • Gunakan URL gambar dari layanan seperti <a href="https://imgbb.com" target="_blank">imgbb.com</a>
+    </div>
+  </div>
+
+  <!-- PANEL KANAN: POSTINGAN -->
+  <div class="panel-right">
+    <div class="card">
+      <div class="filters">
+        <button class="filter-btn active" data-filter="semua">Semua</button>
+        <button class="filter-btn" data-filter="dosen">Dosen</button>
+        <button class="filter-btn" data-filter="tendik">Tendik</button>
+        <button class="filter-btn" data-filter="fasilitas">Fasilitas</button>
+        <button class="filter-btn" data-filter="kurikulum">Kurikulum</button>
+        <button class="filter-btn" data-filter="lainnya">Lainnya</button>
+      </div>
+
+      <div id="posts-container">
+        <div class="loading">Memuat aspirasi…</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: KIRIM KOMENTAR -->
+  <div id="modal-komentar" class="modal">
+    <div class="modal-content">
+      <h3>💬 Balas Aspirasi</h3>
+      <input type="hidden" id="modal-id-aspirasi">
+      <label>Nama Lengkap</label>
+      <input type="text" id="modal-nama" required placeholder="Nama Anda">
+      <label>NIM</label>
+      <input type="text" id="modal-nim" required placeholder="NIM Anda">
+      <label>Komentar</label>
+      <textarea id="modal-isi" rows="3" required placeholder="Tulis komentar Anda..."></textarea>
+      
+      <div class="modal-footer">
+        <button class="modal-btn btn-cancel" onclick="closeModal()">Batal</button>
+        <button class="modal-btn btn-submit" onclick="submitKomentar()">Kirim</button>
+      </div>
+      <div id="status-modal" class="status" style="display:none;"></div>
     </div>
   </div>
 
   <script>
-    // === CONFIG ===
+    // === KONFIG ===
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec";
     let aspirasiList = [];
     let komentarList = [];
+    let currentFilter = 'semua';
 
-    // === FETCH DATA ===
+    // === MASKING NAMA: "Budi Santoso" → "B***"
+    function maskName(nama) {
+      if (!nama) return 'Anonim';
+      const first = nama.trim().charAt(0).toUpperCase();
+      return first + '***';
+    }
+
+    // === INFER KATEGORI DARI ISI (sederhana)
+    function inferKategori(isi) {
+      isi = isi.toLowerCase();
+      if (isi.includes('dosen') || isi.includes('mengajar') || isi.includes('kuliah') || isi.includes('materi')) return 'dosen';
+      if (isi.includes('tendik') || isi.includes('administrasi') || isi.includes('staff') || isi.includes('pegawai')) return 'tendik';
+      if (isi.includes('fasilitas') || isi.includes('ruang') || isi.includes('ac') || isi.includes('lcd') || isi.includes('wifi') || isi.includes('toilet')) return 'fasilitas';
+      if (isi.includes('kurikulum') || isi.includes('mata kuliah') || isi.includes('mk') || isi.includes('sks') || isi.includes('jadwal')) return 'kurikulum';
+      return 'lainnya';
+    }
+
+    // === LOAD DATA ===
     async function loadData() {
       try {
         const res = await fetch(`${SCRIPT_URL}?action=ambil_data`);
         const data = await res.json();
-        
         if (data.error) throw new Error(data.error);
         
         aspirasiList = data.aspirasi || [];
         komentarList = data.komentar || [];
-        
-        renderAspirasi();
+        renderPosts();
       } catch (err) {
-        document.getElementById('aspirasi-container').innerHTML = 
-          `<div class="card"><div class="status error">❌ Gagal memuat: ${err.message}</div></div>`;
+        document.getElementById('posts-container').innerHTML = 
+          `<div class="status error">❌ Gagal memuat: ${err.message}</div>`;
       }
     }
 
     // === KIRIM ASPIRASI ===
     document.getElementById('form-aspirasi').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const status = document.getElementById('status-aspirasi');
-      const btn = e.submitter;
+      const btn = document.getElementById('btn-submit');
+      const status = document.getElementById('status-form');
       
       btn.disabled = true;
       status.textContent = 'Mengirim…';
       status.className = 'status';
+      status.style.display = 'block';
 
       const params = new URLSearchParams({
         action: 'kirim_aspirasi',
         nama: document.getElementById('nama').value,
         nim: document.getElementById('nim').value,
-        kategori: document.getElementById('kategori').value,
         isi: document.getElementById('isi').value,
-        gambar_url: document.getElementById('gambar_url').value || '',
-        anonymous: document.getElementById('anonymous').checked ? 'true' : 'false'
+        gambar_url: document.getElementById('gambar_url').value || ''
       });
 
       try {
         const res = await fetch(`${SCRIPT_URL}?${params}`);
         const data = await res.json();
-        
         if (data.status === 'success') {
           status.textContent = '✅ Berhasil diposting!';
           status.className = 'status success';
           e.target.reset();
-          document.getElementById('anonymous').checked = false;
           setTimeout(() => status.style.display = 'none', 3000);
-          await loadData(); // refresh
+          await loadData();
         } else {
           throw new Error(data.message);
         }
@@ -324,77 +425,113 @@
       }
     });
 
-    // === KIRIM KOMENTAR ===
-    function kirimKomentar(idAspirasi) {
-      const nama = prompt("Nama Anda:");
-      const nim = prompt("NIM Anda:");
-      const isi = prompt("Tulis komentar:");
-      if (!nama || !nim || !isi) return;
-
-      const anonymous = confirm("Kirim secara anonymous?");
-
-      (async () => {
-        const params = new URLSearchParams({
-          action: 'kirim_komentar',
-          id_aspirasi: idAspirasi,
-          nama,
-          nim,
-          isi,
-          anonymous: anonymous ? 'true' : 'false'
-        });
-
-        try {
-          const res = await fetch(`${SCRIPT_URL}?${params}`);
-          const data = await res.json();
-          if (data.status === 'success') {
-            alert('✅ Komentar berhasil dikirim!');
-            await loadData();
-          } else {
-            alert('❌ Gagal: ' + data.message);
-          }
-        } catch (err) {
-          alert('❌ Error: ' + err.message);
-        }
-      })();
+    // === MODAL ===
+    function openKomentar(idAspirasi) {
+      document.getElementById('modal-id-aspirasi').value = idAspirasi;
+      document.getElementById('modal-nama').value = '';
+      document.getElementById('modal-nim').value = '';
+      document.getElementById('modal-isi').value = '';
+      document.getElementById('status-modal').style.display = 'none';
+      document.getElementById('modal-komentar').style.display = 'block';
     }
 
-    // === RENDER ===
-    function renderAspirasi() {
-      const container = document.getElementById('aspirasi-container');
-      
-      if (aspirasiList.length === 0) {
-        container.innerHTML = `<div class="card"><p class="loading">Belum ada aspirasi.</p></div>`;
+    function closeModal() {
+      document.getElementById('modal-komentar').style.display = 'none';
+    }
+
+    async function submitKomentar() {
+      const idAspirasi = document.getElementById('modal-id-aspirasi').value;
+      const nama = document.getElementById('modal-nama').value.trim();
+      const nim = document.getElementById('modal-nim').value.trim();
+      const isi = document.getElementById('modal-isi').value.trim();
+      const status = document.getElementById('status-modal');
+
+      if (!nama || !nim || !isi) {
+        status.textContent = 'Nama, NIM, dan komentar wajib diisi.';
+        status.className = 'status error';
+        status.style.display = 'block';
         return;
       }
 
-      // Sort terbaru
-      aspirasiList.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+      status.textContent = 'Mengirim…';
+      status.className = 'status';
+      status.style.display = 'block';
 
-      container.innerHTML = aspirasiList.map(aspirasi => {
+      const params = new URLSearchParams({
+        action: 'kirim_komentar',
+        id_aspirasi: idAspirasi,
+        nama,
+        nim,
+        isi
+      });
+
+      try {
+        const res = await fetch(`${SCRIPT_URL}?${params}`);
+        const data = await res.json();
+        if (data.status === 'success') {
+          status.textContent = '✅ Komentar berhasil dikirim!';
+          status.className = 'status success';
+          setTimeout(() => {
+            closeModal();
+            loadData();
+          }, 1500);
+        } else {
+          throw new Error(data.message);
+        }
+      } catch (err) {
+        status.textContent = `❌ ${err.message}`;
+        status.className = 'status error';
+      }
+    }
+
+    // Tutup modal saat klik di luar
+    window.onclick = (e) => {
+      if (e.target === document.getElementById('modal-komentar')) closeModal();
+    };
+
+    // === RENDER POST ===
+    function renderPosts() {
+      const container = document.getElementById('posts-container');
+      let filtered = aspirasiList;
+
+      if (currentFilter !== 'semua') {
+        filtered = aspirasiList.filter(a => inferKategori(a.isi) === currentFilter);
+      }
+
+      filtered.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="empty">Belum ada aspirasi di kategori ini.</div>`;
+        return;
+      }
+
+      container.innerHTML = filtered.map(aspirasi => {
         const waktu = new Date(aspirasi.waktu);
         const tgl = waktu.toLocaleDateString('id-ID');
         const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        const namaTampil = aspirasi.anonymous ? 'Anonim' : aspirasi.nama;
-        const inisial = (namaTampil.charAt(0) || '?').toUpperCase();
+        const namaTampil = maskName(aspirasi.nama);
+        const inisial = namaTampil.charAt(0);
 
-        // Filter komentar untuk aspirasi ini
+        // Ambil komentar untuk aspirasi ini
         const replies = komentarList
           .filter(k => k.id_aspirasi === aspirasi.id)
-          .sort((a, b) => new Date(a.waktu) - new Date(b.waktu));
+          .sort((a, b) => new Date(a.waktu) - new Date(b.waktu))
+          .map(k => ({
+            ...k,
+            namaTampil: maskName(k.nama),
+            inisial: maskName(k.nama).charAt(0)
+          }));
 
-        const repliesHtml = replies.map(k => {
-          const ktgl = new Date(k.waktu).toLocaleDateString('id-ID');
-          const kinisial = (k.anonymous ? '?' : (k.nama.charAt(0) || '?')).toUpperCase();
-          return `
-            <div class="reply">
-              <div class="reply-avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')}">${kinisial}</div>
-              <div class="reply-content">
-                <div><span class="reply-name">${k.anonymous ? 'Anonim' : k.nama}</span> · <span class="reply-meta">${ktgl}</span></div>
-                <div class="reply-text">${k.isi}</div>
-              </div>
+        const repliesHtml = replies.map(k => `
+          <div class="reply">
+            <div class="reply-avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')}">${k.inisial}</div>
+            <div class="reply-content">
+              <div class="reply-name">${k.namaTampil}</div>
+              <div class="reply-meta">${new Date(k.waktu).toLocaleDateString('id-ID')}</div>
+              <div class="reply-text">${k.isi}</div>
             </div>
-          `;
-        }).join('');
+          </div>
+        `).join('');
 
         return `
           <div class="post">
@@ -402,14 +539,14 @@
               <div class="avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')}">${inisial}</div>
               <div class="post-info">
                 <div class="post-name">${namaTampil}</div>
-                <div class="post-meta">${aspirasi.kategori} · ${tgl}, ${jam}</div>
+                <div class="post-meta">${tgl}, ${jam}</div>
               </div>
             </div>
             <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
             ${aspirasi.gambar ? `<img src="${aspirasi.gambar}" class="post-image" onerror="this.style.display='none'">` : ''}
             
             <div class="post-footer">
-              <button class="reply-btn" onclick="kirimKomentar('${aspirasi.id}')">
+              <button class="reply-btn" onclick="openKomentar('${aspirasi.id}')">
                 💬 Balas · ${replies.length}
               </button>
             </div>
@@ -419,6 +556,16 @@
         `;
       }).join('');
     }
+
+    // Filter button
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        currentFilter = btn.dataset.filter;
+        renderPosts();
+      });
+    });
 
     // Mulai
     loadData();
