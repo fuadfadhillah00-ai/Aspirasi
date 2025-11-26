@@ -3,412 +3,425 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>📦 Kotak Aspirasi — FEB UNRI</title>
+  <title>🐦 AspirasiFEB — FEB UNRI</title>
   <style>
     :root {
-      --merah: #c00;
-      --putih: #fff;
-      --hitam: #000;
+      --biru: #1da1f2;
+      --hitam: #0f1419;
+      --abu-bg: #f7f9fa;
+      --abu-border: #ccd6dd;
+      --abu-teks: #536471;
     }
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, sans-serif;
-    }
-    body {
-      background-color: #f8f9fa;
-      color: var(--hitam);
-      line-height: 1.6;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { background: var(--abu-bg); color: var(--hitam); line-height: 1.5; }
     header {
-      background-color: var(--merah);
-      color: var(--putih);
-      padding: 1rem;
-      text-align: center;
+      background: white;
+      border-bottom: 1px solid var(--abu-border);
+      padding: 0.75rem 1rem;
+      position: sticky;
+      top: 0;
+      z-index: 100;
     }
-    nav {
-      background: #eee;
-      padding: 0.8rem;
-      text-align: center;
-    }
-    nav a {
-      margin: 0 1rem;
-      text-decoration: none;
-      color: var(--merah);
-      font-weight: 600;
-    }
-    nav a.active {
-      color: var(--hitam);
-      text-decoration: underline;
+    .logo {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: var(--biru);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
     }
     .container {
-      max-width: 900px;
-      margin: 1.5rem auto;
+      max-width: 700px;
+      margin: 0 auto;
       padding: 0 1rem;
     }
-    .page { display: none; }
-    .page.active { display: block; }
     .card {
-      background: var(--putih);
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      margin-bottom: 1.5rem;
+      background: white;
+      border-radius: 16px;
+      padding: 1.25rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
-    h1, h2 { margin-bottom: 1rem; }
-    h1 { font-size: 1.8rem; }
-    h2 { font-size: 1.5rem; }
-
-    /* Form */
+    h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      font-weight: bold;
+    }
     label {
       display: block;
-      margin: 1rem 0 0.4rem;
+      margin: 0.75rem 0 0.3rem;
+      font-size: 0.9rem;
       font-weight: 600;
     }
     input, textarea, select {
       width: 100%;
       padding: 0.75rem;
-      margin-bottom: 1rem;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      border: 1px solid var(--abu-border);
+      border-radius: 8px;
       font-size: 1rem;
+      background: #f5f8fa;
     }
     .checkbox-group {
       display: flex;
       align-items: center;
-      margin: 1rem 0;
+      margin: 0.75rem 0;
     }
-    .checkbox-group input[type="checkbox"] {
-      width: auto;
-      margin-right: 0.5rem;
-      margin-bottom: 0;
-    }
-    button {
-      background-color: var(--merah);
-      color: var(--putih);
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.2s;
-    }
-    button:hover { background-color: #a00; }
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    /* Daftar Aspirasi */
-    .filters {
+    .checkbox-group input { width: auto; margin-right: 0.5rem; }
+    
+    .post-actions {
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin: 1rem 0;
+      gap: 1rem;
+      margin-top: 1rem;
     }
-    .filters button {
-      background: #eee;
-      color: var(--hitam);
+    .btn {
+      flex: 1;
+      padding: 0.75rem;
+      border: none;
+      border-radius: 8px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.2s;
     }
-    .filters button.active {
-      background: var(--merah);
-      color: var(--putih);
-    }
-    .aspirasi-item {
-      border-left: 4px solid var(--merah);
+    .btn-primary { background: var(--biru); color: white; }
+    .btn-primary:hover { background: #0d8bd9; }
+    .btn-outline { background: transparent; border: 1px solid var(--abu-border); color: var(--hitam); }
+    .btn-outline:hover { background: #f0f3f5; }
+
+    /* Postingan */
+    .post {
+      background: white;
+      border-radius: 16px;
       padding: 1rem;
       margin-bottom: 1rem;
-      background-color: #fafafa;
+      border: 1px solid var(--abu-border);
     }
-    .aspirasi-header {
+    .post-header {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 0.5rem;
+    }
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--biru);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    .post-info {
+      flex: 1;
+    }
+    .post-name {
+      font-weight: bold;
+      font-size: 1rem;
+    }
+    .post-meta {
+      font-size: 0.85rem;
+      color: var(--abu-teks);
+    }
+    .post-content {
+      margin: 0.5rem 0;
+      word-break: break-word;
+    }
+    .post-image {
+      width: 100%;
+      border-radius: 12px;
+      margin: 0.5rem 0;
+      max-height: 500px;
+      object-fit: cover;
+    }
+    .post-footer {
       display: flex;
       justify-content: space-between;
-      font-size: 0.9rem;
-      color: #555;
+      margin-top: 0.75rem;
+      padding-top: 0.75rem;
+      border-top: 1px solid #eee;
     }
-    .aspirasi-kategori {
-      background: var(--merah);
-      color: white;
-      padding: 0.15rem 0.5rem;
-      border-radius: 3px;
+    .reply-btn {
+      color: var(--abu-teks);
+      background: none;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    .reply-btn:hover { color: var(--biru); }
+
+    /* Komentar */
+    .replies {
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 2px solid #f0f3f5;
+    }
+    .reply {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    .reply-avatar { width: 32px; height: 32px; border-radius: 50%; background: #ccc; }
+    .reply-content {
+      flex: 1;
+      background: #f7f9fa;
+      padding: 0.75rem;
+      border-radius: 12px;
+    }
+    .reply-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .reply-meta {
       font-size: 0.8rem;
+      color: var(--abu-teks);
     }
-    .badge-anonim {
-      background: #666;
-      color: white;
-      padding: 0.1rem 0.4rem;
-      border-radius: 3px;
-      font-size: 0.75rem;
-      margin-left: 0.3rem;
+    .reply-text {
+      margin-top: 0.25rem;
+      font-size: 0.95rem;
     }
 
-    /* Status */
     .status {
       padding: 1rem;
-      border-radius: 4px;
+      border-radius: 8px;
       margin: 1rem 0;
       display: none;
     }
     .status.success { display: block; background: #d4edda; color: #155724; }
     .status.error { display: block; background: #f8d7da; color: #721c24; }
 
-    /* Loading & Empty */
-    .loading, .empty {
+    .loading {
       text-align: center;
       padding: 2rem;
-      color: #777;
+      color: var(--abu-teks);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .post-actions { flex-direction: column; }
+      .btn { width: 100%; }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1>📦 Kotak Aspirasi Mahasiswa</h1>
-    <p>Fakultas Ekonomi dan Bisnis — Universitas Riau</p>
+    <div class="logo">
+      <span>🐦</span>
+      <span>AspirasiFEB</span>
+    </div>
   </header>
 
-  <nav id="nav">
-    <a href="#/" id="nav-lihat" class="active">Lihat Aspirasi</a>
-    <a href="#/kirim" id="nav-kirim">Kirim Aspirasi</a>
-  </nav>
-
   <div class="container">
-    <!-- HALAMAN: LIHAT -->
-    <div id="page-lihat" class="page active">
-      <div class="card">
-        <h2>📬 Daftar Aspirasi</h2>
-        <div class="filters">
-          <button class="filter-btn active" data-filter="semua">Semua</button>
-          <button class="filter-btn" data-filter="dosen">Dosen</button>
-          <button class="filter-btn" data-filter="tendik">Tendik</button>
-          <button class="filter-btn" data-filter="fasilitas">Fasilitas</button>
-          <button class="filter-btn" data-filter="kurikulum">Kurikulum</button>
-          <button class="filter-btn" data-filter="lainnya">Lainnya</button>
+    <!-- Form Kirim Aspirasi -->
+    <div class="card">
+      <h2>Apa aspirasimu hari ini?</h2>
+      <form id="form-aspirasi">
+        <label for="nama">Nama</label>
+        <input type="text" id="nama" required placeholder="Contoh: Budi Santoso">
+
+        <label for="nim">NIM</label>
+        <input type="text" id="nim" required placeholder="123456789">
+
+        <label for="kategori">Kategori</label>
+        <select id="kategori">
+          <option value="dosen">Dosen</option>
+          <option value="tendik">Tendik</option>
+          <option value="fasilitas">Fasilitas</option>
+          <option value="kurikulum">Kurikulum</option>
+          <option value="lainnya">Lainnya</option>
+        </select>
+
+        <label for="isi">Aspirasi</label>
+        <textarea id="isi" rows="3" required placeholder="Ceritakan aspirasimu..."></textarea>
+
+        <label for="gambar_url">URL Gambar (opsional)</label>
+        <input type="url" id="gambar_url" placeholder="https://i.imgur.com/abc.jpg">
+
+        <div class="checkbox-group">
+          <input type="checkbox" id="anonymous">
+          <label for="anonymous" style="font-weight: normal;">Kirim secara anonymous</label>
         </div>
 
-        <div id="aspirasi-container">
-          <div class="loading">Memuat data dari spreadsheet…</div>
+        <div class="post-actions">
+          <button type="button" class="btn btn-outline" onclick="location.reload()">Batal</button>
+          <button type="submit" class="btn btn-primary">Posting</button>
         </div>
-      </div>
+      </form>
+      <div id="status-aspirasi" class="status"></div>
     </div>
 
-    <!-- HALAMAN: KIRIM -->
-    <div id="page-kirim" class="page">
-      <div class="card">
-        <h2>📨 Kirim Aspirasi</h2>
-        <form id="form-aspirasi">
-          <label for="nama">Nama Lengkap</label>
-          <input type="text" id="nama" required placeholder="Contoh: Ahmad Fauzi">
-
-          <label for="nim">NIM</label>
-          <input type="text" id="nim" required placeholder="Contoh: 123456789">
-
-          <label for="kategori">Kategori Aspirasi</label>
-          <select id="kategori" required>
-            <option value="">— Pilih —</option>
-            <option value="dosen">Dosen</option>
-            <option value="tendik">Tenaga Kependidikan (Tendik)</option>
-            <option value="fasilitas">Fasilitas Kampus</option>
-            <option value="kurikulum">Kurikulum & Akademik</option>
-            <option value="lainnya">Lainnya</option>
-          </select>
-
-          <label for="isi">Isi Aspirasi</label>
-          <textarea id="isi" rows="6" required placeholder="Tulis aspirasimu di sini..."></textarea>
-
-          <div class="checkbox-group">
-            <input type="checkbox" id="anonymous">
-            <label for="anonymous" style="display:inline;font-weight:normal;">
-              Kirim secara <strong>anonymous</strong> (nama & NIM tidak ditampilkan publik)
-            </label>
-          </div>
-
-          <button type="submit" id="submit-btn">Kirim Aspirasi</button>
-        </form>
-
-        <div id="status" class="status"></div>
-      </div>
+    <!-- Daftar Aspirasi -->
+    <div id="aspirasi-container">
+      <div class="loading">Memuat aspirasi…</div>
     </div>
   </div>
 
   <script>
-    // === KONFIGURASI (SUDAH DIISI SESUAI MILIKMU) ===
+    // === CONFIG ===
     const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec";
-    const SPREADSHEET_ID = "18NOJRSCqMbQYQ_gmZZnfmdJw0HSvgcMdePseilG2bGE";
-    const SHEET_NAME = "Sheet1";
+    let aspirasiList = [];
+    let komentarList = [];
 
-    // === STATE ===
-    let currentRoute = '/';
-    let aspirasiData = [];
-    let currentFilter = 'semua';
-
-    // === ROUTING ===
-    function navigate(path) {
-      history.pushState({ path }, '', path);
-      renderRoute(path);
-    }
-
-    function renderRoute(path) {
-      currentRoute = path || '/';
-      document.querySelectorAll('#nav a').forEach(a => a.classList.remove('active'));
-      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-
-      if (path === '/' || path === '#/' || path === '' || path === '#') {
-        document.getElementById('nav-lihat').classList.add('active');
-        document.getElementById('page-lihat').classList.add('active');
-        if (aspirasiData.length === 0) {
-          fetchData();
-        } else {
-          renderAspirasi(currentFilter);
-        }
-      } else if (path.includes('/kirim')) {
-        document.getElementById('nav-kirim').classList.add('active');
-        document.getElementById('page-kirim').classList.add('active');
+    // === FETCH DATA ===
+    async function loadData() {
+      try {
+        const res = await fetch(`${SCRIPT_URL}?action=ambil_data`);
+        const data = await res.json();
+        
+        if (data.error) throw new Error(data.error);
+        
+        aspirasiList = data.aspirasi || [];
+        komentarList = data.komentar || [];
+        
+        renderAspirasi();
+      } catch (err) {
+        document.getElementById('aspirasi-container').innerHTML = 
+          `<div class="card"><div class="status error">❌ Gagal memuat: ${err.message}</div></div>`;
       }
     }
 
-    window.addEventListener('popstate', () => renderRoute(location.hash || '/'));
-    document.getElementById('nav-lihat').addEventListener('click', e => { e.preventDefault(); navigate('/'); });
-    document.getElementById('nav-kirim').addEventListener('click', e => { e.preventDefault(); navigate('/kirim'); });
-
-    // === KIRIM DATA ===
-    document.getElementById('form-aspirasi').addEventListener('submit', async function(e) {
+    // === KIRIM ASPIRASI ===
+    document.getElementById('form-aspirasi').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const btn = document.getElementById('submit-btn');
-      const statusDiv = document.getElementById('status');
-
+      const status = document.getElementById('status-aspirasi');
+      const btn = e.submitter;
+      
       btn.disabled = true;
-      statusDiv.textContent = 'Mengirim…';
-      statusDiv.className = 'status';
+      status.textContent = 'Mengirim…';
+      status.className = 'status';
 
-      const data = {
-        nama: document.getElementById('nama').value.trim(),
-        nim: document.getElementById('nim').value.trim(),
+      const params = new URLSearchParams({
+        action: 'kirim_aspirasi',
+        nama: document.getElementById('nama').value,
+        nim: document.getElementById('nim').value,
         kategori: document.getElementById('kategori').value,
-        isi: document.getElementById('isi').value.trim(),
-        anonymous: document.getElementById('anonymous').checked
-      };
+        isi: document.getElementById('isi').value,
+        gambar_url: document.getElementById('gambar_url').value || '',
+        anonymous: document.getElementById('anonymous').checked ? 'true' : 'false'
+      });
 
       try {
-        const response = await fetch(SCRIPT_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-
-        const result = await response.json();
-
-        if (result.status === 'success') {
-          statusDiv.textContent = '✅ Aspirasi berhasil dikirim! Terima kasih.';
-          statusDiv.className = 'status success';
-          this.reset();
+        const res = await fetch(`${SCRIPT_URL}?${params}`);
+        const data = await res.json();
+        
+        if (data.status === 'success') {
+          status.textContent = '✅ Berhasil diposting!';
+          status.className = 'status success';
+          e.target.reset();
           document.getElementById('anonymous').checked = false;
+          setTimeout(() => status.style.display = 'none', 3000);
+          await loadData(); // refresh
         } else {
-          throw new Error(result.message || 'Gagal mengirim.');
+          throw new Error(data.message);
         }
       } catch (err) {
-        statusDiv.textContent = `❌ Gagal: ${err.message}`;
-        statusDiv.className = 'status error';
+        status.textContent = `❌ ${err.message}`;
+        status.className = 'status error';
       } finally {
         btn.disabled = false;
       }
     });
 
-    // === BACA DATA DARI SPREADSHEET ===
-    async function fetchData() {
-      const container = document.getElementById('aspirasi-container');
-      container.innerHTML = '<div class="loading">Memuat data dari spreadsheet…</div>';
+    // === KIRIM KOMENTAR ===
+    function kirimKomentar(idAspirasi) {
+      const nama = prompt("Nama Anda:");
+      const nim = prompt("NIM Anda:");
+      const isi = prompt("Tulis komentar:");
+      if (!nama || !nim || !isi) return;
 
-      try {
-        const url = `https://docs.google.com/spreadsheets/d/${SPREADSHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
-        const response = await fetch(url);
-        const csvText = await response.text();
+      const anonymous = confirm("Kirim secara anonymous?");
 
-        const rows = csvText.trim()
-          .split('\n')
-          .map(row => 
-            row.split(',').map(cell => 
-              cell.startsWith('"') && cell.endsWith('"') 
-                ? cell.slice(1, -1).replace(/""/g, '"')
-                : cell
-            )
-          );
+      (async () => {
+        const params = new URLSearchParams({
+          action: 'kirim_komentar',
+          id_aspirasi: idAspirasi,
+          nama,
+          nim,
+          isi,
+          anonymous: anonymous ? 'true' : 'false'
+        });
 
-        const aspirasiList = [];
-        for (let i = 1; i < rows.length; i++) {
-          const [ts, nama, nim, kategori, isi, anon] = rows[i];
-          if (!ts || !isi) continue;
-
-          const date = new Date(ts);
-          if (isNaN(date)) continue;
-
-          aspirasiList.push({
-            timestamp: date,
-            nama: nama || '',
-            nim: nim || '',
-            kategori: (kategori || 'lainnya').toLowerCase(),
-            isi: isi || '',
-            anonymous: (anon || '').trim().toLowerCase() === 'ya'
-          });
+        try {
+          const res = await fetch(`${SCRIPT_URL}?${params}`);
+          const data = await res.json();
+          if (data.status === 'success') {
+            alert('✅ Komentar berhasil dikirim!');
+            await loadData();
+          } else {
+            alert('❌ Gagal: ' + data.message);
+          }
+        } catch (err) {
+          alert('❌ Error: ' + err.message);
         }
-
-        aspirasiData = aspirasiList;
-        renderAspirasi(currentFilter);
-      } catch (err) {
-        container.innerHTML = `<div class="empty">❌ Gagal memuat data.<br>Pastikan spreadsheet:<br>• Di-set sebagai 'Siapa saja dengan link'<br>• Sheet bernama 'Sheet1'</div>`;
-        console.error('[Fetch Error]', err);
-      }
+      })();
     }
 
-    function renderAspirasi(filter) {
-      currentFilter = filter;
+    // === RENDER ===
+    function renderAspirasi() {
       const container = document.getElementById('aspirasi-container');
-      let filtered = filter === 'semua' 
-        ? [...aspirasiData] 
-        : aspirasiData.filter(item => item.kategori === filter);
-
-      filtered.sort((a, b) => b.timestamp - a.timestamp);
-
-      if (filtered.length === 0) {
-        container.innerHTML = `<div class="empty">Belum ada aspirasi di kategori ini.</div>`;
+      
+      if (aspirasiList.length === 0) {
+        container.innerHTML = `<div class="card"><p class="loading">Belum ada aspirasi.</p></div>`;
         return;
       }
 
-      container.innerHTML = filtered.map(item => {
-        const tgl = item.timestamp.toLocaleDateString('id-ID');
-        const jam = item.timestamp.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-        let namaTampil = item.anonymous ? '👤 Anonim' : `${item.nama} (${item.nim})`;
-        if (item.anonymous) namaTampil += ` <span class="badge-anonim">anonim</span>`;
+      // Sort terbaru
+      aspirasiList.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
 
-        let kategoriLabel = item.kategori;
-        if (item.kategori === 'tendik') kategoriLabel = 'Tenaga Kependidikan';
-        else if (item.kategori === 'fasilitas') kategoriLabel = 'Fasilitas';
-        else kategoriLabel = kategoriLabel.charAt(0).toUpperCase() + kategoriLabel.slice(1);
+      container.innerHTML = aspirasiList.map(aspirasi => {
+        const waktu = new Date(aspirasi.waktu);
+        const tgl = waktu.toLocaleDateString('id-ID');
+        const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const namaTampil = aspirasi.anonymous ? 'Anonim' : aspirasi.nama;
+        const inisial = (namaTampil.charAt(0) || '?').toUpperCase();
+
+        // Filter komentar untuk aspirasi ini
+        const replies = komentarList
+          .filter(k => k.id_aspirasi === aspirasi.id)
+          .sort((a, b) => new Date(a.waktu) - new Date(b.waktu));
+
+        const repliesHtml = replies.map(k => {
+          const ktgl = new Date(k.waktu).toLocaleDateString('id-ID');
+          const kinisial = (k.anonymous ? '?' : (k.nama.charAt(0) || '?')).toUpperCase();
+          return `
+            <div class="reply">
+              <div class="reply-avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')}">${kinisial}</div>
+              <div class="reply-content">
+                <div><span class="reply-name">${k.anonymous ? 'Anonim' : k.nama}</span> · <span class="reply-meta">${ktgl}</span></div>
+                <div class="reply-text">${k.isi}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
 
         return `
-          <div class="aspirasi-item">
-            <div class="aspirasi-header">
-              <strong>${namaTampil}</strong>
-              <span>${tgl}, ${jam}</span>
+          <div class="post">
+            <div class="post-header">
+              <div class="avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6,'0')}">${inisial}</div>
+              <div class="post-info">
+                <div class="post-name">${namaTampil}</div>
+                <div class="post-meta">${aspirasi.kategori} · ${tgl}, ${jam}</div>
+              </div>
             </div>
-            <div class="aspirasi-kategori">${kategoriLabel}</div>
-            <p>${item.isi.replace(/\n/g, '<br>')}</p>
+            <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
+            ${aspirasi.gambar ? `<img src="${aspirasi.gambar}" class="post-image" onerror="this.style.display='none'">` : ''}
+            
+            <div class="post-footer">
+              <button class="reply-btn" onclick="kirimKomentar('${aspirasi.id}')">
+                💬 Balas · ${replies.length}
+              </button>
+            </div>
+
+            ${replies.length > 0 ? `<div class="replies">${repliesHtml}</div>` : ''}
           </div>
         `;
       }).join('');
     }
 
-    // Filter buttons
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-      btn.addEventListener('click', function() {
-        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-        this.classList.add('active');
-        renderAspirasi(this.dataset.filter);
-      });
-    });
-
     // Mulai
-    renderRoute(location.hash || '/');
+    loadData();
   </script>
 </body>
 </html>
