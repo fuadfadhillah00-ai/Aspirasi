@@ -84,6 +84,7 @@
       padding: 1.5rem;
       margin: 0.5rem 0;
       cursor: pointer;
+      position: relative;
     }
     .btn-outline:hover { background: #f9f9f9; }
     .upload-preview {
@@ -456,74 +457,88 @@
       }
     }
 
-    // === UPLOAD GAMBAR VIA IMGBB ===
-    async function uploadImage(file) {
-      const formData = new FormData();
-      formData.append('image', file);
-
-      // Gunakan proxy CORS (public imgbb upload via fetch)
-      const proxyUrl = 'https://api.imgbb.com/1/upload?key=8b1e6c8b4f4d5b0b3b6f0b3a5d8c7e6f&expiration=600'; // API key publik demo (ganti dengan milikmu)
-      
-      try {
-        const res = await fetch(proxyUrl, {
-          method: 'POST',
-          body: formData
-        });
-        const data = await res.json();
-        if (data.success) {
-          return data.data.url;
-        } else {
-          throw new Error(data.error.message || 'Upload gagal');
-        }
-      } catch (err) {
-        throw new Error('Gagal upload gambar. Coba lagi.');
-      }
+    // === UPLOAD GAMBAR: BASE64 (no external API) ===
+    function getBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+      });
     }
 
-    // === UPLOAD UI ===
+    // === UPLOAD UI (perbaikan drag & drop) ===
     const uploadArea = document.getElementById('upload-area');
     const fileInput = document.getElementById('file-input');
     const preview = document.getElementById('preview');
 
     uploadArea.addEventListener('click', () => fileInput.click());
-    uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.style.borderColor = var('--biru');
+
+    // Drag & Drop: cegah aksi default browser
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, preventDefaults, false);
     });
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.style.borderColor = '';
-    });
-    uploadArea.addEventListener('drop', (e) => {
+
+    function preventDefaults(e) {
       e.preventDefault();
+      e.stopPropagation();
+    }
+
+    ['dragenter', 'dragover'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, highlight, false);
+    });
+
+    ['dragleave', 'drop'].forEach(eventName => {
+      uploadArea.addEventListener(eventName, unhighlight, false);
+    });
+
+    function highlight() {
+      uploadArea.style.borderColor = '#1da1f2';
+      uploadArea.style.backgroundColor = '#f0f9ff';
+    }
+
+    function unhighlight() {
       uploadArea.style.borderColor = '';
-      if (e.dataTransfer.files.length) {
-        fileInput.files = e.dataTransfer.files;
+      uploadArea.style.backgroundColor = '';
+    }
+
+    uploadArea.addEventListener('drop', handleDrop, false);
+
+    function handleDrop(e) {
+      const dt = e.dataTransfer;
+      const files = dt.files;
+      if (files.length) {
+        fileInput.files = files;
         handleFileSelect();
       }
-    });
+    }
 
     fileInput.addEventListener('change', handleFileSelect);
 
-    function handleFileSelect() {
+    async function handleFileSelect() {
       const file = fileInput.files[0];
       if (!file) return;
       
       if (!file.type.match('image.*')) {
-        alert('Hanya file gambar yang diizinkan.');
+        alert('❌ Hanya file gambar (JPG, PNG, GIF) yang diizinkan.');
+        fileInput.value = '';
         return;
       }
 
       if (file.size > 5 * 1024 * 1024) {
-        alert('Ukuran gambar maksimal 5 MB.');
+        alert('❌ Ukuran gambar maksimal 5 MB.');
+        fileInput.value = '';
         return;
       }
 
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        preview.src = e.target.result;
+      try {
+        const base64 = await getBase64(file);
+        preview.src = base64;
         preview.style.display = 'block';
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        alert('❌ Gagal memuat gambar.');
+        console.error(err);
+      }
     }
 
     // === KIRIM ASPIRASI ===
@@ -533,19 +548,24 @@
       const status = document.getElementById('status-form');
       
       btn.disabled = true;
-      status.textContent = 'Mengirim…';
+      status.textContent = '📤 Mengirim…';
       status.className = 'status';
       status.style.display = 'block';
 
-      let gambarUrl = '';
+      let gambarData = '';
       const file = fileInput.files[0];
 
       if (file) {
-        status.textContent = '🔄 Mengupload gambar…';
+        status.textContent = '🖼️ Memproses gambar…';
         try {
-          gambarUrl = await uploadImage(file);
+          gambarData = await getBase64(file);
+          // Batasi panjang (Google Sheets punya limit ~50KB per cell)
+          if (gambarData.length > 50000) {
+            status.textContent = '⚠️ Gambar terlalu besar. Akan dikirim tanpa gambar.';
+            gambarData = '';
+          }
         } catch (err) {
-          status.textContent = `❌ ${err.message}`;
+          status.textContent = `❌ Gagal proses gambar: ${err.message}`;
           status.className = 'status error';
           btn.disabled = false;
           return;
@@ -554,10 +574,10 @@
 
       const params = new URLSearchParams({
         action: 'kirim_aspirasi',
-        nama: document.getElementById('nama').value,
-        nim: document.getElementById('nim').value,
-        isi: document.getElementById('isi').value,
-        gambar_url: gambarUrl
+        nama: document.getElementById('nama').value.trim(),
+        nim: document.getElementById('nim').value.trim(),
+        isi: document.getElementById('isi').value.trim(),
+        gambar_url: gambarData
       });
 
       try {
@@ -566,12 +586,14 @@
         if (data.status === 'success') {
           status.textContent = '✅ Berhasil diposting!';
           status.className = 'status success';
-          e.target.reset();
+          // Reset form
+          document.getElementById('form-aspirasi').reset();
+          fileInput.value = '';
           preview.style.display = 'none';
-          setTimeout(() => status.style.display = 'none', 3000);
+          setTimeout(() => status.style.display = 'none', 2000);
           await loadData();
         } else {
-          throw new Error(data.message);
+          throw new Error(data.message || 'Server error');
         }
       } catch (err) {
         status.textContent = `❌ ${err.message}`;
@@ -603,13 +625,13 @@
       const status = document.getElementById('status-modal');
 
       if (!nama || !nim || !isi) {
-        status.textContent = 'Nama, NIM, dan komentar wajib diisi.';
+        status.textContent = '⚠️ Nama, NIM, dan komentar wajib diisi.';
         status.className = 'status error';
         status.style.display = 'block';
         return;
       }
 
-      status.textContent = 'Mengirim…';
+      status.textContent = '📤 Mengirim komentar…';
       status.className = 'status';
       status.style.display = 'block';
 
@@ -632,7 +654,7 @@
             loadData();
           }, 1500);
         } else {
-          throw new Error(data.message);
+          throw new Error(data.message || 'Gagal mengirim komentar');
         }
       } catch (err) {
         status.textContent = `❌ ${err.message}`;
@@ -726,6 +748,9 @@
           </div>
         `).join('');
 
+        // Potong base64 jika terlalu panjang untuk preview (opsional)
+        const gambar = aspirasi.gambar && aspirasi.gambar.length < 10000 ? aspirasi.gambar : '';
+
         return `
           <div class="post">
             <div class="post-header">
@@ -738,7 +763,7 @@
               </div>
             </div>
             <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
-            ${aspirasi.gambar ? `<img src="${aspirasi.gambar}" class="post-image" onerror="this.style.display='none'">` : ''}
+            ${gambar ? `<img src="${gambar}" class="post-image" onerror="this.style.display='none'">` : ''}
             
             <div class="post-footer">
               <button class="reply-btn" onclick="openKomentar('${aspirasi.id}')">
