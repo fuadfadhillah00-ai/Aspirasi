@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>🐦 AspirasiFEB — FEB UNRI</title>
     <style>
+      /* CSS SAMA DENGAN SEBELUMNYA - TIDAK BERUBAH */
       :root {
         --biru: #1da1f2;
         --hitam: #0f1419;
@@ -14,7 +15,6 @@
       }
       * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
       body { background: var(--abu-bg); color: var(--hitam); display: flex; min-height: 100vh; }
-
       .panel-left {
         width: 400px; background: white; border-right: 1px solid var(--abu-border); padding: 1.5rem; overflow-y: auto;
         position: fixed; height: 100vh;
@@ -74,7 +74,6 @@
         display: none;
         border: 1px solid var(--abu-border);
       }
-
       .panel-right { 
         flex: 1; 
         margin-left: 400px;
@@ -109,7 +108,6 @@
       .filter-btn:hover:not(.active) {
         background: #f0f0f0;
       }
-
       .post { 
         background: white; 
         border-radius: 16px; 
@@ -179,7 +177,6 @@
         color: var(--biru); 
         background: #f0f8ff;
       }
-
       .reply-form-container { 
         margin-top: 1rem; 
         padding: 1rem; 
@@ -224,7 +221,6 @@
         border-radius: 16px;
         margin: 1rem 0;
       }
-      
       .reply { 
         display: flex; 
         gap: 0.75rem; 
@@ -257,7 +253,6 @@
         padding-top: 1rem; 
         border-top: 1px solid #f0f0f0; 
       }
-
       @media (max-width: 768px) {
         body { flex-direction: column; }
         .panel-left { 
@@ -311,13 +306,12 @@
     </div>
 
     <script>
-        // Konfigurasi - URL Web App Google Apps Script
-        const API_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
+        // === GANTI DENGAN URL BARU DARI GAS SETELAH DEPLOY ===
+        const API_URL = 'https://script.google.com/macros/s/REPLACE_WITH_YOUR_NEW_URL/exec';
 
         // State aplikasi
         let currentData = { aspirasi: [], komentar: [] };
         let currentFilter = 'semua';
-        let currentFileInput = null;
 
         // Fungsi untuk menampilkan status
         function showStatus(message, type = 'success') {
@@ -338,7 +332,6 @@
             try {
                 document.getElementById('posts-container').innerHTML = '<div class="loading">Memuat data...</div>';
                 
-                // Gunakan timestamp untuk menghindari cache
                 const timestamp = new Date().getTime();
                 
                 // Buat callback function global untuk JSONP
@@ -349,11 +342,11 @@
                         oldScript.remove();
                     }
                     
-                    if (data.success) {
+                    if (data && data.success) {
                         currentData = data;
                         renderPosts();
                     } else {
-                        throw new Error(data.error || 'Gagal memuat data');
+                        throw new Error(data?.error || 'Gagal memuat data');
                     }
                 };
                 
@@ -364,8 +357,8 @@
                 script.onerror = function() {
                     console.error('JSONP request failed');
                     document.getElementById('posts-container').innerHTML = 
-                        '<div class="empty">Gagal terhubung ke server. Silakan refresh halaman.</div>';
-                    showStatus('Gagal terhubung ke server', 'error');
+                        '<div class="empty">Gagal terhubung ke server. Pastikan URL API benar.</div>';
+                    showStatus('Gagal terhubung ke server. Periksa URL API.', 'error');
                 };
                 
                 document.head.appendChild(script);
@@ -385,6 +378,7 @@
 
         // Fungsi untuk menentukan kategori
         function inferKategori(isi) {
+            if (!isi) return 'lainnya';
             isi = isi.toLowerCase();
             if (isi.includes('dosen') || isi.includes('mengajar')) return 'dosen';
             if (isi.includes('tendik') || isi.includes('administrasi')) return 'tendik';
@@ -396,6 +390,11 @@
         function renderPosts() {
             const container = document.getElementById('posts-container');
             
+            if (!currentData.aspirasi || currentData.aspirasi.length === 0) {
+                container.innerHTML = '<div class="empty">Belum ada aspirasi.</div>';
+                return;
+            }
+
             // Filter aspirasi berdasarkan kategori
             let filteredAspirasi = currentData.aspirasi;
             if (currentFilter !== 'semua') {
@@ -403,7 +402,7 @@
             }
 
             if (filteredAspirasi.length === 0) {
-                container.innerHTML = '<div class="empty">Belum ada aspirasi.</div>';
+                container.innerHTML = '<div class="empty">Belum ada aspirasi untuk kategori ini.</div>';
                 return;
             }
 
@@ -421,7 +420,7 @@
                 }[inferKategori(aspirasi.isi)];
 
                 // Filter komentar untuk aspirasi ini
-                const replies = currentData.komentar
+                const replies = (currentData.komentar || [])
                     .filter(k => k.id_aspirasi === aspirasi.id)
                     .map(k => ({ 
                         ...k, 
@@ -442,7 +441,7 @@
                 `).join('');
 
                 // Format isi aspirasi
-                const safeIsi = aspirasi.isi.replace(/\n/g, '<br>');
+                const safeIsi = (aspirasi.isi || '').replace(/\n/g, '<br>');
                 
                 // Handling gambar
                 let imageHtml = '';
@@ -495,11 +494,11 @@
         // Fungsi untuk toggle form komentar
         function toggleReplyForm(id) {
             const formContainer = document.getElementById('reply-form-' + id);
-            if (formContainer.style.display === 'none' || formContainer.style.display === '') {
-                formContainer.style.display = 'block';
-                formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-                formContainer.style.display = 'none';
+            if (formContainer) {
+                formContainer.style.display = formContainer.style.display === 'none' ? 'block' : 'none';
+                if (formContainer.style.display === 'block') {
+                    formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }
             }
         }
 
@@ -539,6 +538,11 @@
         // Fungsi untuk mengompresi dan mendapatkan base64
         function compressAndGetBase64(file) {
             return new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve('');
+                    return;
+                }
+                
                 const img = new Image();
                 const reader = new FileReader();
                 reader.onload = () => {
@@ -568,26 +572,15 @@
             });
         }
 
-        // Fungsi untuk mendapatkan file input dengan aman
-        function getFileInput() {
-            if (!currentFileInput) {
-                currentFileInput = document.getElementById('file-input');
-            }
-            return currentFileInput;
-        }
-
         // Fungsi untuk submit aspirasi menggunakan JSONP
-        function submitAspirasi(event) {
+        async function submitAspirasi(event) {
             event.preventDefault();
             
-            const form = event.target;
             const nama = document.getElementById('nama').value.trim();
             const nim = document.getElementById('nim').value.trim();
             const isi = document.getElementById('isi').value.trim();
-            
-            // Dapatkan file input dengan aman
-            const fileInput = getFileInput();
-            const file = fileInput ? fileInput.files[0] : null;
+            const fileInput = document.getElementById('file-input');
+            const file = fileInput?.files[0];
             
             if (!validateForm(nama, nim, isi)) {
                 return;
@@ -598,26 +591,12 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
 
-            // Handle file upload jika ada
-            if (file) {
-                compressAndGetBase64(file)
-                    .then(base64Image => {
-                        submitAspirasiData(nama, nim, isi, base64Image, submitBtn, originalText, form);
-                    })
-                    .catch(error => {
-                        console.error('Error compressing image:', error);
-                        showStatus('Gagal memproses gambar: ' + error.message, 'error');
-                        submitBtn.disabled = false;
-                        submitBtn.textContent = originalText;
-                    });
-            } else {
-                submitAspirasiData(nama, nim, isi, '', submitBtn, originalText, form);
-            }
-        }
-
-        // Fungsi helper untuk submit aspirasi data
-        function submitAspirasiData(nama, nim, isi, base64Image, submitBtn, originalText, form) {
             try {
+                let base64Image = '';
+                if (file) {
+                    base64Image = await compressAndGetBase64(file);
+                }
+
                 // Buat callback function global untuk JSONP submit
                 window.handleJsonpSubmit = function(result) {
                     // Hapus script element setelah digunakan
@@ -626,17 +605,21 @@
                         oldScript.remove();
                     }
                     
-                    if (result.success) {
+                    if (result && result.success) {
                         showStatus(result.message, 'success');
                         // Reset form
                         document.getElementById('nama').value = '';
                         document.getElementById('nim').value = '';
                         document.getElementById('isi').value = '';
                         document.getElementById('preview').style.display = 'none';
-                        resetUploadArea();
+                        if (fileInput) fileInput.value = '';
+                        document.getElementById('upload-area').innerHTML = 
+                            '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+                        // Re-initialize file input
+                        initFileInput();
                         loadData(); // Reload data
                     } else {
-                        throw new Error(result.error);
+                        throw new Error(result?.error || 'Gagal mengirim aspirasi');
                     }
                     
                     submitBtn.disabled = false;
@@ -660,7 +643,7 @@
                 script.src = `${API_URL}?${params.toString()}`;
                 script.onerror = function() {
                     console.error('JSONP submit request failed');
-                    showStatus('Gagal mengirim aspirasi. Periksa koneksi internet.', 'error');
+                    showStatus('Gagal mengirim aspirasi. Periksa koneksi internet dan URL API.', 'error');
                     submitBtn.disabled = false;
                     submitBtn.textContent = originalText;
                 };
@@ -672,21 +655,6 @@
                 showStatus('Gagal mengirim aspirasi: ' + error.message, 'error');
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
-            }
-        }
-
-        // Fungsi untuk reset upload area
-        function resetUploadArea() {
-            const uploadArea = document.getElementById('upload-area');
-            uploadArea.innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
-            
-            // Re-initialize event listeners untuk file input baru
-            const newFileInput = document.getElementById('file-input');
-            if (newFileInput) {
-                newFileInput.addEventListener('change', function() {
-                    handleFileSelect(this);
-                });
-                currentFileInput = newFileInput;
             }
         }
 
@@ -717,13 +685,13 @@
                         oldScript.remove();
                     }
                     
-                    if (result.success) {
+                    if (result && result.success) {
                         showStatus(result.message, 'success');
                         form.reset();
                         toggleReplyForm(idAspirasi);
                         loadData(); // Reload data
                     } else {
-                        throw new Error(result.error);
+                        throw new Error(result?.error || 'Gagal mengirim komentar');
                     }
                     
                     submitBtn.disabled = false;
@@ -775,61 +743,45 @@
                 alert('File bukan gambar atau melebihi 5 MB.');
                 input.value = '';
                 document.getElementById('preview').style.display = 'none';
-                resetUploadArea();
+                document.getElementById('upload-area').innerHTML = 
+                    '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+                initFileInput();
             }
         }
 
-        // Initialize event listeners
-        function initEventListeners() {
-            // Form aspirasi
-            document.getElementById('form-aspirasi').addEventListener('submit', submitAspirasi);
-            
-            // File upload
+        // Initialize file input
+        function initFileInput() {
+            const fileInput = document.getElementById('file-input');
             const uploadArea = document.getElementById('upload-area');
-            const fileInput = getFileInput();
-            
-            // Drag & Drop functionality
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-                uploadArea.addEventListener(e, preventDefaults, false);
-            });
-            
-            function preventDefaults(e) {
-                e.preventDefault();
-                e.stopPropagation();
-            }
-            
-            ['dragenter', 'dragover'].forEach(e => {
-                uploadArea.addEventListener(e, () => uploadArea.style.borderColor = '#1da1f2', false);
-            });
-            
-            ['dragleave', 'drop'].forEach(e => {
-                uploadArea.addEventListener(e, () => uploadArea.style.borderColor = '', false);
-            });
-            
-            uploadArea.addEventListener('drop', e => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                if (fileInput) {
-                    fileInput.files = files;
-                    handleFileSelect(fileInput);
-                }
-            });
-            
-            uploadArea.addEventListener('click', () => {
-                if (fileInput) {
-                    fileInput.click();
-                }
-            });
             
             if (fileInput) {
                 fileInput.addEventListener('change', function() {
                     handleFileSelect(this);
                 });
             }
+            
+            if (uploadArea) {
+                uploadArea.addEventListener('click', () => {
+                    if (fileInput) fileInput.click();
+                });
+            }
+        }
+
+        // Initialize event listeners
+        function initEventListeners() {
+            // Form aspirasi
+            const formAspirasi = document.getElementById('form-aspirasi');
+            if (formAspirasi) {
+                formAspirasi.addEventListener('submit', submitAspirasi);
+            }
+            
+            // File upload
+            initFileInput();
         }
 
         // Initialize app
         document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing AspirasiFEB app...');
             initEventListeners();
             loadData();
             
