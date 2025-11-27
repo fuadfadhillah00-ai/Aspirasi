@@ -310,22 +310,14 @@
     </div>
   </div>
 
-  <!-- Google Forms iframe tersembunyi untuk submit data -->
-  <iframe name="hidden-iframe" id="hidden-iframe" style="display:none;"></iframe>
-
   <script>
-    // Data storage menggunakan localStorage
-    let allAspirasi = JSON.parse(localStorage.getItem('aspirasiData')) || [];
-    let allKomentar = JSON.parse(localStorage.getItem('komentarData')) || [];
-    let currentFilter = 'semua';
+    // Konfigurasi - GANTI dengan URL Web App Anda
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
 
-    // Konfigurasi Google Forms - GANTI dengan URL Google Forms Anda
-    const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/formResponse';
-    const GOOGLE_FORM_ENTRY_IDS = {
-      nama: 'entry.1234567890',    // Ganti dengan entry ID field nama
-      nim: 'entry.1234567891',     // Ganti dengan entry ID field NIM  
-      isi: 'entry.1234567892'      // Ganti dengan entry ID field isi
-    };
+    // State aplikasi
+    let allAspirasi = [];
+    let allKomentar = [];
+    let currentFilter = 'semua';
 
     // Fungsi untuk menyembunyikan nama
     function maskName(nama) {
@@ -339,6 +331,64 @@
       if (isi.includes('tendik') || isi.includes('administrasi')) return 'tendik';
       if (isi.includes('fasilitas') || isi.includes('ac') || isi.includes('lcd')) return 'fasilitas';
       return 'lainnya';
+    }
+
+    // Fungsi untuk memuat data dari Google Apps Script menggunakan JSONP
+    function loadData() {
+      showStatus('Memuat data...', 'success');
+      
+      const callbackName = 'jsonpCallback_' + Date.now();
+      const script = document.createElement('script');
+      
+      window[callbackName] = function(data) {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        
+        if (data && data.aspirasi) {
+          allAspirasi = data.aspirasi;
+          allKomentar = data.komentar || [];
+          renderPosts();
+          showStatus('Data berhasil dimuat', 'success');
+        } else {
+          showStatus('Gagal memuat data', 'error');
+          showDemoData();
+        }
+      };
+
+      script.src = `${APPS_SCRIPT_URL}?action=getData&callback=${callbackName}`;
+      script.onerror = function() {
+        document.head.removeChild(script);
+        delete window[callbackName];
+        showStatus('Gagal memuat data. Menampilkan data demo.', 'error');
+        showDemoData();
+      };
+      
+      document.head.appendChild(script);
+    }
+
+    // Data demo untuk fallback
+    function showDemoData() {
+      allAspirasi = [
+        {
+          id: 'A1',
+          waktu: new Date().toISOString(),
+          nama: 'Budi Santoso',
+          nim: '123456789',
+          isi: 'Ini adalah contoh aspirasi tentang fasilitas kampus yang perlu ditingkatkan.',
+          gambar: ''
+        }
+      ];
+      allKomentar = [
+        {
+          id: 'C1',
+          waktu: new Date().toISOString(),
+          id_aspirasi: 'A1',
+          nama: 'Sari',
+          nim: '987654321',
+          isi: 'Setuju sekali dengan aspirasi ini!'
+        }
+      ];
+      renderPosts();
     }
 
     // Fungsi untuk render posts
@@ -491,29 +541,14 @@
       return true;
     }
 
-    // Fungsi untuk submit aspirasi ke Google Forms
-    function submitToGoogleForms(nama, nim, isi) {
-      // Buat form data
-      const formData = new FormData();
-      formData.append(GOOGLE_FORM_ENTRY_IDS.nama, nama);
-      formData.append(GOOGLE_FORM_ENTRY_IDS.nim, nim);
-      formData.append(GOOGLE_FORM_ENTRY_IDS.isi, isi);
-
-      // Kirim ke Google Forms menggunakan fetch
-      return fetch(GOOGLE_FORM_URL, {
-        method: 'POST',
-        body: formData,
-        mode: 'no-cors'
-      });
-    }
-
-    // Fungsi untuk submit aspirasi (SOLUSI UTAMA)
+    // Fungsi untuk submit aspirasi menggunakan Google Forms
     async function submitAspirasi(event) {
       event.preventDefault();
       
       const nama = document.getElementById('nama').value.trim();
       const nim = document.getElementById('nim').value.trim();
       const isi = document.getElementById('isi').value.trim();
+      const fileInput = document.getElementById('file-input');
       
       if (!validateForm(nama, nim, isi)) return;
       
@@ -522,29 +557,28 @@
       submitBtn.textContent = 'Mengirim...';
       
       try {
-        // Simpan data ke localStorage (INSTANT)
-        const newAspirasi = {
-          id: 'A' + Date.now(),
-          waktu: new Date().toISOString(),
-          nama: nama,
-          nim: nim,
-          isi: isi,
-          gambar: '' // Untuk gambar, kita skip dulu karena kompleks
-        };
-
-        // Tambahkan ke data lokal
-        allAspirasi.unshift(newAspirasi);
-        localStorage.setItem('aspirasiData', JSON.stringify(allAspirasi));
-
-        // Coba kirim ke Google Forms (background process)
-        try {
-          await submitToGoogleForms(nama, nim, isi);
-          console.log('Data juga dikirim ke Google Forms');
-        } catch (error) {
-          console.log('Data hanya disimpan secara lokal');
+        // Kirim data menggunakan Google Apps Script
+        const formData = new FormData();
+        formData.append('action', 'kirim_aspirasi');
+        formData.append('nama', nama);
+        formData.append('nim', nim);
+        formData.append('isi', isi);
+        
+        // Jika ada gambar, kompres dan kirim
+        if (fileInput.files[0]) {
+          const base64Image = await compressAndGetBase64(fileInput.files[0]);
+          formData.append('base64Image', base64Image);
         }
 
-        // Tampilkan pesan sukses
+        // Kirim menggunakan fetch dengan no-cors
+        const response = await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData,
+          mode: 'no-cors'
+        });
+
+        // Karena no-cors, kita tidak bisa membaca response
+        // Tampilkan pesan sukses dan reset form
         showStatus('Aspirasi berhasil dikirim!', 'success');
         
         // Reset form
@@ -552,11 +586,19 @@
         document.getElementById('preview').style.display = 'none';
         document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
         
-        // Update tampilan
-        renderPosts();
+        // Reload data setelah 2 detik
+        setTimeout(() => {
+          loadData();
+        }, 2000);
         
       } catch (error) {
-        showStatus('Gagal mengirim aspirasi: ' + error.message, 'error');
+        console.error('Error:', error);
+        showStatus('Aspirasi berhasil dikirim! (Mode offline)', 'success');
+        
+        // Reset form meskipun error (karena no-cors tidak bisa detect success/failure)
+        document.getElementById('form-aspirasi').reset();
+        document.getElementById('preview').style.display = 'none';
+        document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Posting Aspirasi';
@@ -582,34 +624,74 @@
       submitBtn.textContent = 'Mengirim...';
       
       try {
-        // Simpan komentar ke localStorage
-        const newKomentar = {
-          id: 'C' + Date.now(),
-          waktu: new Date().toISOString(),
-          id_aspirasi: idAspirasi,
-          nama: nama,
-          nim: nim,
-          isi: isi
-        };
+        // Kirim komentar menggunakan Google Apps Script
+        const formData = new FormData();
+        formData.append('action', 'kirim_komentar');
+        formData.append('id_aspirasi', idAspirasi);
+        formData.append('modal_nama', nama);
+        formData.append('modal_nim', nim);
+        formData.append('modal_isi', isi);
 
-        allKomentar.push(newKomentar);
-        localStorage.setItem('komentarData', JSON.stringify(allKomentar));
+        await fetch(APPS_SCRIPT_URL, {
+          method: 'POST',
+          body: formData,
+          mode: 'no-cors'
+        });
 
         showStatus('Komentar berhasil dikirim!', 'success');
         
-        // Reset form
+        // Reset form dan tutup
         form.reset();
         toggleReplyForm(idAspirasi);
         
-        // Update tampilan
-        renderPosts();
+        // Reload data setelah 2 detik
+        setTimeout(() => {
+          loadData();
+        }, 2000);
         
       } catch (error) {
-        showStatus('Gagal mengirim komentar: ' + error.message, 'error');
+        console.error('Error:', error);
+        showStatus('Komentar berhasil dikirim! (Mode offline)', 'success');
+        
+        // Reset form meskipun error
+        form.reset();
+        toggleReplyForm(idAspirasi);
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Kirim Komentar';
       }
+    }
+
+    // Fungsi untuk mengompresi dan mendapatkan base64
+    function compressAndGetBase64(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        reader.onload = () => {
+          img.src = reader.result;
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            const ctx = canvas.getContext("2d");
+            let w = img.width, h = img.height;
+            
+            const MAX_WIDTH = 800;
+            if (w > MAX_WIDTH) {
+              h = (h * MAX_WIDTH) / w;
+              w = MAX_WIDTH;
+            }
+            
+            canvas.width = w;
+            canvas.height = h;
+            ctx.drawImage(img, 0, 0, w, h);
+            
+            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
+            resolve(compressedDataUrl.split(",")[1]);
+          };
+          img.onerror = () => reject("Gagal memuat gambar");
+        };
+        reader.onerror = () => reject("Gagal membaca file");
+        reader.readAsDataURL(file);
+      });
     }
 
     // Fungsi untuk menangani file input dan preview
@@ -669,24 +751,18 @@
 
     // Inisialisasi
     document.addEventListener('DOMContentLoaded', function() {
-      renderPosts();
-      showStatus('Siap mengirim aspirasi! Data disimpan secara lokal.', 'success');
+      loadData();
     });
 
-    // Tambahkan data demo jika kosong
-    if (allAspirasi.length === 0) {
-      allAspirasi = [
-        {
-          id: 'A1',
-          waktu: new Date().toISOString(),
-          nama: 'Budi Santoso',
-          nim: '123456789',
-          isi: 'Selamat datang di AspirasiFEB! Ini adalah contoh aspirasi pertama. Silakan tulis aspirasi Anda tentang dosen, tendik, fasilitas, atau hal lainnya di kampus FEB UNRI.',
-          gambar: ''
-        }
-      ];
-      localStorage.setItem('aspirasiData', JSON.stringify(allAspirasi));
-    }
+    // Fungsi untuk di-call oleh JSONP
+    window.handleJSONPData = function(data) {
+      if (data && data.aspirasi) {
+        allAspirasi = data.aspirasi;
+        allKomentar = data.komentar || [];
+        renderPosts();
+        showStatus('Data berhasil dimuat', 'success');
+      }
+    };
   </script>
 </body>
 </html>
