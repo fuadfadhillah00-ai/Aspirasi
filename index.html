@@ -13,64 +13,14 @@
       --abu-teks: #536471;
     }
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    body { background: var(--abu-bg); color: var(--hitam); min-height: 100vh; }
-
-    .container {
-      display: flex;
-      flex-direction: column;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 2rem;
-    }
-
-    .logo { 
-      font-size: 2rem; 
-      font-weight: bold; 
-      color: var(--biru); 
-      margin-bottom: 0.5rem; 
-      display: flex; 
-      justify-content: center;
-      gap: 0.5rem; 
-      align-items: center; 
-    }
-
-    .main-content {
-      display: grid;
-      grid-template-columns: 1fr 2fr;
-      gap: 2rem;
-    }
-
-    @media (max-width: 768px) {
-      .main-content {
-        grid-template-columns: 1fr;
-      }
-    }
+    body { background: var(--abu-bg); color: var(--hitam); display: flex; min-height: 100vh; }
 
     .panel-left {
-      background: white; 
-      border-radius: 16px; 
-      padding: 1.5rem; 
-      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-      height: fit-content;
+      width: 400px; background: white; border-right: 1px solid var(--abu-border); padding: 1.5rem; overflow-y: auto;
+      position: fixed; height: 100vh;
     }
-
-    .panel-right {
-      background: var(--abu-bg);
-    }
-
-    .card { 
-      background: white; 
-      border-radius: 16px; 
-      padding: 1.25rem; 
-      margin-bottom: 1rem; 
-      box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-    }
-    
+    .logo { font-size: 1.5rem; font-weight: bold; color: var(--biru); margin-bottom: 1.5rem; display: flex; gap: 0.5rem; align-items: center; }
+    .card { background: white; border-radius: 16px; padding: 1.25rem; margin-bottom: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
     h2 { font-size: 1.25rem; font-weight: bold; margin-bottom: 1rem; }
     label { display: block; margin: 0.75rem 0 0.3rem; font-weight: 600; color: var(--hitam); }
     input, textarea { 
@@ -125,6 +75,13 @@
       border: 1px solid var(--abu-border);
     }
 
+    .panel-right { 
+      flex: 1; 
+      margin-left: 400px;
+      padding: 1rem; 
+      background: var(--abu-bg);
+      min-height: 100vh;
+    }
     .filters { 
       display: flex; 
       gap: 0.5rem; 
@@ -301,119 +258,304 @@
       border-top: 1px solid #f0f0f0; 
     }
 
-    .app-link {
-      text-align: center;
-      margin-top: 1rem;
-      padding: 1rem;
-      background: #e3f2fd;
-      border-radius: 8px;
-    }
-
-    .app-link a {
-      color: var(--biru);
-      text-decoration: none;
-      font-weight: bold;
-    }
-
-    .app-link a:hover {
-      text-decoration: underline;
+    @media (max-width: 768px) {
+      body { flex-direction: column; }
+      .panel-left { 
+        position: relative; 
+        width: 100%; 
+        height: auto;
+      }
+      .panel-right { 
+        margin-left: 0;
+      }
+      .form-row {
+        flex-direction: column;
+        gap: 0.5rem;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="header">
-      <div class="logo"><span>🐦</span><span>AspirasiFEB</span></div>
-      <p>Platform aspirasi untuk mahasiswa FEB UNRI</p>
+  <div class="panel-left">
+    <div class="logo"><span>🐦</span><span>AspirasiFEB</span></div>
+    <div class="card">
+      <h2>📢 Tulis Aspirasimu</h2>
+      <form id="form-aspirasi">
+        <label for="nama">Nama Lengkap</label>
+        <input type="text" id="nama" name="nama" required placeholder="Contoh: Budi Santoso">
+        <label for="nim">NIM</label>
+        <input type="text" id="nim" name="nim" required placeholder="123456789">
+        <label for="isi">Aspirasi</label>
+        <textarea id="isi" name="isi" rows="4" required placeholder="Ceritakan aspirasimu..."></textarea>
+        <div class="btn-outline" id="upload-area">
+          📷 Seret atau klik untuk upload gambar (maks. 5 MB)
+          <input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">
+        </div>
+        <img id="preview" class="upload-preview">
+        <button type="submit" class="btn btn-primary" id="btn-submit">Posting Aspirasi</button>
+      </form>
+      <div id="status-global" class="status" style="display: none;"></div>
     </div>
+  </div>
 
-    <div class="main-content">
-      <div class="panel-left">
-        <div class="card">
-          <h2>📢 Tulis Aspirasimu</h2>
-          <form method="POST" action="https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec" id="form-aspirasi" target="_blank">
-            <input type="hidden" name="action" value="kirim_aspirasi">
-            <label for="nama">Nama Lengkap</label>
-            <input type="text" id="nama" name="nama" required placeholder="Contoh: Budi Santoso">
-            <label for="nim">NIM</label>
-            <input type="text" id="nim" name="nim" required placeholder="123456789">
-            <label for="isi">Aspirasi</label>
-            <textarea id="isi" name="isi" rows="4" required placeholder="Ceritakan aspirasimu..."></textarea>
-            <div class="btn-outline" id="upload-area">
-              📷 Seret atau klik untuk upload gambar (maks. 5 MB)
-              <input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">
-            </div>
-            <img id="preview" class="upload-preview">
-            <button type="submit" class="btn btn-primary" id="btn-submit">Posting Aspirasi</button>
-          </form>
-          <div id="status-container"></div>
-        </div>
-
-        <div class="app-link">
-          <p><strong>📱 Akses Full Version:</strong></p>
-          <a href="https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec" target="_blank">
-            Buka Aplikasi AspirasiFEB Lengkap
-          </a>
-        </div>
-      </div>
-
-      <div class="panel-right">
-        <div class="card">
-          <h2>📋 Cara Menggunakan</h2>
-          <div style="line-height: 1.6;">
-            <p><strong>1. Untuk melihat aspirasi:</strong></p>
-            <p>Klik tombol "Buka Aplikasi AspirasiFEB Lengkap" di samping</p>
-            
-            <p><strong>2. Untuk mengirim aspirasi:</strong></p>
-            <p>Isi form di samping → akan terbuka tab baru ke aplikasi</p>
-            
-            <p><strong>3. Fitur yang tersedia:</strong></p>
-            <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-              <li>Kirim aspirasi dengan gambar</li>
-              <li>Lihat semua aspirasi yang sudah dikirim</li>
-              <li>Filter berdasarkan kategori</li>
-              <li>Beri komentar pada aspirasi</li>
-            </ul>
-            
-            <div class="status success">
-              <strong>Tips:</strong> Form di samping akan mengirim data langsung ke aplikasi Google Apps Script. Setelah submit, buka link aplikasi untuk melihat hasilnya.
-            </div>
-          </div>
-        </div>
-
-        <div class="card">
-          <h2>ℹ️ Informasi</h2>
-          <div style="line-height: 1.6;">
-            <p><strong>Kategori Aspirasi:</strong></p>
-            <ul style="margin-left: 1.5rem; margin-bottom: 1rem;">
-              <li><strong>Dosen:</strong> Masalah terkait pengajaran, dosen, materi kuliah</li>
-              <li><strong>Tendik:</strong> Masalah administrasi, staff, pelayanan</li>
-              <li><strong>Fasilitas:</strong> Kelas, AC, LCD, laboratorium, dll</li>
-              <li><strong>Lainnya:</strong> Aspirasi lainnya</li>
-            </ul>
-            
-            <p><strong>Ketentuan:</strong></p>
-            <ul style="margin-left: 1.5rem;">
-              <li>Gunakan bahasa yang sopan dan konstruktif</li>
-              <li>Lampirkan bukti foto jika diperlukan</li>
-              <li>Nama dan NIM akan disembunyikan untuk privasi</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+  <div class="panel-right">
+    <div class="filters">
+      <button class="filter-btn active" onclick="setFilter('semua')">Semua</button>
+      <button class="filter-btn" onclick="setFilter('dosen')">Dosen</button>
+      <button class="filter-btn" onclick="setFilter('tendik')">Tendik</button>
+      <button class="filter-btn" onclick="setFilter('fasilitas')">Fasilitas</button>
+    </div>
+    <div id="posts-container">
+      <div class="loading">Memuat data...</div>
     </div>
   </div>
 
   <script>
-    // URL Apps Script Web App
-    const APP_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
-    
-    // Fungsi validasi form client-side
-    function validateForm() {
-      const nama = document.getElementById('nama').value.trim();
-      const nim = document.getElementById('nim').value.trim();
-      const isi = document.getElementById('isi').value.trim();
+    // Konfigurasi - GANTI dengan URL Web App Anda
+    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
+
+    // State aplikasi
+    let allAspirasi = [];
+    let allKomentar = [];
+    let currentFilter = 'semua';
+
+    // Fungsi untuk menyembunyikan nama
+    function maskName(nama) {
+      return nama ? nama.trim().charAt(0).toUpperCase() + '***' : 'Anonim';
+    }
+
+    // Fungsi untuk menentukan kategori
+    function inferKategori(isi) {
+      isi = isi.toLowerCase();
+      if (isi.includes('dosen') || isi.includes('mengajar')) return 'dosen';
+      if (isi.includes('tendik') || isi.includes('administrasi')) return 'tendik';
+      if (isi.includes('fasilitas') || isi.includes('ac') || isi.includes('lcd')) return 'fasilitas';
+      return 'lainnya';
+    }
+
+    // Fungsi untuk memuat data dari Google Apps Script
+    async function loadData() {
+      try {
+        showStatus('Memuat data...', 'success');
+        
+        // Gunakan JSONP atau proxy untuk menghindari CORS
+        const timestamp = new Date().getTime();
+        const url = `${APPS_SCRIPT_URL}?action=getData&_=${timestamp}`;
+        
+        const response = await fetch(url, {
+          method: 'GET',
+          mode: 'no-cors' // Mode no-cors untuk menghindari CORS error
+        }).catch(err => {
+          // Fallback: coba dengan approach yang berbeda
+          return loadDataWithJSONP();
+        });
+
+        // Jika menggunakan no-cors, kita tidak bisa membaca response
+        // Jadi kita akan menggunakan pendekatan JSONP
+        await loadDataWithJSONP();
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showStatus('Gagal memuat data. Silakan refresh halaman.', 'error');
+        
+        // Tampilkan data dummy untuk demo
+        showDemoData();
+      }
+    }
+
+    // Alternatif: Gunakan pendekatan JSONP
+    function loadDataWithJSONP() {
+      return new Promise((resolve, reject) => {
+        const callbackName = 'jsonpCallback_' + Date.now();
+        const script = document.createElement('script');
+        
+        window[callbackName] = function(data) {
+          document.head.removeChild(script);
+          delete window[callbackName];
+          
+          if (data && data.aspirasi) {
+            allAspirasi = data.aspirasi;
+            allKomentar = data.komentar || [];
+            renderPosts();
+            showStatus('Data berhasil dimuat', 'success');
+            resolve(data);
+          } else {
+            reject(new Error('Data tidak valid'));
+          }
+        };
+
+        script.src = `${APPS_SCRIPT_URL}?action=getData&callback=${callbackName}`;
+        document.head.appendChild(script);
+        
+        // Timeout fallback
+        setTimeout(() => {
+          if (document.head.contains(script)) {
+            document.head.removeChild(script);
+            delete window[callbackName];
+            reject(new Error('Timeout'));
+          }
+        }, 10000);
+      });
+    }
+
+    // Data demo untuk fallback
+    function showDemoData() {
+      allAspirasi = [
+        {
+          id: 'A1',
+          waktu: new Date().toISOString(),
+          nama: 'Budi Santoso',
+          nim: '123456789',
+          isi: 'Ini adalah contoh aspirasi tentang fasilitas kampus yang perlu ditingkatkan.',
+          gambar: ''
+        }
+      ];
+      allKomentar = [
+        {
+          id: 'C1',
+          waktu: new Date().toISOString(),
+          id_aspirasi: 'A1',
+          nama: 'Sari',
+          nim: '987654321',
+          isi: 'Setuju sekali dengan aspirasi ini!'
+        }
+      ];
+      renderPosts();
+      showStatus('Mode demo diaktifkan', 'success');
+    }
+
+    // Fungsi untuk render posts
+    function renderPosts() {
+      const container = document.getElementById('posts-container');
       
+      // Filter aspirasi berdasarkan kategori
+      const filteredAspirasi = allAspirasi.filter(a => {
+        if (currentFilter === 'semua') return true;
+        return inferKategori(a.isi) === currentFilter;
+      });
+
+      if (filteredAspirasi.length === 0) {
+        container.innerHTML = '<div class="empty">Belum ada aspirasi.</div>';
+        return;
+      }
+
+      // Urutkan dari terbaru
+      filteredAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+
+      container.innerHTML = filteredAspirasi.map(a => {
+        const t = new Date(a.waktu);
+        const d = t.toLocaleDateString('id-ID');
+        const t2 = t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        const n = maskName(a.nama);
+        const i = n.charAt(0);
+        const k = { dosen: 'Dosen', tendik: 'Tendik', fasilitas: 'Fasilitas', lainnya: 'Lainnya' }[inferKategori(a.isi)];
+
+        // Filter komentar untuk aspirasi ini
+        const replies = allKomentar.filter(komen => komen.id_aspirasi === a.id).map(komen => ({
+          ...komen,
+          n: maskName(komen.nama),
+          i: maskName(komen.nama).charAt(0),
+          waktu: new Date(komen.waktu).toLocaleDateString('id-ID')
+        }));
+
+        const repliesHtml = replies.map(komen => `
+          <div class="reply">
+            <div class="reply-avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}">${komen.i}</div>
+            <div class="reply-content">
+              <div class="reply-name">${komen.n}</div>
+              <div class="reply-meta">${komen.waktu}</div>
+              <div>${komen.isi}</div>
+            </div>
+          </div>
+        `).join('');
+
+        const safeIsi = a.isi.replace(/\n/g, '<br>');
+        
+        let imageHtml = '';
+        if (a.gambar && a.gambar !== '') {
+          imageHtml = `
+            <div class="post-image-container">
+              <img src="${a.gambar}" 
+                   class="post-image" 
+                   alt="Gambar aspirasi"
+                   onerror="this.style.display='none'">
+            </div>
+          `;
+        }
+
+        return `
+          <div class="post" id="post-${a.id}">
+            <div class="post-header">
+              <div class="avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}">${i}</div>
+              <div class="post-info">
+                <div class="post-name">${n}</div>
+                <div class="post-meta">${d}, ${t2} · ${k}</div>
+              </div>
+            </div>
+            <div class="post-content">${safeIsi}</div>
+            ${imageHtml}
+            <div class="post-footer">
+              <button class="reply-btn" onclick="toggleReplyForm('${a.id}')">💬 Balas · ${replies.length}</button>
+            </div>
+            <div id="reply-form-${a.id}" class="reply-form-container" style="display:none;">
+              <form onsubmit="submitKomentar(event, '${a.id}')">
+                <div class="form-row">
+                  <input type="text" name="modal_nama" placeholder="Nama Lengkap" required>
+                  <input type="text" name="modal_nim" placeholder="NIM" required>
+                </div>
+                <textarea name="modal_isi" placeholder="Tulis komentar..." required rows="2"></textarea>
+                <div class="form-buttons">
+                  <button type="submit" class="btn btn-primary">Kirim Komentar</button>
+                  <button type="button" onclick="toggleReplyForm('${a.id}')" class="btn btn-cancel">Batal</button>
+                </div>
+              </form>
+            </div>
+            ${replies.length ? `<div class="replies">${repliesHtml}</div>` : ''}
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Fungsi untuk toggle form komentar
+    function toggleReplyForm(id) {
+      const formContainer = document.getElementById('reply-form-' + id);
+      if (formContainer.style.display === 'none' || formContainer.style.display === '') {
+        formContainer.style.display = 'block';
+        formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      } else {
+        formContainer.style.display = 'none';
+      }
+    }
+
+    // Fungsi untuk set filter
+    function setFilter(filter) {
+      currentFilter = filter;
+      
+      // Update active button
+      document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      event.target.classList.add('active');
+      
+      renderPosts();
+    }
+
+    // Fungsi untuk menampilkan status
+    function showStatus(message, type = 'success') {
+      const statusEl = document.getElementById('status-global');
+      statusEl.textContent = message;
+      statusEl.className = `status ${type}`;
+      statusEl.style.display = 'block';
+      
+      if (type === 'success') {
+        setTimeout(() => {
+          statusEl.style.display = 'none';
+        }, 5000);
+      }
+    }
+
+    // Fungsi validasi form
+    function validateForm(nama, nim, isi) {
       if (!nama || !nim || !isi) {
         showStatus('Semua field wajib diisi!', 'error');
         return false;
@@ -432,15 +574,68 @@
       return true;
     }
 
-    // Fungsi untuk menampilkan status
-    function showStatus(message, type = 'success') {
-      const statusContainer = document.getElementById('status-container');
-      statusContainer.innerHTML = `<div class="status ${type}">${message}</div>`;
+    // Fungsi untuk submit aspirasi
+    async function submitAspirasi(event) {
+      event.preventDefault();
       
-      if (type === 'success') {
-        setTimeout(() => {
-          statusContainer.innerHTML = '';
-        }, 5000);
+      const nama = document.getElementById('nama').value.trim();
+      const nim = document.getElementById('nim').value.trim();
+      const isi = document.getElementById('isi').value.trim();
+      
+      if (!validateForm(nama, nim, isi)) return;
+      
+      const submitBtn = document.getElementById('btn-submit');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Mengirim...';
+      
+      try {
+        // Untuk GitHub Pages, kita hanya bisa menampilkan pesan sukses
+        // karena tidak bisa mengirim data ke Google Apps Script due to CORS
+        showStatus('Fitur pengiriman aspirasi hanya tersedia di versi Google Apps Script. Silakan kunjungi link Google Apps Script untuk mengirim aspirasi.', 'success');
+        
+        // Reset form
+        document.getElementById('form-aspirasi').reset();
+        document.getElementById('preview').style.display = 'none';
+        document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+        
+      } catch (error) {
+        showStatus('Gagal mengirim aspirasi: ' + error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Posting Aspirasi';
+      }
+    }
+
+    // Fungsi untuk submit komentar
+    async function submitKomentar(event, idAspirasi) {
+      event.preventDefault();
+      
+      const form = event.target;
+      const nama = form.querySelector('input[name="modal_nama"]').value.trim();
+      const nim = form.querySelector('input[name="modal_nim"]').value.trim();
+      const isi = form.querySelector('textarea[name="modal_isi"]').value.trim();
+      
+      if (!nama || !nim || !isi) {
+        showStatus('Semua field komentar harus diisi!', 'error');
+        return;
+      }
+      
+      const submitBtn = form.querySelector('button[type="submit"]');
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Mengirim...';
+      
+      try {
+        showStatus('Fitur komentar hanya tersedia di versi Google Apps Script. Silakan kunjungi link Google Apps Script untuk mengirim komentar.', 'success');
+        
+        // Reset form
+        form.reset();
+        toggleReplyForm(idAspirasi);
+        
+      } catch (error) {
+        showStatus('Gagal mengirim komentar: ' + error.message, 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Kirim Komentar';
       }
     }
 
@@ -493,99 +688,26 @@
     
     uploadArea.addEventListener('click', () => fileInput.click());
 
-    // Fungsi untuk mengompresi dan mendapatkan base64
-    function compressAndGetBase64(file) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const reader = new FileReader();
-        reader.onload = () => {
-          img.src = reader.result;
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            let w = img.width, h = img.height;
-            
-            const MAX_WIDTH = 800;
-            if (w > MAX_WIDTH) {
-              h = (h * MAX_WIDTH) / w;
-              w = MAX_WIDTH;
-            }
-            
-            canvas.width = w;
-            canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            
-            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
-            resolve(compressedDataUrl.split(",")[1]);
-          };
-          img.onerror = () => reject("Gagal memuat gambar");
-        };
-        reader.onerror = () => reject("Gagal membaca file");
-        reader.readAsDataURL(file);
-      });
-    }
-
-    // Validasi form aspirasi sebelum submit
-    document.getElementById('form-aspirasi').addEventListener('submit', function(e) {
-      if (!validateForm()) {
-        e.preventDefault();
-        return false;
-      }
-      
-      // Tampilkan pesan sukses
-      showStatus('Mengirim aspirasi... Silakan tunggu tab baru terbuka.', 'success');
-    });
-
-    // Handle form aspirasi dengan gambar
-    document.getElementById('form-aspirasi').addEventListener('submit', async (e) => {
-      const file = fileInput.files[0];
-      const submitBtn = document.getElementById('btn-submit');
-      
-      if (file) {
-        e.preventDefault();
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Mengupload gambar...';
-
-        try {
-          const base64 = await compressAndGetBase64(file);
-          const base64Input = document.createElement('input');
-          base64Input.type = 'hidden';
-          base64Input.name = 'base64Image';
-          base64Input.value = base64;
-          e.target.appendChild(base64Input);
-
-          // Submit form setelah menambahkan base64
-          e.target.submit();
-          
-          // Reset form setelah submit
-          setTimeout(() => {
-            e.target.reset();
-            document.getElementById('preview').style.display = 'none';
-            document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Posting Aspirasi';
-          }, 2000);
-          
-        } catch (err) {
-          showStatus('Gagal mengompresi gambar: ' + err, 'error');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Posting Aspirasi';
-        }
-      } else {
-        // Jika tidak ada gambar, biarkan form submit normal
-        showStatus('Mengirim aspirasi... Silakan tunggu tab baru terbuka.', 'success');
-      }
-    });
-
+    // Event listeners
+    document.getElementById('form-aspirasi').addEventListener('submit', submitAspirasi);
     fileInput.addEventListener('change', function() {
       handleFileSelect(this);
     });
 
-    // Pesan welcome
+    // Inisialisasi
     document.addEventListener('DOMContentLoaded', function() {
-      showStatus('Selamat datang! Isi form di samping untuk mengirim aspirasi.', 'success');
+      loadData();
     });
 
+    // Fungsi untuk di-call oleh JSONP
+    window.handleJSONPData = function(data) {
+      if (data && data.aspirasi) {
+        allAspirasi = data.aspirasi;
+        allKomentar = data.komentar || [];
+        renderPosts();
+        showStatus('Data berhasil dimuat', 'success');
+      }
+    };
   </script>
 </body>
 </html>
