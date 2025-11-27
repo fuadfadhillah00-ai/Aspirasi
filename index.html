@@ -280,7 +280,7 @@
     <div class="logo"><span>🐦</span><span>AspirasiFEB</span></div>
     <div class="card">
       <h2>📢 Tulis Aspirasimu</h2>
-      <form method="POST" action="<?= appUrl ?>" id="form-aspirasi">
+      <form method="POST" action="https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec" id="form-aspirasi">
         <input type="hidden" name="action" value="kirim_aspirasi">
         <label for="nama">Nama Lengkap</label>
         <input type="text" id="nama" name="nama" required placeholder="Contoh: Budi Santoso">
@@ -295,128 +295,69 @@
         <img id="preview" class="upload-preview">
         <button type="submit" class="btn btn-primary" id="btn-submit">Posting Aspirasi</button>
       </form>
-      <? if (statusMessage) { ?>
-        <div id="status-global" class="status <?= statusType === 'error' ? 'error' : 'success' ?>">
-          <?= statusMessage ?>
-        </div>
-      <? } ?>
+      <div id="status-container"></div>
     </div>
   </div>
 
   <div class="panel-right">
     <div class="filters">
-      <button class="filter-btn <?= currentFilter === 'semua' ? 'active' : '' ?>" onclick="setFilter('semua')">Semua</button>
-      <button class="filter-btn <?= currentFilter === 'dosen' ? 'active' : '' ?>" onclick="setFilter('dosen')">Dosen</button>
-      <button class="filter-btn <?= currentFilter === 'tendik' ? 'active' : '' ?>" onclick="setFilter('tendik')">Tendik</button>
-      <button class="filter-btn <?= currentFilter === 'fasilitas' ? 'active' : '' ?>" onclick="setFilter('fasilitas')">Fasilitas</button>
+      <button class="filter-btn active" onclick="setFilter('semua')">Semua</button>
+      <button class="filter-btn" onclick="setFilter('dosen')">Dosen</button>
+      <button class="filter-btn" onclick="setFilter('tendik')">Tendik</button>
+      <button class="filter-btn" onclick="setFilter('fasilitas')">Fasilitas</button>
     </div>
     <div id="posts-container">
-      <? 
-      // Fungsi untuk menyembunyikan nama
-      function maskName(nama) {
-        return nama ? nama.trim().charAt(0).toUpperCase() + '***' : 'Anonim';
-      }
-
-      // Fungsi untuk menentukan kategori
-      function inferKategori(isi) {
-        isi = isi.toLowerCase();
-        if (isi.includes('dosen') || isi.includes('mengajar')) return 'dosen';
-        if (isi.includes('tendik') || isi.includes('administrasi')) return 'tendik';
-        if (isi.includes('fasilitas') || isi.includes('ac') || isi.includes('lcd')) return 'fasilitas';
-        return 'lainnya';
-      }
-
-      // Filter aspirasi berdasarkan kategori
-      let filteredAspirasi = aspirasiList;
-      if (currentFilter !== 'semua') {
-        filteredAspirasi = aspirasiList.filter(a => inferKategori(a.isi) === currentFilter);
-      }
-
-      if (filteredAspirasi.length === 0) { ?>
-        <div class="empty">Belum ada aspirasi.</div>
-      <? } else { 
-        filteredAspirasi.forEach(a => {
-          const t = new Date(a.waktu);
-          const d = t.toLocaleDateString('id-ID');
-          const t2 = t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-          const n = maskName(a.nama);
-          const i = n.charAt(0);
-          const k = { dosen: 'Dosen', tendik: 'Tendik', fasilitas: 'Fasilitas', lainnya: 'Lainnya' }[inferKategori(a.isi)];
-
-          // Filter komentar untuk aspirasi ini
-          const replies = komentarList.filter(k => k.id_aspirasi === a.id).map(k => ({ 
-            ...k, 
-            n: maskName(k.nama), 
-            i: maskName(k.nama).charAt(0),
-            waktu: new Date(k.waktu).toLocaleDateString('id-ID')
-          }));
-
-          const repliesHtml = replies.map(k => `
-            <div class="reply">
-              <div class="reply-avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}">${k.i}</div>
-              <div class="reply-content">
-                <div class="reply-name">${k.n}</div>
-                <div class="reply-meta">${k.waktu}</div>
-                <div>${k.isi}</div>
-              </div>
-            </div>
-          `).join('');
-
-          // Sanitasi dan format isi aspirasi
-          const safeIsi = a.isi.replace(/\n/g, '<br>');
-          
-          // Handling gambar
-          let imageHtml = '';
-          if (a.gambar && a.gambar !== '') {
-            imageHtml = `
-              <div class="post-image-container">
-                <img src="${a.gambar}" 
-                     class="post-image" 
-                     alt="Gambar aspirasi"
-                     onerror="this.style.display='none'; console.log('Gambar gagal dimuat')"
-                     onload="console.log('Gambar berhasil dimuat')">
-              </div>
-            `;
-          }
-      ?>
-        <div class="post" id="post-<?= a.id ?>">
-          <div class="post-header">
-            <div class="avatar" style="background:#<?= Math.floor(Math.random()*16777215).toString(16).padStart(6, '0') ?>"><?= i ?></div>
-            <div class="post-info">
-              <div class="post-name"><?= n ?></div>
-              <div class="post-meta"><?= d ?>, <?= t2 ?> · <?= k ?></div>
-            </div>
-          </div>
-          <div class="post-content"><?!= safeIsi ?></div>
-          <?!= imageHtml ?>
-          <div class="post-footer">
-            <button class="reply-btn" onclick="toggleReplyForm('<?= a.id ?>')">💬 Balas · <?= replies.length ?></button>
-          </div>
-          <div id="reply-form-<?= a.id ?>" class="reply-form-container" style="display:none;">
-            <form method="POST" action="<?= appUrl ?>">
-              <input type="hidden" name="action" value="kirim_komentar">
-              <input type="hidden" name="id_aspirasi" value="<?= a.id ?>">
-              <div class="form-row">
-                <input type="text" name="modal_nama" placeholder="Nama Lengkap" required>
-                <input type="text" name="modal_nim" placeholder="NIM" required>
-              </div>
-              <textarea name="modal_isi" placeholder="Tulis komentar..." required rows="2"></textarea>
-              <div class="form-buttons">
-                <button type="submit" class="btn btn-primary">Kirim Komentar</button>
-                <button type="button" onclick="toggleReplyForm('<?= a.id ?>')" class="btn btn-cancel">Batal</button>
-              </div>
-            </form>
-          </div>
-          <? if (replies.length) { ?>
-            <div class="replies"><?!= repliesHtml ?></div>
-          <? } ?>
-        </div>
-      <? }); 
-      } ?>
+      <div class="loading">Memuat aspirasi...</div>
     </div>
   </div>
 
   <script>
+    // URL Apps Script Web App
+    const APP_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
+    
+    let currentFilter = 'semua';
+    let allAspirasi = [];
+    let allKomentar = [];
+
+    // Fungsi untuk memuat data dari Google Apps Script
+    async function loadData() {
+      try {
+        const response = await fetch(APP_URL);
+        const html = await response.text();
+        
+        // Parse HTML untuk mendapatkan data
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const postsContainer = doc.getElementById('posts-container');
+        
+        if (postsContainer) {
+          document.getElementById('posts-container').innerHTML = postsContainer.innerHTML;
+        }
+        
+        // Update filter buttons
+        updateFilterButtons();
+        
+      } catch (error) {
+        console.error('Error loading data:', error);
+        document.getElementById('posts-container').innerHTML = '<div class="empty">Gagal memuat data.</div>';
+      }
+    }
+
+    // Fungsi untuk update tombol filter
+    function updateFilterButtons() {
+      const filterBtns = document.querySelectorAll('.filter-btn');
+      filterBtns.forEach(btn => {
+        const filter = btn.textContent.toLowerCase();
+        btn.classList.toggle('active', filter === currentFilter);
+      });
+    }
+
+    // Fungsi untuk set filter
+    function setFilter(filter) {
+      currentFilter = filter;
+      loadData();
+    }
+
     // Fungsi validasi form client-side
     function validateForm() {
       const nama = document.getElementById('nama').value.trim();
@@ -424,17 +365,17 @@
       const isi = document.getElementById('isi').value.trim();
       
       if (!nama || !nim || !isi) {
-        alert('Semua field wajib diisi!');
+        showStatus('Semua field wajib diisi!', 'error');
         return false;
       }
       
       if (nim.length < 8 || !/^\d+$/.test(nim)) {
-        alert('NIM harus berupa angka minimal 8 digit!');
+        showStatus('NIM harus berupa angka minimal 8 digit!', 'error');
         return false;
       }
       
       if (isi.length < 10) {
-        alert('Isi aspirasi minimal 10 karakter!');
+        showStatus('Isi aspirasi minimal 10 karakter!', 'error');
         return false;
       }
       
@@ -452,13 +393,16 @@
       }
     }
 
-    // Fungsi untuk set filter (reload halaman dengan parameter filter)
-    function setFilter(filter) {
-       const url = new URL(window.location);
-       url.searchParams.set('filter', filter);
-       url.searchParams.delete('status');
-       url.searchParams.delete('status_type');
-       window.location.href = url.toString();
+    // Fungsi untuk menampilkan status
+    function showStatus(message, type = 'success') {
+      const statusContainer = document.getElementById('status-container');
+      statusContainer.innerHTML = `<div class="status ${type}">${message}</div>`;
+      
+      if (type === 'success') {
+        setTimeout(() => {
+          statusContainer.innerHTML = '';
+        }, 5000);
+      }
     }
 
     // Fungsi untuk menangani file input dan preview
@@ -570,7 +514,7 @@
 
           e.target.submit();
         } catch (err) {
-          alert('Gagal mengompresi gambar: ' + err);
+          showStatus('Gagal mengompresi gambar: ' + err, 'error');
           submitBtn.disabled = false;
           submitBtn.textContent = 'Posting Aspirasi';
         }
@@ -607,19 +551,31 @@
       }
     });
 
-    // Auto-hide success messages after 5 seconds
+    // Handle URL parameters untuk status message
     document.addEventListener('DOMContentLoaded', function() {
-      const statusEl = document.getElementById('status-global');
-      if (statusEl && statusEl.classList.contains('success')) {
-        setTimeout(() => {
-          statusEl.style.display = 'none';
-        }, 5000);
+      const urlParams = new URLSearchParams(window.location.search);
+      const status = urlParams.get('status');
+      const statusType = urlParams.get('status_type');
+      
+      if (status) {
+        showStatus(decodeURIComponent(status), statusType || 'success');
+        
+        // Hapus parameter dari URL
+        const newUrl = window.location.pathname + window.location.search.replace(/[?&]status=[^&]+/, '').replace(/[?&]status_type=[^&]+/, '');
+        window.history.replaceState({}, document.title, newUrl);
       }
+      
+      // Load data pertama kali
+      loadData();
     });
 
     fileInput.addEventListener('change', function() {
       handleFileSelect(this);
     });
+
+    // Auto-refresh data setiap 30 detik
+    setInterval(loadData, 30000);
+
   </script>
 </body>
 </html>
