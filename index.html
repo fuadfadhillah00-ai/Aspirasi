@@ -333,37 +333,30 @@
       return 'lainnya';
     }
 
-    // Fungsi untuk memuat data dari Google Apps Script menggunakan JSONP
-    function loadData() {
-      showStatus('Memuat data...', 'success');
-      
-      const callbackName = 'jsonpCallback_' + Date.now();
-      const script = document.createElement('script');
-      
-      window[callbackName] = function(data) {
-        document.head.removeChild(script);
-        delete window[callbackName];
+    // Fungsi untuk memuat data dari Google Apps Script
+    async function loadData() {
+      try {
+        showStatus('Memuat data...', 'success');
         
-        if (data && data.aspirasi) {
-          allAspirasi = data.aspirasi;
+        const timestamp = new Date().getTime();
+        const url = `${APPS_SCRIPT_URL}?action=getData&_=${timestamp}`;
+        
+        const response = await fetch(url);
+        const data = await response.json();
+        
+        if (data.success) {
+          allAspirasi = data.aspirasi || [];
           allKomentar = data.komentar || [];
           renderPosts();
           showStatus('Data berhasil dimuat', 'success');
         } else {
-          showStatus('Gagal memuat data', 'error');
-          showDemoData();
+          throw new Error(data.error || 'Gagal memuat data');
         }
-      };
-
-      script.src = `${APPS_SCRIPT_URL}?action=getData&callback=${callbackName}`;
-      script.onerror = function() {
-        document.head.removeChild(script);
-        delete window[callbackName];
-        showStatus('Gagal memuat data. Menampilkan data demo.', 'error');
+      } catch (error) {
+        console.error('Error loading data:', error);
+        showStatus('Gagal memuat data. Silakan refresh halaman.', 'error');
         showDemoData();
-      };
-      
-      document.head.appendChild(script);
+      }
     }
 
     // Data demo untuk fallback
@@ -541,7 +534,55 @@
       return true;
     }
 
-    // Fungsi untuk submit aspirasi menggunakan Google Forms
+    // Fungsi untuk mengompresi gambar
+    function compressImage(file) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        const reader = new FileReader();
+        
+        reader.onload = function(e) {
+          img.src = e.target.result;
+          img.onload = function() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Set maximum width
+            const MAX_WIDTH = 800;
+            let width = img.width;
+            let height = img.height;
+            
+            if (width > MAX_WIDTH) {
+              height = (height * MAX_WIDTH) / width;
+              width = MAX_WIDTH;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            // Convert to base64
+            const base64 = canvas.toDataURL('image/jpeg', 0.7);
+            // Remove data:image/jpeg;base64, prefix
+            const base64Data = base64.split(',')[1];
+            
+            resolve(base64Data);
+          };
+          
+          img.onerror = function() {
+            reject(new Error('Gagal memuat gambar'));
+          };
+        };
+        
+        reader.onerror = function() {
+          reject(new Error('Gagal membaca file'));
+        };
+        
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // Fungsi untuk submit aspirasi
     async function submitAspirasi(event) {
       event.preventDefault();
       
@@ -549,6 +590,7 @@
       const nim = document.getElementById('nim').value.trim();
       const isi = document.getElementById('isi').value.trim();
       const fileInput = document.getElementById('file-input');
+      const file = fileInput.files[0];
       
       if (!validateForm(nama, nim, isi)) return;
       
@@ -557,48 +599,47 @@
       submitBtn.textContent = 'Mengirim...';
       
       try {
-        // Kirim data menggunakan Google Apps Script
-        const formData = new FormData();
+        let base64Image = '';
+        
+        // Kompres gambar jika ada
+        if (file) {
+          base64Image = await compressImage(file);
+        }
+        
+        // Kirim data ke Google Apps Script
+        const formData = new URLSearchParams();
         formData.append('action', 'kirim_aspirasi');
         formData.append('nama', nama);
         formData.append('nim', nim);
         formData.append('isi', isi);
+        formData.append('base64Image', base64Image);
         
-        // Jika ada gambar, kompres dan kirim
-        if (fileInput.files[0]) {
-          const base64Image = await compressAndGetBase64(fileInput.files[0]);
-          formData.append('base64Image', base64Image);
-        }
-
-        // Kirim menggunakan fetch dengan no-cors
         const response = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
-          body: formData,
-          mode: 'no-cors'
+          body: formData
         });
-
-        // Karena no-cors, kita tidak bisa membaca response
-        // Tampilkan pesan sukses dan reset form
-        showStatus('Aspirasi berhasil dikirim!', 'success');
         
-        // Reset form
-        document.getElementById('form-aspirasi').reset();
-        document.getElementById('preview').style.display = 'none';
-        document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+        const result = await response.json();
         
-        // Reload data setelah 2 detik
-        setTimeout(() => {
-          loadData();
-        }, 2000);
+        if (result.success) {
+          showStatus(result.message, 'success');
+          
+          // Reset form
+          document.getElementById('form-aspirasi').reset();
+          document.getElementById('preview').style.display = 'none';
+          document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+          
+          // Reload data
+          setTimeout(() => {
+            loadData();
+          }, 1000);
+        } else {
+          throw new Error(result.message);
+        }
         
       } catch (error) {
         console.error('Error:', error);
-        showStatus('Aspirasi berhasil dikirim! (Mode offline)', 'success');
-        
-        // Reset form meskipun error (karena no-cors tidak bisa detect success/failure)
-        document.getElementById('form-aspirasi').reset();
-        document.getElementById('preview').style.display = 'none';
-        document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+        showStatus('Gagal mengirim aspirasi: ' + error.message, 'error');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Posting Aspirasi';
@@ -624,74 +665,43 @@
       submitBtn.textContent = 'Mengirim...';
       
       try {
-        // Kirim komentar menggunakan Google Apps Script
-        const formData = new FormData();
+        // Kirim data ke Google Apps Script
+        const formData = new URLSearchParams();
         formData.append('action', 'kirim_komentar');
         formData.append('id_aspirasi', idAspirasi);
         formData.append('modal_nama', nama);
         formData.append('modal_nim', nim);
         formData.append('modal_isi', isi);
-
-        await fetch(APPS_SCRIPT_URL, {
+        
+        const response = await fetch(APPS_SCRIPT_URL, {
           method: 'POST',
-          body: formData,
-          mode: 'no-cors'
+          body: formData
         });
-
-        showStatus('Komentar berhasil dikirim!', 'success');
         
-        // Reset form dan tutup
-        form.reset();
-        toggleReplyForm(idAspirasi);
+        const result = await response.json();
         
-        // Reload data setelah 2 detik
-        setTimeout(() => {
-          loadData();
-        }, 2000);
+        if (result.success) {
+          showStatus(result.message, 'success');
+          
+          // Reset form dan tutup
+          form.reset();
+          toggleReplyForm(idAspirasi);
+          
+          // Reload data
+          setTimeout(() => {
+            loadData();
+          }, 1000);
+        } else {
+          throw new Error(result.message);
+        }
         
       } catch (error) {
         console.error('Error:', error);
-        showStatus('Komentar berhasil dikirim! (Mode offline)', 'success');
-        
-        // Reset form meskipun error
-        form.reset();
-        toggleReplyForm(idAspirasi);
+        showStatus('Gagal mengirim komentar: ' + error.message, 'error');
       } finally {
         submitBtn.disabled = false;
         submitBtn.textContent = 'Kirim Komentar';
       }
-    }
-
-    // Fungsi untuk mengompresi dan mendapatkan base64
-    function compressAndGetBase64(file) {
-      return new Promise((resolve, reject) => {
-        const img = new Image();
-        const reader = new FileReader();
-        reader.onload = () => {
-          img.src = reader.result;
-          img.onload = () => {
-            const canvas = document.createElement("canvas");
-            const ctx = canvas.getContext("2d");
-            let w = img.width, h = img.height;
-            
-            const MAX_WIDTH = 800;
-            if (w > MAX_WIDTH) {
-              h = (h * MAX_WIDTH) / w;
-              w = MAX_WIDTH;
-            }
-            
-            canvas.width = w;
-            canvas.height = h;
-            ctx.drawImage(img, 0, 0, w, h);
-            
-            const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.7);
-            resolve(compressedDataUrl.split(",")[1]);
-          };
-          img.onerror = () => reject("Gagal memuat gambar");
-        };
-        reader.onerror = () => reject("Gagal membaca file");
-        reader.readAsDataURL(file);
-      });
     }
 
     // Fungsi untuk menangani file input dan preview
@@ -753,16 +763,6 @@
     document.addEventListener('DOMContentLoaded', function() {
       loadData();
     });
-
-    // Fungsi untuk di-call oleh JSONP
-    window.handleJSONPData = function(data) {
-      if (data && data.aspirasi) {
-        allAspirasi = data.aspirasi;
-        allKomentar = data.komentar || [];
-        renderPosts();
-        showStatus('Data berhasil dimuat', 'success');
-      }
-    };
   </script>
 </body>
 </html>
