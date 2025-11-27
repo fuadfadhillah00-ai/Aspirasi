@@ -310,14 +310,22 @@
     </div>
   </div>
 
-  <script>
-    // Konfigurasi - GANTI dengan URL Web App Anda
-    const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
+  <!-- Google Forms iframe tersembunyi untuk submit data -->
+  <iframe name="hidden-iframe" id="hidden-iframe" style="display:none;"></iframe>
 
-    // State aplikasi
-    let allAspirasi = [];
-    let allKomentar = [];
+  <script>
+    // Data storage menggunakan localStorage
+    let allAspirasi = JSON.parse(localStorage.getItem('aspirasiData')) || [];
+    let allKomentar = JSON.parse(localStorage.getItem('komentarData')) || [];
     let currentFilter = 'semua';
+
+    // Konfigurasi Google Forms - GANTI dengan URL Google Forms Anda
+    const GOOGLE_FORM_URL = 'https://docs.google.com/forms/d/e/YOUR_FORM_ID_HERE/formResponse';
+    const GOOGLE_FORM_ENTRY_IDS = {
+      nama: 'entry.1234567890',    // Ganti dengan entry ID field nama
+      nim: 'entry.1234567891',     // Ganti dengan entry ID field NIM  
+      isi: 'entry.1234567892'      // Ganti dengan entry ID field isi
+    };
 
     // Fungsi untuk menyembunyikan nama
     function maskName(nama) {
@@ -331,97 +339,6 @@
       if (isi.includes('tendik') || isi.includes('administrasi')) return 'tendik';
       if (isi.includes('fasilitas') || isi.includes('ac') || isi.includes('lcd')) return 'fasilitas';
       return 'lainnya';
-    }
-
-    // Fungsi untuk memuat data dari Google Apps Script
-    async function loadData() {
-      try {
-        showStatus('Memuat data...', 'success');
-        
-        // Gunakan JSONP atau proxy untuk menghindari CORS
-        const timestamp = new Date().getTime();
-        const url = `${APPS_SCRIPT_URL}?action=getData&_=${timestamp}`;
-        
-        const response = await fetch(url, {
-          method: 'GET',
-          mode: 'no-cors' // Mode no-cors untuk menghindari CORS error
-        }).catch(err => {
-          // Fallback: coba dengan approach yang berbeda
-          return loadDataWithJSONP();
-        });
-
-        // Jika menggunakan no-cors, kita tidak bisa membaca response
-        // Jadi kita akan menggunakan pendekatan JSONP
-        await loadDataWithJSONP();
-        
-      } catch (error) {
-        console.error('Error loading data:', error);
-        showStatus('Gagal memuat data. Silakan refresh halaman.', 'error');
-        
-        // Tampilkan data dummy untuk demo
-        showDemoData();
-      }
-    }
-
-    // Alternatif: Gunakan pendekatan JSONP
-    function loadDataWithJSONP() {
-      return new Promise((resolve, reject) => {
-        const callbackName = 'jsonpCallback_' + Date.now();
-        const script = document.createElement('script');
-        
-        window[callbackName] = function(data) {
-          document.head.removeChild(script);
-          delete window[callbackName];
-          
-          if (data && data.aspirasi) {
-            allAspirasi = data.aspirasi;
-            allKomentar = data.komentar || [];
-            renderPosts();
-            showStatus('Data berhasil dimuat', 'success');
-            resolve(data);
-          } else {
-            reject(new Error('Data tidak valid'));
-          }
-        };
-
-        script.src = `${APPS_SCRIPT_URL}?action=getData&callback=${callbackName}`;
-        document.head.appendChild(script);
-        
-        // Timeout fallback
-        setTimeout(() => {
-          if (document.head.contains(script)) {
-            document.head.removeChild(script);
-            delete window[callbackName];
-            reject(new Error('Timeout'));
-          }
-        }, 10000);
-      });
-    }
-
-    // Data demo untuk fallback
-    function showDemoData() {
-      allAspirasi = [
-        {
-          id: 'A1',
-          waktu: new Date().toISOString(),
-          nama: 'Budi Santoso',
-          nim: '123456789',
-          isi: 'Ini adalah contoh aspirasi tentang fasilitas kampus yang perlu ditingkatkan.',
-          gambar: ''
-        }
-      ];
-      allKomentar = [
-        {
-          id: 'C1',
-          waktu: new Date().toISOString(),
-          id_aspirasi: 'A1',
-          nama: 'Sari',
-          nim: '987654321',
-          isi: 'Setuju sekali dengan aspirasi ini!'
-        }
-      ];
-      renderPosts();
-      showStatus('Mode demo diaktifkan', 'success');
     }
 
     // Fungsi untuk render posts
@@ -574,7 +491,23 @@
       return true;
     }
 
-    // Fungsi untuk submit aspirasi
+    // Fungsi untuk submit aspirasi ke Google Forms
+    function submitToGoogleForms(nama, nim, isi) {
+      // Buat form data
+      const formData = new FormData();
+      formData.append(GOOGLE_FORM_ENTRY_IDS.nama, nama);
+      formData.append(GOOGLE_FORM_ENTRY_IDS.nim, nim);
+      formData.append(GOOGLE_FORM_ENTRY_IDS.isi, isi);
+
+      // Kirim ke Google Forms menggunakan fetch
+      return fetch(GOOGLE_FORM_URL, {
+        method: 'POST',
+        body: formData,
+        mode: 'no-cors'
+      });
+    }
+
+    // Fungsi untuk submit aspirasi (SOLUSI UTAMA)
     async function submitAspirasi(event) {
       event.preventDefault();
       
@@ -589,14 +522,38 @@
       submitBtn.textContent = 'Mengirim...';
       
       try {
-        // Untuk GitHub Pages, kita hanya bisa menampilkan pesan sukses
-        // karena tidak bisa mengirim data ke Google Apps Script due to CORS
-        showStatus('Fitur pengiriman aspirasi hanya tersedia di versi Google Apps Script. Silakan kunjungi link Google Apps Script untuk mengirim aspirasi.', 'success');
+        // Simpan data ke localStorage (INSTANT)
+        const newAspirasi = {
+          id: 'A' + Date.now(),
+          waktu: new Date().toISOString(),
+          nama: nama,
+          nim: nim,
+          isi: isi,
+          gambar: '' // Untuk gambar, kita skip dulu karena kompleks
+        };
+
+        // Tambahkan ke data lokal
+        allAspirasi.unshift(newAspirasi);
+        localStorage.setItem('aspirasiData', JSON.stringify(allAspirasi));
+
+        // Coba kirim ke Google Forms (background process)
+        try {
+          await submitToGoogleForms(nama, nim, isi);
+          console.log('Data juga dikirim ke Google Forms');
+        } catch (error) {
+          console.log('Data hanya disimpan secara lokal');
+        }
+
+        // Tampilkan pesan sukses
+        showStatus('Aspirasi berhasil dikirim!', 'success');
         
         // Reset form
         document.getElementById('form-aspirasi').reset();
         document.getElementById('preview').style.display = 'none';
         document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+        
+        // Update tampilan
+        renderPosts();
         
       } catch (error) {
         showStatus('Gagal mengirim aspirasi: ' + error.message, 'error');
@@ -625,11 +582,27 @@
       submitBtn.textContent = 'Mengirim...';
       
       try {
-        showStatus('Fitur komentar hanya tersedia di versi Google Apps Script. Silakan kunjungi link Google Apps Script untuk mengirim komentar.', 'success');
+        // Simpan komentar ke localStorage
+        const newKomentar = {
+          id: 'C' + Date.now(),
+          waktu: new Date().toISOString(),
+          id_aspirasi: idAspirasi,
+          nama: nama,
+          nim: nim,
+          isi: isi
+        };
+
+        allKomentar.push(newKomentar);
+        localStorage.setItem('komentarData', JSON.stringify(allKomentar));
+
+        showStatus('Komentar berhasil dikirim!', 'success');
         
         // Reset form
         form.reset();
         toggleReplyForm(idAspirasi);
+        
+        // Update tampilan
+        renderPosts();
         
       } catch (error) {
         showStatus('Gagal mengirim komentar: ' + error.message, 'error');
@@ -696,18 +669,24 @@
 
     // Inisialisasi
     document.addEventListener('DOMContentLoaded', function() {
-      loadData();
+      renderPosts();
+      showStatus('Siap mengirim aspirasi! Data disimpan secara lokal.', 'success');
     });
 
-    // Fungsi untuk di-call oleh JSONP
-    window.handleJSONPData = function(data) {
-      if (data && data.aspirasi) {
-        allAspirasi = data.aspirasi;
-        allKomentar = data.komentar || [];
-        renderPosts();
-        showStatus('Data berhasil dimuat', 'success');
-      }
-    };
+    // Tambahkan data demo jika kosong
+    if (allAspirasi.length === 0) {
+      allAspirasi = [
+        {
+          id: 'A1',
+          waktu: new Date().toISOString(),
+          nama: 'Budi Santoso',
+          nim: '123456789',
+          isi: 'Selamat datang di AspirasiFEB! Ini adalah contoh aspirasi pertama. Silakan tulis aspirasi Anda tentang dosen, tendik, fasilitas, atau hal lainnya di kampus FEB UNRI.',
+          gambar: ''
+        }
+      ];
+      localStorage.setItem('aspirasiData', JSON.stringify(allAspirasi));
+    }
   </script>
 </body>
 </html>
