@@ -317,6 +317,7 @@
         // State aplikasi
         let currentData = { aspirasi: [], komentar: [] };
         let currentFilter = 'semua';
+        let currentFileInput = null;
 
         // Fungsi untuk menampilkan status
         function showStatus(message, type = 'success') {
@@ -567,16 +568,26 @@
             });
         }
 
+        // Fungsi untuk mendapatkan file input dengan aman
+        function getFileInput() {
+            if (!currentFileInput) {
+                currentFileInput = document.getElementById('file-input');
+            }
+            return currentFileInput;
+        }
+
         // Fungsi untuk submit aspirasi menggunakan JSONP
         function submitAspirasi(event) {
             event.preventDefault();
             
             const form = event.target;
-            const formData = new FormData(form);
-            const nama = formData.get('nama').trim();
-            const nim = formData.get('nim').trim();
-            const isi = formData.get('isi').trim();
-            const file = document.getElementById('file-input').files[0];
+            const nama = document.getElementById('nama').value.trim();
+            const nim = document.getElementById('nim').value.trim();
+            const isi = document.getElementById('isi').value.trim();
+            
+            // Dapatkan file input dengan aman
+            const fileInput = getFileInput();
+            const file = fileInput ? fileInput.files[0] : null;
             
             if (!validateForm(nama, nim, isi)) {
                 return;
@@ -617,9 +628,12 @@
                     
                     if (result.success) {
                         showStatus(result.message, 'success');
-                        form.reset();
+                        // Reset form
+                        document.getElementById('nama').value = '';
+                        document.getElementById('nim').value = '';
+                        document.getElementById('isi').value = '';
                         document.getElementById('preview').style.display = 'none';
-                        document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+                        resetUploadArea();
                         loadData(); // Reload data
                     } else {
                         throw new Error(result.error);
@@ -635,7 +649,9 @@
                 params.append('nama', nama);
                 params.append('nim', nim);
                 params.append('isi', isi);
-                params.append('base64Image', base64Image);
+                if (base64Image) {
+                    params.append('base64Image', base64Image);
+                }
                 params.append('callback', 'handleJsonpSubmit');
 
                 // Buat script element untuk JSONP
@@ -659,15 +675,29 @@
             }
         }
 
+        // Fungsi untuk reset upload area
+        function resetUploadArea() {
+            const uploadArea = document.getElementById('upload-area');
+            uploadArea.innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+            
+            // Re-initialize event listeners untuk file input baru
+            const newFileInput = document.getElementById('file-input');
+            if (newFileInput) {
+                newFileInput.addEventListener('change', function() {
+                    handleFileSelect(this);
+                });
+                currentFileInput = newFileInput;
+            }
+        }
+
         // Fungsi untuk submit komentar menggunakan JSONP
         function submitKomentar(event, idAspirasi) {
             event.preventDefault();
             
             const form = event.target;
-            const formData = new FormData(form);
-            const nama = formData.get('nama').trim();
-            const nim = formData.get('nim').trim();
-            const isi = formData.get('isi').trim();
+            const nama = form.querySelector('input[name="nama"]').value.trim();
+            const nim = form.querySelector('input[name="nim"]').value.trim();
+            const isi = form.querySelector('textarea[name="isi"]').value.trim();
             
             if (!validateForm(nama, nim, isi)) {
                 return;
@@ -745,7 +775,7 @@
                 alert('File bukan gambar atau melebihi 5 MB.');
                 input.value = '';
                 document.getElementById('preview').style.display = 'none';
-                document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
+                resetUploadArea();
             }
         }
 
@@ -756,7 +786,7 @@
             
             // File upload
             const uploadArea = document.getElementById('upload-area');
-            const fileInput = document.getElementById('file-input');
+            const fileInput = getFileInput();
             
             // Drag & Drop functionality
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
@@ -779,14 +809,23 @@
             uploadArea.addEventListener('drop', e => {
                 const dt = e.dataTransfer;
                 const files = dt.files;
-                fileInput.files = files;
-                handleFileSelect(fileInput);
+                if (fileInput) {
+                    fileInput.files = files;
+                    handleFileSelect(fileInput);
+                }
             });
             
-            uploadArea.addEventListener('click', () => fileInput.click());
-            fileInput.addEventListener('change', function() {
-                handleFileSelect(this);
+            uploadArea.addEventListener('click', () => {
+                if (fileInput) {
+                    fileInput.click();
+                }
             });
+            
+            if (fileInput) {
+                fileInput.addEventListener('change', function() {
+                    handleFileSelect(this);
+                });
+            }
         }
 
         // Initialize app
