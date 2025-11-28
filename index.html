@@ -441,13 +441,19 @@
         let allKomentar = [];
         let currentFilter = 'semua';
         
+        // Global variables for file handling
+        let currentFileInput = null;
+        let currentBase64Image = '';
+        
         // Fungsi bantu
         function showStatus(message, type = 'success', elementId = 'formStatus') {
             const element = document.getElementById(elementId);
-            element.innerHTML = `<div class="status ${type}">${message}</div>`;
-            
-            if (type === 'success') {
-                setTimeout(() => element.innerHTML = '', 5000);
+            if (element) {
+                element.innerHTML = `<div class="status ${type}">${message}</div>`;
+                
+                if (type === 'success') {
+                    setTimeout(() => element.innerHTML = '', 5000);
+                }
             }
         }
         
@@ -473,18 +479,25 @@
                     allAspirasi = response.data.aspirasi || [];
                     allKomentar = response.data.komentar || [];
                     renderPosts();
+                } else {
+                    console.error('Failed to load data:', response);
                 }
                 delete window[callbackName];
             };
             
             const script = document.createElement('script');
             script.src = `${APP_SCRIPT_URL}?callback=${callbackName}`;
+            script.onerror = function() {
+                console.error('Failed to load script');
+                delete window[callbackName];
+            };
             document.head.appendChild(script);
         }
         
         // Render posts
         function renderPosts() {
             const container = document.getElementById('postsContainer');
+            if (!container) return;
             
             let filteredAspirasi = allAspirasi;
             if (currentFilter !== 'semua') {
@@ -529,7 +542,7 @@
                         
                         <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
                         
-                        ${aspirasi.gambar ? `
+                        ${aspirasi.gambar && aspirasi.gambar !== '' ? `
                             <img src="${aspirasi.gambar}" alt="Gambar aspirasi" class="post-image" 
                                  onerror="this.style.display='none'">
                         ` : ''}
@@ -577,7 +590,9 @@
         // Toggle reply form
         function toggleReplyForm(id) {
             const form = document.getElementById(`reply-form-${id}`);
-            form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            if (form) {
+                form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            }
         }
         
         // Set filter
@@ -586,7 +601,9 @@
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            event.target.classList.add('active');
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
             renderPosts();
         }
         
@@ -596,17 +613,35 @@
             const fileInput = document.getElementById('fileInput');
             const preview = document.getElementById('preview');
             
+            if (!uploadArea || !fileInput || !preview) {
+                console.error('File upload elements not found');
+                return;
+            }
+            
+            // Store file input globally
+            currentFileInput = fileInput;
+            
             // Click to upload
-            uploadArea.addEventListener('click', () => fileInput.click());
+            uploadArea.addEventListener('click', () => {
+                if (currentFileInput) {
+                    currentFileInput.click();
+                }
+            });
             
             // File selected
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
-                if (file && file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+                if (file && file.type.startsWith('image/')) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        showStatus('File terlalu besar. Maksimal 5MB', 'error');
+                        return;
+                    }
+                    
                     const reader = new FileReader();
                     reader.onload = (e) => {
                         preview.src = e.target.result;
                         preview.style.display = 'block';
+                        currentBase64Image = e.target.result; // Store base64 globally
                         uploadArea.innerHTML = `
                             <div>✅ Gambar terpilih</div>
                             <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
@@ -614,9 +649,12 @@
                             </div>
                         `;
                     };
+                    reader.onerror = () => {
+                        showStatus('Gagal membaca file', 'error');
+                    };
                     reader.readAsDataURL(file);
                 } else {
-                    showStatus('File harus gambar dan maksimal 5MB', 'error');
+                    showStatus('File harus berupa gambar (JPG, PNG)', 'error');
                 }
             });
             
@@ -644,24 +682,28 @@
             
             uploadArea.addEventListener('drop', (e) => {
                 const files = e.dataTransfer.files;
-                if (files.length > 0) {
-                    fileInput.files = files;
-                    fileInput.dispatchEvent(new Event('change'));
+                if (files.length > 0 && currentFileInput) {
+                    currentFileInput.files = files;
+                    currentFileInput.dispatchEvent(new Event('change'));
                 }
             });
         }
         
-        // Submit aspirasi
+        // Submit aspirasi - FIXED VERSION
         async function submitAspirasi(event) {
             event.preventDefault();
             
             const submitBtn = document.getElementById('submitBtn');
             const form = document.getElementById('aspirasiForm');
-            const fileInput = document.getElementById('fileInput');
             
-            const nama = document.getElementById('nama').value.trim();
-            const nim = document.getElementById('nim').value.trim();
-            const isi = document.getElementById('isi').value.trim();
+            if (!submitBtn || !form) {
+                console.error('Form elements not found');
+                return;
+            }
+            
+            const nama = document.getElementById('nama')?.value.trim();
+            const nim = document.getElementById('nim')?.value.trim();
+            const isi = document.getElementById('isi')?.value.trim();
             
             // Validasi
             if (!nama || !nim || !isi) {
@@ -674,21 +716,17 @@
                 return;
             }
             
+            if (isi.length < 10) {
+                showStatus('Aspirasi minimal 10 karakter', 'error');
+                return;
+            }
+            
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
             
             try {
-                let base64Image = '';
-                
-                // Process image
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    base64Image = await new Promise((resolve) => {
-                        const reader = new FileReader();
-                        reader.onload = (e) => resolve(e.target.result);
-                        reader.readAsDataURL(file);
-                    });
-                }
+                // Use globally stored base64 image
+                let base64Image = currentBase64Image;
                 
                 // Submit data
                 const formData = new FormData();
@@ -696,19 +734,22 @@
                 formData.append('nama', nama);
                 formData.append('nim', nim);
                 formData.append('isi', isi);
-                if (base64Image) {
+                if (base64Image && base64Image.length > 0) {
                     formData.append('base64Image', base64Image);
                 }
                 
+                console.log('Mengirim aspirasi...');
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
                 
                 const result = await response.json();
+                console.log('Response:', result);
                 
                 if (result.success) {
                     showStatus(result.message + (result.gambar_url ? ' dengan gambar' : ''));
+                    // Reset form
                     form.reset();
                     document.getElementById('preview').style.display = 'none';
                     document.getElementById('uploadArea').innerHTML = `
@@ -716,15 +757,22 @@
                         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
                             Maksimal 5MB - JPG, PNG
                         </div>
+                        <input type="file" id="fileInput" class="file-input" accept="image/*">
                     `;
+                    // Reset global variables
+                    currentBase64Image = '';
+                    currentFileInput = document.getElementById('fileInput');
+                    // Setup file upload again
+                    setupFileUpload();
+                    // Reload data
                     setTimeout(loadData, 2000);
                 } else {
                     showStatus(result.message, 'error');
                 }
                 
             } catch (error) {
-                showStatus('Gagal mengirim aspirasi', 'error');
                 console.error('Error:', error);
+                showStatus('Gagal mengirim aspirasi: ' + error.message, 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Posting Aspirasi';
@@ -737,12 +785,26 @@
             
             const form = event.target;
             const submitBtn = form.querySelector('button[type="submit"]');
-            const nama = form.querySelector('input[name="nama"]').value.trim();
-            const nim = form.querySelector('input[name="nim"]').value.trim();
-            const isi = form.querySelector('textarea[name="isi"]').value.trim();
+            const namaInput = form.querySelector('input[name="nama"]');
+            const nimInput = form.querySelector('input[name="nim"]');
+            const isiInput = form.querySelector('textarea[name="isi"]');
+            
+            if (!submitBtn || !namaInput || !nimInput || !isiInput) {
+                showStatus('Form komentar tidak lengkap', 'error');
+                return;
+            }
+            
+            const nama = namaInput.value.trim();
+            const nim = nimInput.value.trim();
+            const isi = isiInput.value.trim();
             
             if (!nama || !nim || !isi) {
-                showStatus('Harap isi semua field', 'error', 'formStatus');
+                showStatus('Harap isi semua field', 'error');
+                return;
+            }
+            
+            if (nim.length < 8 || !/^\d+$/.test(nim)) {
+                showStatus('NIM harus angka minimal 8 digit', 'error');
                 return;
             }
             
@@ -774,6 +836,7 @@
                 }
                 
             } catch (error) {
+                console.error('Error:', error);
                 showStatus('Gagal mengirim komentar', 'error');
             } finally {
                 submitBtn.disabled = false;
@@ -783,10 +846,18 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('aspirasiForm').addEventListener('submit', submitAspirasi);
+            const aspirasiForm = document.getElementById('aspirasiForm');
+            if (aspirasiForm) {
+                aspirasiForm.addEventListener('submit', submitAspirasi);
+            } else {
+                console.error('Aspirasi form not found');
+            }
+            
             setupFileUpload();
             loadData();
-            setInterval(loadData, 30000); // Auto refresh every 30 seconds
+            
+            // Auto refresh every 30 seconds
+            setInterval(loadData, 30000);
         });
     </script>
 </body>
