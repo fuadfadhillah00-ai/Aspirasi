@@ -344,7 +344,6 @@
         
         .arrow-up.active {
             color: var(--upvote);
-            transform: scale(1.2);
         }
         
         .arrow-down {
@@ -353,7 +352,6 @@
         
         .arrow-down.active {
             color: var(--downvote);
-            transform: scale(1.2);
         }
         
         /* Voting Styles - Clean Twitter Style */
@@ -862,9 +860,6 @@
         let isLoading = false;
         let currentUser = null;
         
-        // Voting state untuk optimistic updates
-        let pendingVotes = new Map();
-        
         // Global variables for file handling
         let currentFileInput = null;
         let currentBase64Image = '';
@@ -906,11 +901,13 @@
         
         // Voting Management dengan Local Storage
         function getUserVotes() {
+            if (!currentUser) return {};
             const votes = localStorage.getItem(`aspirasiFEB_votes_${currentUser.nim}`);
             return votes ? JSON.parse(votes) : {};
         }
         
         function saveUserVote(postId, voteType) {
+            if (!currentUser) return;
             const votes = getUserVotes();
             if (voteType === 'none') {
                 delete votes[postId];
@@ -1252,7 +1249,7 @@
             renderPagination();
         }
         
-        // Handle voting dengan logika yang benar
+        // Handle voting dengan logika yang benar - SISTEM BARU
         async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
@@ -1261,32 +1258,40 @@
             
             const post = allAspirasi.find(a => a.id === postId);
             if (!post) return;
-            
+
             // Cek vote sebelumnya dari Local Storage
             const previousVoteType = getUserVoteForPost(postId);
-            
-            // Tentukan vote type baru berdasarkan logika toggle
+
+            // Tentukan vote type baru berdasarkan logika toggle 1-0-1
             let newVoteType;
             if (previousVoteType === voteType) {
-                // Jika klik vote yang sama, hapus vote (toggle off)
+                // Jika klik vote yang sama, hapus vote (toggle off) → 0
                 newVoteType = 'none';
             } else {
-                // Jika klik vote berbeda, ganti ke vote baru
+                // Jika klik vote berbeda, ganti ke vote baru → 1
                 newVoteType = voteType;
             }
-            
-            // Simpan ke Local Storage langsung - warna akan bertahan setelah reload
+
+            // Simpan ke Local Storage langsung
             saveUserVote(postId, newVoteType);
-            
-            // Immediate UI update
+
+            // Update UI langsung untuk warna (tapi count tetap dari server)
             renderPosts();
-            
+
             try {
                 const formData = new FormData();
                 formData.append('action', 'vote');
                 formData.append('id_aspirasi', postId);
                 formData.append('nim_user', currentUser.nim);
-                formData.append('vote_type', newVoteType === 'none' ? previousVoteType : voteType);
+                
+                // Kirim vote type yang sesuai dengan logika toggle
+                if (newVoteType === 'none') {
+                    // Kirim instruksi untuk menghapus vote
+                    formData.append('vote_type', previousVoteType); // Kirim type sebelumnya untuk dihapus
+                } else {
+                    // Kirim instruksi untuk menambah/mengganti vote
+                    formData.append('vote_type', voteType);
+                }
                 
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
@@ -1296,7 +1301,7 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Success - reload data untuk sync dengan server
+                    // Success - reload data untuk sync count dengan server
                     loadData();
                     showStatus('Vote berhasil disimpan!');
                 } else {
