@@ -227,11 +227,73 @@
             white-space: pre-line;
         }
         
-        .post-image {
-            max-width: 100%;
-            border-radius: 12px;
+        /* PERBAIKAN: Ukuran gambar lebih kecil */
+        .post-image-container {
             margin: 15px 0;
+            text-align: center;
+        }
+        
+        .post-image {
+            max-width: 300px; /* Lebih kecil dari sebelumnya */
+            max-height: 200px; /* Lebih kecil dari sebelumnya */
+            width: auto;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        
+        .post-image:hover {
+            transform: scale(1.02);
+        }
+        
+        /* Modal untuk gambar full size */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
             display: block;
+            margin: auto;
+            max-width: 90%;
+            max-height: 90%;
+            border-radius: 8px;
+            animation: zoomIn 0.3s;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: #ccc;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
         }
         
         .post-actions {
@@ -365,10 +427,29 @@
             .form-row {
                 grid-template-columns: 1fr;
             }
+            
+            /* Gambar lebih kecil di mobile */
+            .post-image {
+                max-width: 250px;
+                max-height: 180px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .post-image {
+                max-width: 200px;
+                max-height: 150px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Modal untuk gambar full size -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+
     <div class="container">
         <!-- Header -->
         <div class="header">
@@ -469,6 +550,44 @@
             return 'lainnya';
         }
         
+        // Image Modal Functions
+        function setupImageModal() {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const closeBtn = document.querySelector('.close-modal');
+            
+            if (!modal || !modalImg || !closeBtn) return;
+            
+            // Close modal when clicking X
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+            
+            // Close modal when clicking outside image
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+            
+            // Close modal with ESC key
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+        
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            
+            if (modal && modalImg) {
+                modal.style.display = 'block';
+                modalImg.src = src;
+            }
+        }
+        
         // Load data
         function loadData() {
             const timestamp = Date.now();
@@ -543,8 +662,13 @@
                         <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
                         
                         ${aspirasi.gambar && aspirasi.gambar !== '' ? `
-                            <img src="${aspirasi.gambar}" alt="Gambar aspirasi" class="post-image" 
-                                 onerror="this.style.display='none'">
+                            <div class="post-image-container">
+                                <img src="${aspirasi.gambar}" 
+                                     alt="Gambar aspirasi" 
+                                     class="post-image"
+                                     onclick="openImageModal('${aspirasi.gambar}')"
+                                     onerror="this.style.display='none'">
+                            </div>
                         ` : ''}
                         
                         <div class="post-actions">
@@ -854,6 +978,7 @@
             }
             
             setupFileUpload();
+            setupImageModal();
             loadData();
             
             // Auto refresh every 30 seconds
