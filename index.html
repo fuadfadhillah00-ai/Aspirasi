@@ -166,6 +166,17 @@
             cursor: not-allowed;
         }
         
+        .btn-refresh {
+            background: #6c757d;
+            width: auto;
+            padding: 8px 16px;
+            margin: 0;
+        }
+        
+        .btn-refresh:hover {
+            background: #5a6268;
+        }
+        
         /* Posts Section - SCROLLABLE MAIN CONTENT */
         .posts-section {
             flex: 1;
@@ -204,6 +215,7 @@
             background: var(--light-bg);
             padding: 15px 0;
             z-index: 10;
+            align-items: center;
         }
         
         .filter-btn {
@@ -246,31 +258,6 @@
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
-        }
-        
-        /* New Post Animation */
-        .new-post-indicator {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 10px 15px;
-            border-radius: 20px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: 600;
-            font-size: 14px;
-            animation: slideDown 0.5s ease-out;
-            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
-        }
-        
-        @keyframes slideDown {
-            from {
-                transform: translateY(-20px);
-                opacity: 0;
-            }
-            to {
-                transform: translateY(0);
-                opacity: 1;
-            }
         }
         
         .post {
@@ -355,6 +342,38 @@
             transform: scale(1.02);
         }
         
+        /* CSS Arrow Icons */
+        .arrow-icon {
+            width: 20px;
+            height: 20px;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .arrow-up {
+            border: 2px solid var(--text-light);
+            border-bottom: none;
+            border-right: none;
+            transform: rotate(45deg);
+        }
+        
+        .arrow-up.active {
+            border-color: var(--upvote);
+            background-color: var(--upvote);
+        }
+        
+        .arrow-down {
+            border: 2px solid var(--text-light);
+            border-top: none;
+            border-left: none;
+            transform: rotate(45deg);
+        }
+        
+        .arrow-down.active {
+            border-color: var(--downvote);
+            background-color: var(--downvote);
+        }
+        
         /* Voting Styles */
         .post-voting {
             display: flex;
@@ -366,7 +385,7 @@
         .vote-btn {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 8px;
             background: none;
             border: none;
             cursor: pointer;
@@ -377,28 +396,32 @@
             font-size: 14px;
         }
         
-        .upvote-btn {
-            color: var(--text-light);
+        .vote-btn:hover {
+            background: #f8f9fa;
         }
         
-        .upvote-btn.active {
-            color: var(--upvote);
-            background: #e8f4fe;
+        .vote-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
         }
         
-        .downvote-btn {
-            color: var(--text-light);
-        }
-        
-        .downvote-btn.active {
-            color: var(--downvote);
-            background: #fef0f7;
+        .vote-btn:disabled:hover {
+            background: none;
         }
         
         .vote-count {
             font-weight: bold;
             min-width: 20px;
             text-align: center;
+            transition: color 0.3s ease;
+        }
+        
+        .upvote-btn.active .vote-count {
+            color: var(--upvote);
+        }
+        
+        .downvote-btn.active .vote-count {
+            color: var(--downvote);
         }
         
         .post-actions {
@@ -428,19 +451,22 @@
             color: var(--primary);
         }
         
+        .reply-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        
+        .reply-btn:disabled:hover {
+            background: none;
+            color: var(--text-light);
+        }
+        
         .reply-form {
             margin-top: 15px;
             padding: 20px;
             background: #f8f9fa;
             border-radius: 12px;
             display: none;
-        }
-        
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 10px;
         }
         
         .replies {
@@ -490,6 +516,52 @@
             font-size: 12px;
             color: var(--text-light);
             margin-bottom: 5px;
+        }
+        
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            min-width: 40px;
+            text-align: center;
+        }
+        
+        .page-btn:hover {
+            background: #f8f9fa;
+        }
+        
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .page-btn.disabled:hover {
+            background: white;
+        }
+        
+        .page-dots {
+            padding: 8px 4px;
+            color: var(--text-light);
         }
         
         /* Modal untuk gambar full size */
@@ -646,26 +718,23 @@
                 position: static;
             }
             
-            .form-row {
-                grid-template-columns: 1fr;
-            }
-            
-            /* Gambar lebih kecil di mobile */
-            .post-image {
-                max-height: 60vh;
-            }
-            
             .welcome-content {
                 margin: 10% auto;
                 width: 95%;
             }
+            
+            .pagination {
+                gap: 4px;
+            }
+            
+            .page-btn {
+                padding: 6px 10px;
+                min-width: 36px;
+                font-size: 13px;
+            }
         }
         
         @media (max-width: 480px) {
-            .post-image {
-                max-height: 50vh;
-            }
-            
             .container {
                 padding: 0;
             }
@@ -694,6 +763,11 @@
                 padding: 6px 8px;
                 font-size: 12px;
             }
+            
+            .arrow-icon {
+                width: 16px;
+                height: 16px;
+            }
         }
     </style>
 </head>
@@ -719,6 +793,7 @@
                     Mulai Berpartisipasi
                 </button>
             </form>
+            <div id="welcomeStatus"></div>
         </div>
     </div>
 
@@ -780,6 +855,9 @@
             <div class="filters">
                 <button class="filter-btn active" onclick="setSort('votes')">🔥 Terpopuler</button>
                 <button class="filter-btn" onclick="setSort('time')">🕒 Terbaru</button>
+                <button class="btn btn-refresh" onclick="loadData()" id="refreshBtn">
+                    🔄 Refresh
+                </button>
             </div>
             
             <div id="postsContainer">
@@ -788,19 +866,26 @@
                     <div class="loading-text">Memuat aspirasi...</div>
                 </div>
             </div>
+            
+            <div id="paginationContainer"></div>
         </div>
     </div>
 
     <script>
         const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
         
+        // State management
         let allAspirasi = [];
         let allKomentar = [];
         let allVoting = [];
         let currentSort = 'votes';
+        let currentPage = 1;
+        const postsPerPage = 10;
         let isLoading = false;
-        let lastPostCount = 0;
         let currentUser = null;
+        
+        // Voting state untuk optimistic updates
+        let pendingVotes = new Map(); // postId -> { type, originalState }
         
         // Global variables for file handling
         let currentFileInput = null;
@@ -863,19 +948,16 @@
             
             if (!modal || !modalImg || !closeBtn) return;
             
-            // Close modal when clicking X
             closeBtn.onclick = function() {
                 modal.style.display = 'none';
             }
             
-            // Close modal when clicking outside image
             modal.onclick = function(event) {
                 if (event.target === modal) {
                     modal.style.display = 'none';
                 }
             }
             
-            // Close modal with ESC key
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
                     modal.style.display = 'none';
@@ -893,22 +975,26 @@
             }
         }
         
-        // Load data dengan loading animation
+        // Load data dengan pagination
         function loadData() {
             if (isLoading) return;
             
             isLoading = true;
             const container = document.getElementById('postsContainer');
+            const refreshBtn = document.getElementById('refreshBtn');
             
-            // Show loading spinner hanya jika belum ada data
-            if (allAspirasi.length === 0) {
-                container.innerHTML = `
-                    <div class="loading-container">
-                        <div class="loading-spinner"></div>
-                        <div class="loading-text">Memuat aspirasi...</div>
-                    </div>
-                `;
+            if (refreshBtn) {
+                refreshBtn.disabled = true;
+                refreshBtn.textContent = '⏳ Loading...';
             }
+            
+            // Show loading spinner
+            container.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Memuat aspirasi...</div>
+                </div>
+            `;
             
             const timestamp = Date.now();
             const callbackName = `handleData_${timestamp}`;
@@ -916,20 +1002,18 @@
             window[callbackName] = function(response) {
                 isLoading = false;
                 
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = '🔄 Refresh';
+                }
+                
                 if (response && response.success) {
-                    const newAspirasi = response.data.aspirasi || [];
-                    const newKomentar = response.data.komentar || [];
-                    const newVoting = response.data.voting || [];
+                    allAspirasi = response.data.aspirasi || [];
+                    allKomentar = response.data.komentar || [];
+                    allVoting = response.data.voting || [];
                     
-                    // Check if there are new posts
-                    const hasNewPosts = newAspirasi.length > lastPostCount;
-                    lastPostCount = newAspirasi.length;
-                    
-                    allAspirasi = newAspirasi;
-                    allKomentar = newKomentar;
-                    allVoting = newVoting;
-                    
-                    renderPosts(hasNewPosts);
+                    renderPosts();
+                    renderPagination();
                 } else {
                     console.error('Failed to load data:', response);
                     container.innerHTML = `
@@ -947,17 +1031,18 @@
             script.src = `${APP_SCRIPT_URL}?callback=${callbackName}`;
             script.onerror = function() {
                 isLoading = false;
+                if (refreshBtn) {
+                    refreshBtn.disabled = false;
+                    refreshBtn.textContent = '🔄 Refresh';
+                }
                 console.error('Failed to load script');
                 delete window[callbackName];
             };
             document.head.appendChild(script);
         }
         
-        // Render posts dengan animation
-        function renderPosts(showNewIndicator = false) {
-            const container = document.getElementById('postsContainer');
-            if (!container) return;
-            
+        // Get current page posts
+        function getCurrentPagePosts() {
             let sortedAspirasi = [...allAspirasi];
             
             // Sort berdasarkan pilihan
@@ -968,11 +1053,24 @@
                     return netB - netA;
                 });
             } else {
-                // Sort by time (newest first)
                 sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
             }
             
-            if (sortedAspirasi.length === 0) {
+            // Pagination
+            const startIndex = (currentPage - 1) * postsPerPage;
+            const endIndex = startIndex + postsPerPage;
+            
+            return sortedAspirasi.slice(startIndex, endIndex);
+        }
+        
+        // Render posts dengan pagination
+        function renderPosts() {
+            const container = document.getElementById('postsContainer');
+            if (!container) return;
+            
+            const currentPosts = getCurrentPagePosts();
+            
+            if (currentPosts.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div style="font-size: 48px; margin-bottom: 10px;">🔍</div>
@@ -983,18 +1081,7 @@
                 return;
             }
             
-            let postsHTML = '';
-            
-            // Add new post indicator jika ada post baru
-            if (showNewIndicator && sortedAspirasi.length > 0) {
-                postsHTML += `
-                    <div class="new-post-indicator">
-                        ✨ Ada aspirasi baru!
-                    </div>
-                `;
-            }
-            
-            postsHTML += sortedAspirasi.map((aspirasi, index) => {
+            let postsHTML = currentPosts.map((aspirasi, index) => {
                 const waktu = new Date(aspirasi.waktu);
                 const tanggal = waktu.toLocaleDateString('id-ID');
                 const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -1012,8 +1099,27 @@
                     userVote = userVoteData ? userVoteData.vote_type : null;
                 }
                 
-                const upvoteCount = aspirasi.upvote_count || 0;
-                const downvoteCount = aspirasi.downvote_count || 0;
+                // Gunakan optimistic state jika ada
+                const pendingVote = pendingVotes.get(aspirasi.id);
+                let upvoteCount = aspirasi.upvote_count || 0;
+                let downvoteCount = aspirasi.downvote_count || 0;
+                let displayUserVote = userVote;
+                
+                if (pendingVote) {
+                    if (pendingVote.type === 'upvote') {
+                        upvoteCount = pendingVote.newUpvotes;
+                        downvoteCount = pendingVote.newDownvotes;
+                        displayUserVote = 'upvote';
+                    } else if (pendingVote.type === 'downvote') {
+                        upvoteCount = pendingVote.newUpvotes;
+                        downvoteCount = pendingVote.newDownvotes;
+                        displayUserVote = 'downvote';
+                    } else if (pendingVote.type === 'none') {
+                        upvoteCount = pendingVote.newUpvotes;
+                        downvoteCount = pendingVote.newDownvotes;
+                        displayUserVote = null;
+                    }
+                }
                 
                 return `
                     <div class="post" id="post-${aspirasi.id}">
@@ -1039,16 +1145,16 @@
                         
                         <div class="post-actions">
                             <div class="post-voting">
-                                <button class="vote-btn upvote-btn ${userVote === 'upvote' ? 'active' : ''}" 
+                                <button class="vote-btn upvote-btn ${displayUserVote === 'upvote' ? 'active' : ''}" 
                                         onclick="handleVote('${aspirasi.id}', 'upvote')"
                                         ${!currentUser ? 'disabled' : ''}>
-                                    <span>↑</span>
+                                    <div class="arrow-icon arrow-up ${displayUserVote === 'upvote' ? 'active' : ''}"></div>
                                     <span class="vote-count">${upvoteCount}</span>
                                 </button>
-                                <button class="vote-btn downvote-btn ${userVote === 'downvote' ? 'active' : ''}" 
+                                <button class="vote-btn downvote-btn ${displayUserVote === 'downvote' ? 'active' : ''}" 
                                         onclick="handleVote('${aspirasi.id}', 'downvote')"
                                         ${!currentUser ? 'disabled' : ''}>
-                                    <span>↓</span>
+                                    <div class="arrow-icon arrow-down ${displayUserVote === 'downvote' ? 'active' : ''}"></div>
                                     <span class="vote-count">${downvoteCount}</span>
                                 </button>
                             </div>
@@ -1090,6 +1196,79 @@
             container.innerHTML = postsHTML;
         }
         
+        // Render pagination
+        function renderPagination() {
+            const container = document.getElementById('paginationContainer');
+            if (!container) return;
+            
+            const totalPosts = allAspirasi.length;
+            const totalPages = Math.ceil(totalPosts / postsPerPage);
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '<div class="pagination">';
+            
+            // Previous button
+            if (currentPage > 1) {
+                paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">‹</button>`;
+            } else {
+                paginationHTML += `<button class="page-btn disabled">‹</button>`;
+            }
+            
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                paginationHTML += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHTML += `<span class="page-dots">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    paginationHTML += `<button class="page-btn active">${i}</button>`;
+                } else {
+                    paginationHTML += `<button class="page-btn" onclick="goToPage(${i})">${i}</button>`;
+                }
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<span class="page-dots">...</span>`;
+                }
+                paginationHTML += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            if (currentPage < totalPages) {
+                paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">›</button>`;
+            } else {
+                paginationHTML += `<button class="page-btn disabled">›</button>`;
+            }
+            
+            paginationHTML += '</div>';
+            container.innerHTML = paginationHTML;
+        }
+        
+        // Pagination functions
+        function goToPage(page) {
+            currentPage = page;
+            renderPosts();
+            renderPagination();
+            // Scroll to top of posts
+            document.getElementById('postsContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+        
         // Toggle reply form
         function toggleReplyForm(id) {
             const form = document.getElementById(`reply-form-${id}`);
@@ -1101,21 +1280,66 @@
         // Set sort type
         function setSort(sortType) {
             currentSort = sortType;
+            currentPage = 1; // Reset to first page
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
-            if (event && event.target) {
-                event.target.classList.add('active');
-            }
+            event.target.classList.add('active');
             renderPosts();
+            renderPagination();
         }
         
-        // Handle voting
+        // Handle voting dengan optimistic updates
         async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
+            
+            const post = allAspirasi.find(a => a.id === postId);
+            if (!post) return;
+            
+            // Cek vote sebelumnya
+            const previousVote = allVoting.find(v => 
+                v.id_aspirasi === postId && v.nim_user === currentUser.nim
+            );
+            
+            const previousVoteType = previousVote ? previousVote.vote_type : null;
+            
+            // Hitung votes baru untuk optimistic update
+            let newUpvotes = post.upvote_count || 0;
+            let newDownvotes = post.downvote_count || 0;
+            let finalVoteType = voteType;
+            
+            if (previousVoteType === voteType) {
+                // Toggle off - remove vote
+                finalVoteType = 'none';
+                if (voteType === 'upvote') newUpvotes--;
+                if (voteType === 'downvote') newDownvotes--;
+            } else if (previousVoteType) {
+                // Change vote
+                if (previousVoteType === 'upvote') newUpvotes--;
+                if (previousVoteType === 'downvote') newDownvotes--;
+                if (voteType === 'upvote') newUpvotes++;
+                if (voteType === 'downvote') newDownvotes++;
+            } else {
+                // New vote
+                if (voteType === 'upvote') newUpvotes++;
+                if (voteType === 'downvote') newDownvotes++;
+            }
+            
+            // Simpan state asli untuk rollback
+            pendingVotes.set(postId, {
+                type: finalVoteType,
+                originalUpvotes: post.upvote_count || 0,
+                originalDownvotes: post.downvote_count || 0,
+                newUpvotes: newUpvotes,
+                newDownvotes: newDownvotes,
+                previousVoteType: previousVoteType
+            });
+            
+            // Immediate UI update
+            renderPosts();
             
             try {
                 const formData = new FormData();
@@ -1132,15 +1356,20 @@
                 const result = await response.json();
                 
                 if (result.success) {
-                    // Reload data untuk update counts
+                    // Success - hapus dari pending votes
+                    pendingVotes.delete(postId);
+                    // Reload data untuk sync dengan server
                     setTimeout(() => loadData(), 1000);
                 } else {
-                    showStatus(result.message, 'error');
+                    throw new Error(result.message);
                 }
                 
             } catch (error) {
                 console.error('Error:', error);
-                showStatus('Gagal melakukan vote', 'error');
+                // Rollback optimistic update
+                pendingVotes.delete(postId);
+                renderPosts();
+                showStatus('Gagal menyimpan vote', 'error');
             }
         }
         
@@ -1155,17 +1384,14 @@
                 return;
             }
             
-            // Store file input globally
             currentFileInput = fileInput;
             
-            // Click to upload
             uploadArea.addEventListener('click', () => {
                 if (currentFileInput) {
                     currentFileInput.click();
                 }
             });
             
-            // File selected
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file && file.type.startsWith('image/')) {
@@ -1178,7 +1404,7 @@
                     reader.onload = (e) => {
                         preview.src = e.target.result;
                         preview.style.display = 'block';
-                        currentBase64Image = e.target.result; // Store base64 globally
+                        currentBase64Image = e.target.result;
                         uploadArea.innerHTML = `
                             <div>✅ Gambar terpilih</div>
                             <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
@@ -1195,7 +1421,6 @@
                 }
             });
             
-            // Drag and drop
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, preventDefaults, false);
             });
@@ -1245,7 +1470,6 @@
             
             const isi = document.getElementById('isi')?.value.trim();
             
-            // Validasi
             if (!isi) {
                 showStatus('Harap isi aspirasi', 'error');
                 return;
@@ -1260,10 +1484,8 @@
             submitBtn.textContent = 'Mengirim...';
             
             try {
-                // Use globally stored base64 image
                 let base64Image = currentBase64Image;
                 
-                // Submit data
                 const formData = new FormData();
                 formData.append('action', 'kirim_aspirasi');
                 formData.append('nama', currentUser.nama);
@@ -1273,18 +1495,15 @@
                     formData.append('base64Image', base64Image);
                 }
                 
-                console.log('Mengirim aspirasi...');
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
                 
                 const result = await response.json();
-                console.log('Response:', result);
                 
                 if (result.success) {
                     showStatus(result.message + (result.gambar_url ? ' dengan gambar' : ''));
-                    // Reset form
                     form.reset();
                     document.getElementById('preview').style.display = 'none';
                     document.getElementById('uploadArea').innerHTML = `
@@ -1294,13 +1513,10 @@
                         </div>
                         <input type="file" id="fileInput" class="file-input" accept="image/*">
                     `;
-                    // Reset global variables
                     currentBase64Image = '';
                     currentFileInput = document.getElementById('fileInput');
-                    // Setup file upload again
                     setupFileUpload();
-                    // Reload data dengan indicator new post
-                    setTimeout(() => loadData(), 2000);
+                    loadData();
                 } else {
                     showStatus(result.message, 'error');
                 }
@@ -1361,7 +1577,7 @@
                     showStatus('Komentar berhasil dikirim!');
                     form.reset();
                     toggleReplyForm(aspirasiId);
-                    setTimeout(loadData, 2000);
+                    loadData();
                 } else {
                     showStatus(result.message, 'error');
                 }
@@ -1394,7 +1610,6 @@
         
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            // Check if user already exists
             if (!initializeUser()) {
                 showWelcomeModal();
             }
@@ -1402,8 +1617,6 @@
             const aspirasiForm = document.getElementById('aspirasiForm');
             if (aspirasiForm) {
                 aspirasiForm.addEventListener('submit', submitAspirasi);
-            } else {
-                console.error('Aspirasi form not found');
             }
             
             const welcomeForm = document.getElementById('welcomeForm');
@@ -1414,9 +1627,6 @@
             setupFileUpload();
             setupImageModal();
             loadData();
-            
-            // Auto refresh every 30 seconds
-            setInterval(loadData, 30000);
         });
     </script>
 </body>
