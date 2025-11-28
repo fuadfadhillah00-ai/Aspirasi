@@ -24,6 +24,8 @@
             background: var(--light-bg);
             color: var(--dark);
             line-height: 1.6;
+            height: 100vh;
+            overflow: hidden; /* Prevent body scroll */
         }
         
         .container {
@@ -33,6 +35,7 @@
             display: grid;
             grid-template-columns: 350px 1fr;
             gap: 20px;
+            height: 100vh;
         }
         
         /* Header */
@@ -52,7 +55,14 @@
             gap: 10px;
         }
         
-        /* Form Styles */
+        /* Form Styles - FIXED */
+        .form-section {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto; /* Scroll jika form terlalu panjang */
+        }
+        
         .form-card {
             background: white;
             border-radius: 16px;
@@ -152,9 +162,30 @@
             cursor: not-allowed;
         }
         
-        /* Posts Section */
+        /* Posts Section - SCROLLABLE */
         .posts-section {
-            background: transparent;
+            height: 100vh;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        /* Custom scrollbar untuk posts section */
+        .posts-section::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        .posts-section::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        
+        .posts-section::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        
+        .posts-section::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
         }
         
         .filters {
@@ -162,6 +193,11 @@
             gap: 10px;
             margin-bottom: 20px;
             flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            background: var(--light-bg);
+            padding: 15px 0;
+            z-index: 10;
         }
         
         .filter-btn {
@@ -227,15 +263,15 @@
             white-space: pre-line;
         }
         
-        /* PERBAIKAN: Ukuran gambar lebih kecil */
+        /* Ukuran gambar lebih kecil */
         .post-image-container {
             margin: 15px 0;
             text-align: center;
         }
         
         .post-image {
-            max-width: 500px; /* Lebih kecil dari sebelumnya */
-            max-height: 400px; /* Lebih kecil dari sebelumnya */
+            max-width: 300px;
+            max-height: 200px;
             width: auto;
             height: auto;
             border-radius: 12px;
@@ -416,11 +452,34 @@
         
         /* Responsive */
         @media (max-width: 768px) {
+            body {
+                overflow: auto;
+                height: auto;
+            }
+            
             .container {
                 grid-template-columns: 1fr;
+                height: auto;
+                gap: 0;
+            }
+            
+            .form-section {
+                height: auto;
+                position: static;
+                margin-bottom: 20px;
             }
             
             .form-card {
+                position: static;
+            }
+            
+            .posts-section {
+                height: auto;
+                overflow-y: visible;
+                padding-right: 0;
+            }
+            
+            .filters {
                 position: static;
             }
             
@@ -430,8 +489,8 @@
             
             /* Gambar lebih kecil di mobile */
             .post-image {
-                max-width: 400px;
-                max-height: 300px;
+                max-width: 250px;
+                max-height: 180px;
             }
         }
         
@@ -439,6 +498,18 @@
             .post-image {
                 max-width: 200px;
                 max-height: 150px;
+            }
+            
+            .container {
+                padding: 10px;
+            }
+            
+            .form-card {
+                padding: 20px;
+            }
+            
+            .post {
+                padding: 20px;
             }
         }
     </style>
@@ -459,44 +530,46 @@
             </div>
         </div>
         
-        <!-- Form Section -->
-        <div class="form-card">
-            <h2 class="form-title">📢 Tulis Aspirasimu</h2>
-            <form id="aspirasiForm">
-                <div class="form-group">
-                    <label for="nama">Nama Lengkap</label>
-                    <input type="text" id="nama" required placeholder="Nama Anda">
-                </div>
-                
-                <div class="form-group">
-                    <label for="nim">NIM</label>
-                    <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
-                </div>
-                
-                <div class="form-group">
-                    <label for="isi">Aspirasi</label>
-                    <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
-                </div>
-                
-                <div class="form-group">
-                    <div class="upload-area" id="uploadArea">
-                        <div>📷 Klik atau seret gambar ke sini</div>
-                        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
-                            Maksimal 5MB - JPG, PNG
-                        </div>
-                        <input type="file" id="fileInput" class="file-input" accept="image/*">
+        <!-- Form Section - FIXED -->
+        <div class="form-section">
+            <div class="form-card">
+                <h2 class="form-title">📢 Tulis Aspirasimu</h2>
+                <form id="aspirasiForm">
+                    <div class="form-group">
+                        <label for="nama">Nama Lengkap</label>
+                        <input type="text" id="nama" required placeholder="Nama Anda">
                     </div>
-                    <img id="preview" class="preview">
-                </div>
-                
-                <button type="submit" class="btn" id="submitBtn">
-                    Posting Aspirasi
-                </button>
-            </form>
-            <div id="formStatus"></div>
+                    
+                    <div class="form-group">
+                        <label for="nim">NIM</label>
+                        <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="isi">Aspirasi</label>
+                        <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="upload-area" id="uploadArea">
+                            <div>📷 Klik atau seret gambar ke sini</div>
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                                Maksimal 5MB - JPG, PNG
+                            </div>
+                            <input type="file" id="fileInput" class="file-input" accept="image/*">
+                        </div>
+                        <img id="preview" class="preview">
+                    </div>
+                    
+                    <button type="submit" class="btn" id="submitBtn">
+                        Posting Aspirasi
+                    </button>
+                </form>
+                <div id="formStatus"></div>
+            </div>
         </div>
         
-        <!-- Posts Section -->
+        <!-- Posts Section - SCROLLABLE -->
         <div class="posts-section">
             <div class="filters">
                 <button class="filter-btn active" onclick="setFilter('semua')">Semua</button>
@@ -987,4 +1060,3 @@
     </script>
 </body>
 </html>
-
