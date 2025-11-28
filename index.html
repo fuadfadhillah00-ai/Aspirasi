@@ -904,6 +904,27 @@
             document.getElementById('nim').value = nim;
         }
         
+        // Voting Management dengan Local Storage
+        function getUserVotes() {
+            const votes = localStorage.getItem(`aspirasiFEB_votes_${currentUser.nim}`);
+            return votes ? JSON.parse(votes) : {};
+        }
+        
+        function saveUserVote(postId, voteType) {
+            const votes = getUserVotes();
+            if (voteType === 'none') {
+                delete votes[postId];
+            } else {
+                votes[postId] = voteType;
+            }
+            localStorage.setItem(`aspirasiFEB_votes_${currentUser.nim}`, JSON.stringify(votes));
+        }
+        
+        function getUserVoteForPost(postId) {
+            const votes = getUserVotes();
+            return votes[postId] || null;
+        }
+        
         function showWelcomeModal() {
             const modal = document.getElementById('welcomeModal');
             if (modal) {
@@ -1053,13 +1074,10 @@
                 
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
                 
-                // Cek vote user saat ini - warna akan bertahan karena data dari server
+                // Cek vote user dari Local Storage - ini yang akan bertahan setelah reload
                 let userVote = null;
                 if (currentUser) {
-                    const userVoteData = allVoting.find(v => 
-                        v.id_aspirasi === aspirasi.id && v.nim_user === currentUser.nim
-                    );
-                    userVote = userVoteData ? userVoteData.vote_type : null;
+                    userVote = getUserVoteForPost(aspirasi.id);
                 }
                 
                 // Gunakan optimistic state jika ada
@@ -1252,7 +1270,7 @@
             renderPagination();
         }
         
-        // Handle voting dengan optimistic updates
+        // Handle voting dengan Local Storage
         async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
@@ -1262,12 +1280,8 @@
             const post = allAspirasi.find(a => a.id === postId);
             if (!post) return;
             
-            // Cek vote sebelumnya
-            const previousVote = allVoting.find(v => 
-                v.id_aspirasi === postId && v.nim_user === currentUser.nim
-            );
-            
-            const previousVoteType = previousVote ? previousVote.vote_type : null;
+            // Cek vote sebelumnya dari Local Storage
+            const previousVoteType = getUserVoteForPost(postId);
             
             // Hitung votes baru untuk optimistic update
             let newUpvotes = post.upvote_count || 0;
@@ -1301,6 +1315,9 @@
                 previousVoteType: previousVoteType
             });
             
+            // Simpan ke Local Storage langsung - warna akan bertahan setelah reload
+            saveUserVote(postId, finalVoteType);
+            
             // Immediate UI update
             renderPosts();
             
@@ -1321,16 +1338,17 @@
                 if (result.success) {
                     // Success - hapus dari pending votes
                     pendingVotes.delete(postId);
-                    // Reload data untuk sync dengan server - warna akan bertahan karena data dari server
-                    loadData();
+                    // Tidak perlu reload data - biarkan UI tetap dengan optimistic update
+                    showStatus('Vote berhasil disimpan!');
                 } else {
                     throw new Error(result.message);
                 }
                 
             } catch (error) {
                 console.error('Error:', error);
-                // Rollback optimistic update
+                // Rollback optimistic update dan Local Storage
                 pendingVotes.delete(postId);
+                saveUserVote(postId, previousVoteType); // Kembalikan ke state sebelumnya
                 renderPosts();
                 showStatus('Gagal menyimpan vote', 'error');
             }
@@ -1479,7 +1497,7 @@
                     currentBase64Image = '';
                     currentFileInput = document.getElementById('fileInput');
                     setupFileUpload();
-                    loadData();
+                    loadData(); // Reload untuk menampilkan postingan baru
                 } else {
                     showStatus(result.message, 'error');
                 }
@@ -1540,7 +1558,7 @@
                     showStatus('Komentar berhasil dikirim!');
                     form.reset();
                     toggleReplyForm(aspirasiId);
-                    loadData();
+                    loadData(); // Reload untuk menampilkan komentar baru
                 } else {
                     showStatus(result.message, 'error');
                 }
