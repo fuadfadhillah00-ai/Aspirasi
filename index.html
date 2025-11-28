@@ -376,7 +376,7 @@
             font-size: 14px;
         }
         
-        .vote-btn:hover {
+        .vote-btn:hover:not(:disabled) {
             background: #f8f9fa;
         }
         
@@ -860,6 +860,9 @@
         let isLoading = false;
         let currentUser = null;
         
+        // Track voting state untuk prevent rapid clicks
+        let isVoting = new Map();
+        
         // Global variables for file handling
         let currentFileInput = null;
         let currentBase64Image = '';
@@ -1081,6 +1084,9 @@
                 const upvoteCount = aspirasi.upvote_count || 0;
                 const downvoteCount = aspirasi.downvote_count || 0;
                 
+                // Cek apakah post sedang dalam proses voting
+                const isCurrentlyVoting = isVoting.get(aspirasi.id) || false;
+                
                 return `
                     <div class="post" id="post-${aspirasi.id}">
                         <div class="post-header">
@@ -1107,13 +1113,15 @@
                             <div class="post-voting">
                                 <button class="vote-btn upvote-btn ${userVote === 'upvote' ? 'active' : ''}" 
                                         onclick="handleVote('${aspirasi.id}', 'upvote')"
-                                        ${!currentUser ? 'disabled' : ''}>
+                                        ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
+                                        id="upvote-${aspirasi.id}">
                                     <span class="arrow-icon arrow-up ${userVote === 'upvote' ? 'active' : ''}">▲</span>
                                     <span class="vote-count">${upvoteCount}</span>
                                 </button>
                                 <button class="vote-btn downvote-btn ${userVote === 'downvote' ? 'active' : ''}" 
                                         onclick="handleVote('${aspirasi.id}', 'downvote')"
-                                        ${!currentUser ? 'disabled' : ''}>
+                                        ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
+                                        id="downvote-${aspirasi.id}">
                                     <span class="arrow-icon arrow-down ${userVote === 'downvote' ? 'active' : ''}">▼</span>
                                     <span class="vote-count">${downvoteCount}</span>
                                 </button>
@@ -1249,30 +1257,51 @@
             renderPagination();
         }
         
-        // Handle voting dengan logika yang benar - SISTEM BARU
+        // Handle voting dengan logika yang benar - FIXED VERSION
         async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
             
+            // PREVENT RAPID CLICKS - FIX RACE CONDITION
+            if (isVoting.get(postId)) {
+                console.log('Vote sedang diproses untuk post', postId);
+                return;
+            }
+            
+            // Set voting state untuk post ini
+            isVoting.set(postId, true);
+            
             const post = allAspirasi.find(a => a.id === postId);
-            if (!post) return;
+            if (!post) {
+                isVoting.set(postId, false);
+                return;
+            }
 
             // Cek vote sebelumnya dari Local Storage
             const previousVoteType = getUserVoteForPost(postId);
+            console.log(`Vote: ${voteType} untuk ${postId}, Previous: ${previousVoteType}`);
 
             // Tentukan vote type baru berdasarkan logika toggle 1-0-1
             let newVoteType;
             if (previousVoteType === voteType) {
                 // Jika klik vote yang sama, hapus vote (toggle off) → 0
                 newVoteType = 'none';
+                console.log('Toggle OFF - remove vote');
             } else {
                 // Jika klik vote berbeda, ganti ke vote baru → 1
                 newVoteType = voteType;
+                console.log('Toggle ON - new vote:', voteType);
             }
 
-            // Simpan ke Local Storage langsung
+            // DISABLE TOMBOL SELAMA PROSES
+            const upvoteBtn = document.getElementById(`upvote-${postId}`);
+            const downvoteBtn = document.getElementById(`downvote-${postId}`);
+            if (upvoteBtn) upvoteBtn.disabled = true;
+            if (downvoteBtn) downvoteBtn.disabled = true;
+
+            // Simpan ke Local Storage langsung untuk UI responsiveness
             saveUserVote(postId, newVoteType);
 
             // Update UI langsung untuk warna (tapi count tetap dari server)
@@ -1283,15 +1312,9 @@
                 formData.append('action', 'vote');
                 formData.append('id_aspirasi', postId);
                 formData.append('nim_user', currentUser.nim);
+                formData.append('vote_type', voteType); // Selalu kirim vote_type asli
                 
-                // Kirim vote type yang sesuai dengan logika toggle
-                if (newVoteType === 'none') {
-                    // Kirim instruksi untuk menghapus vote
-                    formData.append('vote_type', previousVoteType); // Kirim type sebelumnya untuk dihapus
-                } else {
-                    // Kirim instruksi untuk menambah/mengganti vote
-                    formData.append('vote_type', voteType);
-                }
+                console.log('Mengirim vote ke server...');
                 
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
@@ -1301,9 +1324,10 @@
                 const result = await response.json();
                 
                 if (result.success) {
+                    console.log('Server response:', result);
                     // Success - reload data untuk sync count dengan server
-                    loadData();
-                    showStatus('Vote berhasil disimpan!');
+                    await loadData();
+                    showStatus(`Vote berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
                 } else {
                     throw new Error(result.message);
                 }
@@ -1314,6 +1338,10 @@
                 saveUserVote(postId, previousVoteType);
                 renderPosts();
                 showStatus('Gagal menyimpan vote', 'error');
+            } finally {
+                // ENABLE TOMBOL KEMBALI
+                isVoting.set(postId, false);
+                renderPosts(); // Render ulang untuk enable tombol
             }
         }
         
