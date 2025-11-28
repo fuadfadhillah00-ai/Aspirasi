@@ -3,552 +3,584 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>🐦 AspirasiFEB — FEB UNRI</title>
+    <title>🐦 AspirasiFEB</title>
     <style>
         :root {
-            --biru: #1da1f2;
-            --hitam: #0f1419;
-            --abu-bg: #f7f9fa;
-            --abu-border: #ccd6dd;
-            --abu-teks: #536471;
-        }
-        * { 
-            box-sizing: border-box; 
-            margin: 0; 
-            padding: 0; 
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
-        }
-        body { 
-            background: var(--abu-bg); 
-            color: var(--hitam); 
-            display: flex; 
-            min-height: 100vh; 
-        }
-
-        .panel-left {
-            width: 400px; 
-            background: white; 
-            border-right: 1px solid var(--abu-border); 
-            padding: 1.5rem; 
-            overflow-y: auto;
-            position: fixed; 
-            height: 100vh;
-        }
-        .logo { 
-            font-size: 1.5rem; 
-            font-weight: bold; 
-            color: var(--biru); 
-            margin-bottom: 1.5rem; 
-            display: flex; 
-            gap: 0.5rem; 
-            align-items: center; 
-        }
-        .card { 
-            background: white; 
-            border-radius: 16px; 
-            padding: 1.25rem; 
-            margin-bottom: 1rem; 
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
-        }
-        h2 { 
-            font-size: 1.25rem; 
-            font-weight: bold; 
-            margin-bottom: 1rem; 
-        }
-        label { 
-            display: block; 
-            margin: 0.75rem 0 0.3rem; 
-            font-weight: 600; 
-            color: var(--hitam); 
-        }
-        input, textarea { 
-            width: 100%; 
-            padding: 0.75rem; 
-            border: 1px solid var(--abu-border); 
-            border-radius: 8px; 
-            background: #f5f8fa; 
-            font-size: 14px;
-            transition: border-color 0.2s;
-        }
-        input:focus, textarea:focus {
-            outline: none;
-            border-color: var(--biru);
-            background: white;
-        }
-        .btn { 
-            padding: 0.75rem 1.5rem; 
-            border: none; 
-            border-radius: 8px; 
-            font-weight: bold; 
-            cursor: pointer; 
-            font-size: 14px;
-            transition: background-color 0.2s;
-        }
-        .btn-primary { 
-            background: var(--biru); 
-            color: white; 
-        }
-        .btn-primary:hover { 
-            background: #0d8bd9; 
-        }
-        .btn-cancel { 
-            background: #f0f0f0; 
-            color: var(--hitam); 
-            margin-left: 0.5rem; 
-        }
-        .btn-cancel:hover { 
-            background: #e0e0e0; 
-        }
-        .btn:disabled { 
-            opacity: 0.6; 
-            cursor: not-allowed; 
-        }
-        .btn-outline { 
-            background: transparent; 
-            border: 2px dashed var(--abu-border); 
-            color: var(--abu-teks); 
-            text-align: center; 
-            padding: 1.5rem; 
-            margin: 0.5rem 0; 
-            cursor: pointer;
-            border-radius: 8px;
-            transition: all 0.2s;
-        }
-        .btn-outline:hover {
-            border-color: var(--biru);
-            color: var(--biru);
-        }
-        .upload-preview { 
-            max-width: 100%; 
-            max-height: 200px; 
-            border-radius: 8px; 
-            margin: 0.5rem 0; 
-            display: none;
-            border: 1px solid var(--abu-border);
-        }
-
-        .panel-right { 
-            flex: 1; 
-            margin-left: 400px;
-            padding: 1rem; 
-            background: var(--abu-bg);
-            min-height: 100vh;
-        }
-        .filters { 
-            display: flex; 
-            gap: 0.5rem; 
-            margin-bottom: 1rem; 
-            flex-wrap: wrap; 
-            background: white;
-            padding: 1rem;
-            border-radius: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .filter-btn { 
-            padding: 0.5rem 1rem; 
-            border: 1px solid var(--abu-border); 
-            border-radius: 20px; 
-            background: white; 
-            cursor: pointer; 
-            font-size: 0.85rem;
-            transition: all 0.2s;
-        }
-        .filter-btn.active { 
-            background: var(--biru); 
-            color: white; 
-            border-color: var(--biru); 
-        }
-        .filter-btn:hover:not(.active) {
-            background: #f0f0f0;
-        }
-
-        .post { 
-            background: white; 
-            border-radius: 16px; 
-            padding: 1.25rem; 
-            margin-bottom: 1.25rem; 
-            border: 1px solid var(--abu-border);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        .post-header { 
-            display: flex; 
-            gap: 0.75rem; 
-            margin-bottom: 0.75rem; 
-        }
-        .avatar { 
-            width: 40px; 
-            height: 40px; 
-            border-radius: 50%; 
-            background: var(--biru); 
-            color: white; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold;
-            flex-shrink: 0;
-        }
-        .post-info { 
-            flex: 1; 
-        }
-        .post-name { 
-            font-weight: bold; 
-            font-size: 1rem; 
-        }
-        .post-meta { 
-            font-size: 0.85rem; 
-            color: var(--abu-teks); 
-        }
-        .post-content { 
-            margin: 0.5rem 0; 
-            word-break: break-word; 
-            line-height: 1.5; 
-            font-size: 15px;
-        }
-        .post-image-container {
-            margin: 0.75rem 0;
-        }
-        .post-image { 
-            max-width: 100%; 
-            border-radius: 12px; 
-            max-height: 400px; 
-            object-fit: cover;
-            border: 1px solid var(--abu-border);
-        }
-        .post-footer { 
-            display: flex; 
-            justify-content: flex-end; 
-            margin-top: 0.75rem; 
-            padding-top: 0.75rem; 
-            border-top: 1px solid #eee; 
-        }
-        .reply-btn { 
-            color: var(--abu-teks); 
-            background: none; 
-            border: none; 
-            font-weight: 600; 
-            cursor: pointer; 
-            display: flex; 
-            align-items: center; 
-            gap: 0.25rem; 
-            font-size: 0.9rem;
-            padding: 0.5rem;
-            border-radius: 6px;
-            transition: background-color 0.2s;
-        }
-        .reply-btn:hover { 
-            color: var(--biru); 
-            background: #f0f8ff;
-        }
-
-        .reply-form-container { 
-            margin-top: 1rem; 
-            padding: 1rem; 
-            background: #f5f8fa; 
-            border-radius: 8px; 
-        }
-        .form-row {
-            display: flex;
-            gap: 0.5rem;
-            margin-bottom: 0.5rem;
-        }
-        .form-row input {
-            flex: 1;
-        }
-        .form-buttons {
-            display: flex;
-            gap: 0.5rem;
-            margin-top: 0.5rem;
-        }
-        .status { 
-            padding: 0.75rem; 
-            border-radius: 6px; 
-            margin: 0.75rem 0; 
-            font-size: 0.9rem; 
-            border: 1px solid transparent;
-        }
-        .status.success { 
-            background: #d4edda; 
-            color: #155724; 
-            border-color: #c3e6cb;
-        }
-        .status.error { 
-            background: #f8d7da; 
-            color: #721c24; 
-            border-color: #f5c6cb;
-        }
-        .empty, .loading { 
-            text-align: center; 
-            padding: 2rem; 
-            color: var(--abu-teks); 
-            background: white;
-            border-radius: 16px;
-            margin: 1rem 0;
+            --primary: #1da1f2;
+            --dark: #0f1419;
+            --light-bg: #f7f9fa;
+            --border: #ccd6dd;
+            --text-light: #536471;
         }
         
-        .reply { 
-            display: flex; 
-            gap: 0.75rem; 
-            margin-bottom: 1rem; 
-            padding-bottom: 1rem; 
-            border-bottom: 1px solid #f0f0f0; 
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
+        
+        body {
+            background: var(--light-bg);
+            color: var(--dark);
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+        }
+        
+        /* Header */
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            grid-column: 1 / -1;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        /* Form Styles */
+        .form-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+        }
+        
+        .form-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        
+        textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+        
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafbfc;
+        }
+        
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: #f0f8ff;
+        }
+        
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: #e8f4fe;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .preview {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .btn:hover {
+            background: #0d8bd9;
+        }
+        
+        .btn:disabled {
+            background: #a0a0a0;
+            cursor: not-allowed;
+        }
+        
+        /* Posts Section */
+        .posts-section {
+            background: transparent;
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        
+        .post {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .post-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+        
+        .avatar {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+        }
+        
+        .post-info {
+            flex: 1;
+        }
+        
+        .post-name {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .post-meta {
+            font-size: 14px;
+            color: var(--text-light);
+        }
+        
+        .post-content {
+            margin-bottom: 15px;
+            white-space: pre-line;
+        }
+        
+        .post-image {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 15px 0;
+            display: block;
+        }
+        
+        .post-actions {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        
+        .reply-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        
+        .reply-btn:hover {
+            background: #f0f8ff;
+            color: var(--primary);
+        }
+        
+        .reply-form {
+            margin-top: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .replies {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        
+        .reply {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
         .reply:last-child {
             margin-bottom: 0;
             padding-bottom: 0;
             border-bottom: none;
         }
-        .reply-avatar { 
-            width: 32px; 
-            height: 32px; 
-            border-radius: 50%; 
-            color: white; 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            font-weight: bold; 
-            font-size: 0.8rem;
+        
+        .reply-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
             flex-shrink: 0;
         }
-        .reply-content { 
-            flex: 1; 
+        
+        .reply-content {
+            flex: 1;
         }
-        .reply-name { 
-            font-weight: bold; 
-            font-size: 0.9rem; 
+        
+        .reply-name {
+            font-weight: bold;
+            font-size: 14px;
         }
-        .reply-meta { 
-            font-size: 0.75rem; 
-            color: var(--abu-teks); 
-            margin-bottom: 0.25rem; 
+        
+        .reply-meta {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 5px;
         }
-        .replies { 
-            margin-top: 1rem; 
-            padding-top: 1rem; 
-            border-top: 1px solid #f0f0f0; 
+        
+        /* Status Messages */
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
         }
-
+        
+        .status.success {
+            background: #e8f5e8;
+            color: #2d5016;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-light);
+            background: white;
+            border-radius: 16px;
+        }
+        
+        /* Responsive */
         @media (max-width: 768px) {
-            body { 
-                flex-direction: column; 
+            .container {
+                grid-template-columns: 1fr;
             }
-            .panel-left { 
-                position: relative; 
-                width: 100%; 
-                height: auto;
+            
+            .form-card {
+                position: static;
             }
-            .panel-right { 
-                margin-left: 0;
-            }
+            
             .form-row {
-                flex-direction: column;
-                gap: 0.5rem;
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <div class="panel-left">
-        <div class="logo"><span>🐦</span><span>AspirasiFEB</span></div>
-        <div class="card">
-            <h2>📢 Tulis Aspirasimu</h2>
-            <form id="form-aspirasi">
-                <label for="nama">Nama Lengkap</label>
-                <input type="text" id="nama" name="nama" required placeholder="Contoh: Budi Santoso">
-                <label for="nim">NIM</label>
-                <input type="text" id="nim" name="nim" required placeholder="123456789">
-                <label for="isi">Aspirasi</label>
-                <textarea id="isi" name="isi" rows="4" required placeholder="Ceritakan aspirasimu..."></textarea>
-                <div class="btn-outline" id="upload-area">
-                    📷 Seret atau klik untuk upload gambar (maks. 5 MB)
-                    <input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">
+                <span>🐦</span>
+                <span>AspirasiFEB</span>
+            </div>
+        </div>
+        
+        <!-- Form Section -->
+        <div class="form-card">
+            <h2 class="form-title">📢 Tulis Aspirasimu</h2>
+            <form id="aspirasiForm">
+                <div class="form-group">
+                    <label for="nama">Nama Lengkap</label>
+                    <input type="text" id="nama" required placeholder="Nama Anda">
                 </div>
-                <img id="preview" class="upload-preview">
-                <button type="submit" class="btn btn-primary" id="btn-submit">Posting Aspirasi</button>
+                
+                <div class="form-group">
+                    <label for="nim">NIM</label>
+                    <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
+                </div>
+                
+                <div class="form-group">
+                    <label for="isi">Aspirasi</label>
+                    <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
+                </div>
+                
+                <div class="form-group">
+                    <div class="upload-area" id="uploadArea">
+                        <div>📷 Klik atau seret gambar ke sini</div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                            Maksimal 5MB - JPG, PNG
+                        </div>
+                        <input type="file" id="fileInput" class="file-input" accept="image/*">
+                    </div>
+                    <img id="preview" class="preview">
+                </div>
+                
+                <button type="submit" class="btn" id="submitBtn">
+                    Posting Aspirasi
+                </button>
             </form>
-            <div id="status-global"></div>
+            <div id="formStatus"></div>
         </div>
-    </div>
-
-    <div class="panel-right">
-        <div class="filters">
-            <button class="filter-btn active" onclick="setFilter('semua')">Semua</button>
-            <button class="filter-btn" onclick="setFilter('dosen')">Dosen</button>
-            <button class="filter-btn" onclick="setFilter('tendik')">Tendik</button>
-            <button class="filter-btn" onclick="setFilter('fasilitas')">Fasilitas</button>
-        </div>
-        <div id="posts-container">
-            <div class="loading">Memuat data...</div>
+        
+        <!-- Posts Section -->
+        <div class="posts-section">
+            <div class="filters">
+                <button class="filter-btn active" onclick="setFilter('semua')">Semua</button>
+                <button class="filter-btn" onclick="setFilter('dosen')">Dosen</button>
+                <button class="filter-btn" onclick="setFilter('tendik')">Tendik</button>
+                <button class="filter-btn" onclick="setFilter('fasilitas')">Fasilitas</button>
+            </div>
+            
+            <div id="postsContainer">
+                <div class="empty-state">
+                    <div style="font-size: 48px; margin-bottom: 10px;">📝</div>
+                    <h3>Belum ada aspirasi</h3>
+                    <p>Jadilah yang pertama menulis aspirasi!</p>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        // Konfigurasi
         const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
         
-        // State aplikasi
         let allAspirasi = [];
         let allKomentar = [];
         let currentFilter = 'semua';
-
-        // Fungsi untuk menampilkan status
-        function showStatus(message, type = 'success') {
-            const statusEl = document.getElementById('status-global');
-            statusEl.innerHTML = `<div class="status ${type}">${message}</div>`;
+        
+        // Fungsi bantu
+        function showStatus(message, type = 'success', elementId = 'formStatus') {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `<div class="status ${type}">${message}</div>`;
             
             if (type === 'success') {
-                setTimeout(() => {
-                    statusEl.innerHTML = '';
-                }, 5000);
+                setTimeout(() => element.innerHTML = '', 5000);
             }
         }
-
-        // Fungsi untuk memuat data menggunakan JSONP
+        
+        function maskName(nama) {
+            return nama ? `${nama.charAt(0).toUpperCase()}***` : 'Anonim';
+        }
+        
+        function inferKategori(isi) {
+            isi = isi.toLowerCase();
+            if (isi.includes('dosen') || isi.includes('mengajar')) return 'dosen';
+            if (isi.includes('tendik') || isi.includes('admin')) return 'tendik';
+            if (isi.includes('fasilitas') || isi.includes('ruang') || isi.includes('ac') || isi.includes('lcd')) return 'fasilitas';
+            return 'lainnya';
+        }
+        
+        // Load data
         function loadData() {
             const timestamp = Date.now();
-            const callbackName = 'jsonpCallback_' + timestamp;
+            const callbackName = `handleData_${timestamp}`;
             
             window[callbackName] = function(response) {
                 if (response && response.success) {
                     allAspirasi = response.data.aspirasi || [];
                     allKomentar = response.data.komentar || [];
                     renderPosts();
-                } else {
-                    showStatus('Gagal memuat data', 'error');
                 }
                 delete window[callbackName];
             };
-
+            
             const script = document.createElement('script');
             script.src = `${APP_SCRIPT_URL}?callback=${callbackName}`;
-            script.onerror = function() {
-                showStatus('Gagal terhubung ke server', 'error');
-                delete window[callbackName];
-            };
             document.head.appendChild(script);
         }
-
-        // Fungsi untuk menyembunyikan nama
-        function maskName(nama) {
-            return nama ? `${nama.trim().charAt(0).toUpperCase()}***` : 'Anonim';
-        }
-
-        // Fungsi untuk menentukan kategori
-        function inferKategori(isi) {
-            isi = isi.toLowerCase();
-            if (isi.includes('dosen') || isi.includes('mengajar')) return 'dosen';
-            if (isi.includes('tendik') || isi.includes('administrasi')) return 'tendik';
-            if (isi.includes('fasilitas') || isi.includes('ac') || isi.includes('lcd')) return 'fasilitas';
-            return 'lainnya';
-        }
-
-        // Fungsi untuk merender posts
+        
+        // Render posts
         function renderPosts() {
-            const container = document.getElementById('posts-container');
+            const container = document.getElementById('postsContainer');
             
             let filteredAspirasi = allAspirasi;
             if (currentFilter !== 'semua') {
                 filteredAspirasi = allAspirasi.filter(a => inferKategori(a.isi) === currentFilter);
             }
-
+            
             if (filteredAspirasi.length === 0) {
-                container.innerHTML = `<div class="empty">Belum ada aspirasi dalam kategori ${currentFilter}.</div>`;
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🔍</div>
+                        <h3>Tidak ada aspirasi</h3>
+                        <p>Tidak ada aspirasi dalam kategori ${currentFilter}</p>
+                    </div>
+                `;
                 return;
             }
-
-            const postsHtml = filteredAspirasi.map(a => {
-                const t = new Date(a.waktu);
-                const d = t.toLocaleDateString('id-ID');
-                const t2 = t.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-                const n = maskName(a.nama);
-                const i = n.charAt(0);
-                const k = { 
-                    dosen: 'Dosen', 
-                    tendik: 'Tendik', 
-                    fasilitas: 'Fasilitas', 
-                    lainnya: 'Lainnya' 
-                }[inferKategori(a.isi)];
-
-                const replies = allKomentar
-                    .filter(k => k.id_aspirasi === a.id)
-                    .map(k => ({ 
-                        ...k, 
-                        n: maskName(k.nama), 
-                        i: maskName(k.nama).charAt(0),
-                        waktu: new Date(k.waktu).toLocaleDateString('id-ID')
-                    }));
-
-                const repliesHtml = replies.map(k => `
-                    <div class="reply">
-                        <div class="reply-avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}">${k.i}</div>
-                        <div class="reply-content">
-                            <div class="reply-name">${k.n}</div>
-                            <div class="reply-meta">${k.waktu}</div>
-                            <div>${k.isi}</div>
-                        </div>
-                    </div>
-                `).join('');
-
-                const safeIsi = a.isi.replace(/\n/g, '<br>');
+            
+            container.innerHTML = filteredAspirasi.map(aspirasi => {
+                const waktu = new Date(aspirasi.waktu);
+                const tanggal = waktu.toLocaleDateString('id-ID');
+                const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+                const namaTersamarkan = maskName(aspirasi.nama);
+                const inisial = namaTersamarkan.charAt(0);
+                const kategori = {
+                    'dosen': 'Dosen',
+                    'tendik': 'Tendik', 
+                    'fasilitas': 'Fasilitas',
+                    'lainnya': 'Lainnya'
+                }[inferKategori(aspirasi.isi)];
                 
-                let imageHtml = '';
-                if (a.gambar && a.gambar !== '') {
-                    imageHtml = `
-                        <div class="post-image-container">
-                            <img src="${a.gambar}" 
-                                 class="post-image" 
-                                 alt="Gambar aspirasi"
-                                 onerror="this.style.display='none'">
-                        </div>
-                    `;
-                }
-
+                const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
+                
                 return `
-                    <div class="post" id="post-${a.id}">
+                    <div class="post" id="post-${aspirasi.id}">
                         <div class="post-header">
-                            <div class="avatar" style="background:#${Math.floor(Math.random()*16777215).toString(16).padStart(6, '0')}">${i}</div>
+                            <div class="avatar">${inisial}</div>
                             <div class="post-info">
-                                <div class="post-name">${n}</div>
-                                <div class="post-meta">${d}, ${t2} · ${k}</div>
+                                <div class="post-name">${namaTersamarkan}</div>
+                                <div class="post-meta">${tanggal} • ${jam} • ${kategori}</div>
                             </div>
                         </div>
-                        <div class="post-content">${safeIsi}</div>
-                        ${imageHtml}
-                        <div class="post-footer">
-                            <button class="reply-btn" onclick="toggleReplyForm('${a.id}')">💬 Balas · ${replies.length}</button>
+                        
+                        <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
+                        
+                        ${aspirasi.gambar ? `
+                            <img src="${aspirasi.gambar}" alt="Gambar aspirasi" class="post-image" 
+                                 onerror="this.style.display='none'">
+                        ` : ''}
+                        
+                        <div class="post-actions">
+                            <button class="reply-btn" onclick="toggleReplyForm('${aspirasi.id}')">
+                                💬 Balas (${komentar.length})
+                            </button>
                         </div>
-                        <div id="reply-form-${a.id}" class="reply-form-container" style="display:none;">
-                            <form onsubmit="submitKomentar(event, '${a.id}')">
+                        
+                        <div class="reply-form" id="reply-form-${aspirasi.id}">
+                            <form onsubmit="submitKomentar(event, '${aspirasi.id}')">
                                 <div class="form-row">
-                                    <input type="text" name="modal_nama" placeholder="Nama Lengkap" required>
-                                    <input type="text" name="modal_nim" placeholder="NIM" required>
+                                    <input type="text" name="nama" placeholder="Nama Anda" required>
+                                    <input type="text" name="nim" placeholder="NIM" required>
                                 </div>
-                                <textarea name="modal_isi" placeholder="Tulis komentar..." required rows="2"></textarea>
-                                <div class="form-buttons">
-                                    <button type="submit" class="btn btn-primary">Kirim Komentar</button>
-                                    <button type="button" onclick="toggleReplyForm('${a.id}')" class="btn btn-cancel">Batal</button>
+                                <textarea name="isi" placeholder="Tulis komentar..." required rows="3"></textarea>
+                                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                    <button type="submit" class="btn" style="flex: 1;">Kirim Komentar</button>
+                                    <button type="button" class="btn" style="background: #6c757d;" 
+                                            onclick="toggleReplyForm('${aspirasi.id}')">Batal</button>
                                 </div>
                             </form>
                         </div>
-                        ${replies.length ? `<div class="replies">${repliesHtml}</div>` : ''}
+                        
+                        ${komentar.length > 0 ? `
+                            <div class="replies">
+                                ${komentar.map(k => `
+                                    <div class="reply">
+                                        <div class="reply-avatar">${maskName(k.nama).charAt(0)}</div>
+                                        <div class="reply-content">
+                                            <div class="reply-name">${maskName(k.nama)}</div>
+                                            <div class="reply-meta">${new Date(k.waktu).toLocaleDateString('id-ID')}</div>
+                                            <div>${k.isi}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
-
-            container.innerHTML = postsHtml;
         }
-
-        // Fungsi untuk toggle form komentar
+        
+        // Toggle reply form
         function toggleReplyForm(id) {
-            const formContainer = document.getElementById('reply-form-' + id);
-            if (formContainer.style.display === 'none' || formContainer.style.display === '') {
-                formContainer.style.display = 'block';
-                formContainer.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            } else {
-                formContainer.style.display = 'none';
-            }
+            const form = document.getElementById(`reply-form-${id}`);
+            form.style.display = form.style.display === 'block' ? 'none' : 'block';
         }
-
-        // Fungsi untuk set filter
+        
+        // Set filter
         function setFilter(filter) {
             currentFilter = filter;
             document.querySelectorAll('.filter-btn').forEach(btn => {
@@ -557,70 +589,40 @@
             event.target.classList.add('active');
             renderPosts();
         }
-
-        // Fungsi validasi form
-        function validateForm(nama, nim, isi) {
-            if (!nama || !nim || !isi) {
-                showStatus('Semua field wajib diisi!', 'error');
-                return false;
-            }
+        
+        // File upload handling
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const preview = document.getElementById('preview');
             
-            if (nim.length < 8 || !/^\d+$/.test(nim)) {
-                showStatus('NIM harus berupa angka minimal 8 digit!', 'error');
-                return false;
-            }
+            // Click to upload
+            uploadArea.addEventListener('click', () => fileInput.click());
             
-            if (isi.length < 10) {
-                showStatus('Isi aspirasi minimal 10 karakter!', 'error');
-                return false;
-            }
-            
-            return true;
-        }
-
-        // Fungsi untuk convert file ke base64
-        function fileToBase64(file) {
-            return new Promise((resolve) => {
-                const reader = new FileReader();
-                reader.onload = (e) => resolve(e.target.result);
-                reader.readAsDataURL(file);
-            });
-        }
-
-        // Fungsi untuk menangani file input
-        function handleFileSelect(input) {
-            const file = input.files[0];
-            if (file && file.type.match('image.*') && file.size <= 5e6) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    document.getElementById('preview').src = e.target.result;
-                    document.getElementById('preview').style.display = 'block';
-                    document.getElementById('upload-area').innerHTML = '📷 Gambar terpilih: ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)';
-                    setupFileInput();
+            // File selected
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/') && file.size <= 5 * 1024 * 1024) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                        uploadArea.innerHTML = `
+                            <div>✅ Gambar terpilih</div>
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                                ${file.name} (${Math.round(file.size/1024)}KB)
+                            </div>
+                        `;
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    showStatus('File harus gambar dan maksimal 5MB', 'error');
                 }
-                reader.readAsDataURL(file);
-            } else {
-                showStatus('File bukan gambar atau melebihi 5 MB.', 'error');
-                input.value = '';
-                document.getElementById('preview').style.display = 'none';
-                document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
-                setupFileInput();
-            }
-        }
-
-        // Setup file input
-        function setupFileInput() {
-            const fileInput = document.getElementById('file-input');
-            const uploadArea = document.getElementById('upload-area');
+            });
             
-            if (fileInput) {
-                fileInput.addEventListener('change', function() {
-                    handleFileSelect(this);
-                });
-            }
-
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-                uploadArea.addEventListener(e, preventDefaults, false);
+            // Drag and drop
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
             });
             
             function preventDefaults(e) {
@@ -628,54 +630,67 @@
                 e.stopPropagation();
             }
             
-            ['dragenter', 'dragover'].forEach(e => {
-                uploadArea.addEventListener(e, () => uploadArea.style.borderColor = '#1da1f2', false);
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.add('dragover');
+                }, false);
             });
             
-            ['dragleave', 'drop'].forEach(e => {
-                uploadArea.addEventListener(e, () => uploadArea.style.borderColor = '', false);
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.remove('dragover');
+                }, false);
             });
             
-            uploadArea.addEventListener('drop', e => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                if (files.length > 0 && fileInput) {
+            uploadArea.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
                     fileInput.files = files;
-                    handleFileSelect(fileInput);
+                    fileInput.dispatchEvent(new Event('change'));
                 }
             });
-            
-            uploadArea.addEventListener('click', () => {
-                if (fileInput) fileInput.click();
-            });
         }
-
-        // Fungsi untuk submit aspirasi
+        
+        // Submit aspirasi
         async function submitAspirasi(event) {
             event.preventDefault();
+            
+            const submitBtn = document.getElementById('submitBtn');
+            const form = document.getElementById('aspirasiForm');
+            const fileInput = document.getElementById('fileInput');
             
             const nama = document.getElementById('nama').value.trim();
             const nim = document.getElementById('nim').value.trim();
             const isi = document.getElementById('isi').value.trim();
-            const fileInput = document.getElementById('file-input');
-            const file = fileInput && fileInput.files.length > 0 ? fileInput.files[0] : null;
-            const submitBtn = document.getElementById('btn-submit');
-
-            if (!validateForm(nama, nim, isi)) {
+            
+            // Validasi
+            if (!nama || !nim || !isi) {
+                showStatus('Harap isi semua field', 'error');
                 return;
             }
-
+            
+            if (nim.length < 8 || !/^\d+$/.test(nim)) {
+                showStatus('NIM harus angka minimal 8 digit', 'error');
+                return;
+            }
+            
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
-
+            
             try {
                 let base64Image = '';
-                if (file) {
-                    submitBtn.textContent = 'Mengupload gambar...';
-                    base64Image = await fileToBase64(file);
+                
+                // Process image
+                if (fileInput.files.length > 0) {
+                    const file = fileInput.files[0];
+                    base64Image = await new Promise((resolve) => {
+                        const reader = new FileReader();
+                        reader.onload = (e) => resolve(e.target.result);
+                        reader.readAsDataURL(file);
+                    });
                 }
-
-                // Buat form data
+                
+                // Submit data
                 const formData = new FormData();
                 formData.append('action', 'kirim_aspirasi');
                 formData.append('nama', nama);
@@ -684,99 +699,94 @@
                 if (base64Image) {
                     formData.append('base64Image', base64Image);
                 }
-
-                // Kirim ke Google Apps Script
+                
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
-
+                
                 const result = await response.json();
                 
                 if (result.success) {
-                    if (result.gambar_url) {
-                        showStatus('✅ Aspirasi berhasil dikirim dengan gambar!', 'success');
-                    } else {
-                        showStatus('✅ Aspirasi berhasil dikirim!', 'success');
-                    }
+                    showStatus(result.message + (result.gambar_url ? ' dengan gambar' : ''));
+                    form.reset();
+                    document.getElementById('preview').style.display = 'none';
+                    document.getElementById('uploadArea').innerHTML = `
+                        <div>📷 Klik atau seret gambar ke sini</div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                            Maksimal 5MB - JPG, PNG
+                        </div>
+                    `;
+                    setTimeout(loadData, 2000);
                 } else {
-                    showStatus('❌ ' + result.message, 'error');
+                    showStatus(result.message, 'error');
                 }
-
-                // Reset form
-                document.getElementById('form-aspirasi').reset();
-                document.getElementById('preview').style.display = 'none';
-                document.getElementById('upload-area').innerHTML = '📷 Seret atau klik untuk upload gambar (maks. 5 MB)<input type="file" id="file-input" name="gambar" accept="image/*" style="display:none;">';
-                setupFileInput();
-                
-                // Reload data
-                setTimeout(loadData, 2000);
                 
             } catch (error) {
+                showStatus('Gagal mengirim aspirasi', 'error');
                 console.error('Error:', error);
-                showStatus('❌ Gagal mengirim aspirasi', 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Posting Aspirasi';
             }
         }
-
-        // Fungsi untuk submit komentar
-        async function submitKomentar(event, idAspirasi) {
+        
+        // Submit komentar
+        async function submitKomentar(event, aspirasiId) {
             event.preventDefault();
             
             const form = event.target;
-            const nama = form.querySelector('input[name="modal_nama"]').value.trim();
-            const nim = form.querySelector('input[name="modal_nim"]').value.trim();
-            const isi = form.querySelector('textarea[name="modal_isi"]').value.trim();
             const submitBtn = form.querySelector('button[type="submit"]');
-
-            if (!validateForm(nama, nim, isi)) {
+            const nama = form.querySelector('input[name="nama"]').value.trim();
+            const nim = form.querySelector('input[name="nim"]').value.trim();
+            const isi = form.querySelector('textarea[name="isi"]').value.trim();
+            
+            if (!nama || !nim || !isi) {
+                showStatus('Harap isi semua field', 'error', 'formStatus');
                 return;
             }
-
+            
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
-
+            
             try {
                 const formData = new FormData();
                 formData.append('action', 'kirim_komentar');
-                formData.append('id_aspirasi', idAspirasi);
+                formData.append('id_aspirasi', aspirasiId);
                 formData.append('modal_nama', nama);
                 formData.append('modal_nim', nim);
                 formData.append('modal_isi', isi);
-
+                
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
-
+                
                 const result = await response.json();
+                
                 if (result.success) {
-                    showStatus('✅ Komentar berhasil dikirim!', 'success');
+                    showStatus('Komentar berhasil dikirim!');
+                    form.reset();
+                    toggleReplyForm(aspirasiId);
+                    setTimeout(loadData, 2000);
                 } else {
-                    showStatus('❌ ' + result.message, 'error');
+                    showStatus(result.message, 'error');
                 }
-
-                form.reset();
-                toggleReplyForm(idAspirasi);
-                setTimeout(loadData, 2000);
                 
             } catch (error) {
-                console.error('Error:', error);
-                showStatus('❌ Gagal mengirim komentar', 'error');
+                showStatus('Gagal mengirim komentar', 'error');
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Kirim Komentar';
             }
         }
-
-        // Inisialisasi
+        
+        // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            document.getElementById('form-aspirasi').addEventListener('submit', submitAspirasi);
-            setupFileInput();
+            document.getElementById('aspirasiForm').addEventListener('submit', submitAspirasi);
+            setupFileUpload();
             loadData();
-            setInterval(loadData, 30000);
+            setInterval(loadData, 30000); // Auto refresh every 30 seconds
         });
     </script>
 </body>
