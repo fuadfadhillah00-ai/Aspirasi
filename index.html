@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, minimum-scale=0.5"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>🐦 AspirasiFEB</title>
     <style>
         :root {
@@ -24,89 +24,93 @@
             background: var(--light-bg);
             color: var(--dark);
             line-height: 1.6;
-            min-height: 100vh;
-            overflow-x: hidden;
+            height: 100vh;
+            overflow: hidden;
         }
         
         .container {
-            max-width: min(1200px, 95vw);
+            max-width: 1200px;
             margin: 0 auto;
-            padding: max(1.25vw, 10px);
+            padding: 20px;
             display: grid;
-            grid-template-columns: minmax(300px, 350px) 1fr;
-            gap: max(1.25vw, 15px);
-            min-height: 100vh;
-            align-items: start;
+            grid-template-columns: 350px 1fr;
+            gap: 20px;
+            height: 100vh;
         }
         
         /* Header */
         .header {
             text-align: center;
-            margin-bottom: max(1.875vw, 20px);
+            margin-bottom: 30px;
             grid-column: 1 / -1;
-            padding: 0 max(0.625vw, 5px);
         }
         
         .logo {
-            font-size: clamp(1.5rem, 2.5vw, 2rem);
+            font-size: 2rem;
             font-weight: bold;
             color: var(--primary);
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: max(0.625vw, 8px);
+            gap: 10px;
         }
         
-        /* Form Styles - ZOOM RESPONSIVE */
+        /* Form Styles - FIXED HEIGHT NO SCROLL */
         .form-section {
+            height: 100vh;
             position: sticky;
-            top: max(1.25vw, 10px);
-            height: fit-content;
-            max-height: 95vh;
+            top: 0;
+            display: flex;
+            flex-direction: column;
         }
         
         .form-card {
             background: white;
-            border-radius: max(1vw, 12px);
-            padding: clamp(15px, 2vw, 25px);
+            border-radius: 16px;
+            padding: 25px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 20px;
+            /* Form akan menyesuaikan tinggi konten tanpa scroll */
+            max-height: calc(100vh - 40px);
             display: flex;
             flex-direction: column;
-            gap: clamp(10px, 1.5vw, 20px);
+        }
+        
+        .form-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent internal scrolling */
         }
         
         .form-title {
-            font-size: clamp(1.1rem, 1.8vw, 1.3rem);
+            font-size: 1.3rem;
+            margin-bottom: 20px;
             color: var(--dark);
-            margin: 0;
+            flex-shrink: 0;
         }
         
         .form-group {
-            display: flex;
-            flex-direction: column;
-            gap: max(0.5vw, 6px);
+            margin-bottom: 15px; /* Reduced margin to fit better */
+            flex-shrink: 0;
         }
         
         label {
+            display: block;
+            margin-bottom: 6px; /* Reduced margin */
             font-weight: 600;
             color: var(--dark);
-            font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+            font-size: 14px;
         }
         
         input, textarea {
             width: 100%;
-            padding: clamp(8px, 1.2vw, 12px);
+            padding: 10px; /* Reduced padding */
             border: 2px solid var(--border);
-            border-radius: max(0.5vw, 6px);
-            font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+            border-radius: 8px;
+            font-size: 14px;
             transition: border-color 0.3s;
-            resize: vertical;
-            min-height: clamp(35px, 4vw, 45px);
-        }
-        
-        textarea {
-            min-height: clamp(70px, 8vw, 100px);
-            max-height: clamp(100px, 12vw, 150px);
         }
         
         input:focus, textarea:focus {
@@ -114,15 +118,22 @@
             border-color: var(--primary);
         }
         
+        textarea {
+            resize: vertical;
+            min-height: 80px; /* Reduced min-height */
+            max-height: 120px; /* Limit max height */
+        }
+        
         .upload-area {
             border: 2px dashed var(--border);
-            border-radius: max(0.5vw, 6px);
-            padding: clamp(15px, 2vw, 25px);
+            border-radius: 8px;
+            padding: 20px; /* Reduced padding */
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             background: #fafbfc;
-            font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+            font-size: 14px;
+            flex-shrink: 0;
         }
         
         .upload-area:hover {
@@ -141,23 +152,26 @@
         
         .preview {
             max-width: 100%;
-            max-height: clamp(120px, 15vw, 180px);
-            border-radius: max(0.5vw, 6px);
+            max-height: 150px; /* Reduced max-height */
+            border-radius: 8px;
+            margin-top: 8px;
             display: none;
+            flex-shrink: 0;
         }
         
         .btn {
             width: 100%;
-            padding: clamp(10px, 1.5vw, 14px);
+            padding: 12px; /* Reduced padding */
             background: var(--primary);
             color: white;
             border: none;
-            border-radius: max(0.5vw, 6px);
-            font-size: clamp(0.9rem, 1.3vw, 1rem);
+            border-radius: 8px;
+            font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s;
-            margin-top: auto;
+            flex-shrink: 0;
+            margin-top: 10px;
         }
         
         .btn:hover {
@@ -169,27 +183,26 @@
             cursor: not-allowed;
         }
         
-        /* Posts Section - SCROLLABLE & ZOOM RESPONSIVE */
+        /* Posts Section - SCROLLABLE */
         .posts-section {
-            min-height: 80vh;
-            max-height: 95vh;
+            height: 100vh;
             overflow-y: auto;
-            padding-right: max(0.625vw, 8px);
+            padding-right: 10px;
         }
         
         /* Custom scrollbar untuk posts section */
         .posts-section::-webkit-scrollbar {
-            width: max(0.5vw, 6px);
+            width: 8px;
         }
         
         .posts-section::-webkit-scrollbar-track {
             background: #f1f1f1;
-            border-radius: max(0.5vw, 6px);
+            border-radius: 10px;
         }
         
         .posts-section::-webkit-scrollbar-thumb {
             background: #c1c1c1;
-            border-radius: max(0.5vw, 6px);
+            border-radius: 10px;
         }
         
         .posts-section::-webkit-scrollbar-thumb:hover {
@@ -198,25 +211,24 @@
         
         .filters {
             display: flex;
-            gap: max(0.5vw, 8px);
-            margin-bottom: max(1.25vw, 15px);
+            gap: 10px;
+            margin-bottom: 20px;
             flex-wrap: wrap;
             position: sticky;
             top: 0;
             background: var(--light-bg);
-            padding: max(1vw, 12px) 0;
+            padding: 15px 0;
             z-index: 10;
         }
         
         .filter-btn {
-            padding: clamp(6px, 1vw, 10px) clamp(12px, 1.5vw, 16px);
+            padding: 8px 16px;
             border: 2px solid var(--border);
-            border-radius: max(1.25vw, 20px);
+            border-radius: 20px;
             background: white;
             cursor: pointer;
-            font-size: clamp(0.75rem, 1vw, 0.85rem);
+            font-size: 14px;
             transition: all 0.3s;
-            white-space: nowrap;
         }
         
         .filter-btn.active {
@@ -228,22 +240,22 @@
         /* Loading Animation */
         .loading-container {
             text-align: center;
-            padding: clamp(30px, 4vw, 50px) clamp(15px, 2vw, 25px);
+            padding: 40px 20px;
         }
         
         .loading-spinner {
-            width: clamp(30px, 4vw, 50px);
-            height: clamp(30px, 4vw, 50px);
-            border: clamp(3px, 0.4vw, 5px) solid #f3f3f3;
-            border-top: clamp(3px, 0.4vw, 5px) solid var(--primary);
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin: 0 auto max(1.25vw, 15px);
+            margin: 0 auto 20px;
         }
         
         .loading-text {
             color: var(--text-light);
-            font-size: clamp(0.8rem, 1.1vw, 0.9rem);
+            font-size: 14px;
         }
         
         @keyframes spin {
@@ -255,12 +267,12 @@
         .new-post-indicator {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: clamp(8px, 1.2vw, 12px) clamp(12px, 1.5vw, 16px);
-            border-radius: max(1.25vw, 20px);
-            margin-bottom: max(1vw, 12px);
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 15px;
             text-align: center;
             font-weight: 600;
-            font-size: clamp(0.75rem, 1vw, 0.85rem);
+            font-size: 14px;
             animation: slideDown 0.5s ease-out;
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
@@ -278,9 +290,9 @@
         
         .post {
             background: white;
-            border-radius: max(1vw, 12px);
-            padding: clamp(15px, 2vw, 25px);
-            margin-bottom: max(1.25vw, 15px);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             animation: fadeInUp 0.5s ease-out;
         }
@@ -299,13 +311,13 @@
         .post-header {
             display: flex;
             align-items: center;
-            gap: max(0.75vw, 10px);
-            margin-bottom: max(1vw, 12px);
+            gap: 12px;
+            margin-bottom: 15px;
         }
         
         .avatar {
-            width: clamp(35px, 4.5vw, 50px);
-            height: clamp(35px, 4.5vw, 50px);
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
             background: var(--primary);
             color: white;
@@ -313,47 +325,40 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: clamp(0.9rem, 1.3vw, 1.1rem);
-            flex-shrink: 0;
+            font-size: 18px;
         }
         
         .post-info {
             flex: 1;
-            min-width: 0;
         }
         
         .post-name {
             font-weight: bold;
-            font-size: clamp(0.9rem, 1.3vw, 1.1rem);
-            margin-bottom: max(0.25vw, 3px);
+            font-size: 16px;
         }
         
         .post-meta {
-            font-size: clamp(0.75rem, 1vw, 0.85rem);
+            font-size: 14px;
             color: var(--text-light);
         }
         
         .post-content {
-            margin-bottom: max(1vw, 12px);
+            margin-bottom: 15px;
             white-space: pre-line;
-            font-size: clamp(0.85rem, 1.1vw, 0.95rem);
-            line-height: 1.5;
-            word-wrap: break-word;
-            overflow-wrap: break-word;
         }
         
-        /* Ukuran gambar responsive */
+        /* Ukuran gambar lebih kecil */
         .post-image-container {
-            margin: max(1vw, 12px) 0;
+            margin: 15px 0;
             text-align: center;
         }
         
         .post-image {
-            max-width: min(100%, clamp(250px, 35vw, 400px));
-            max-height: clamp(150px, 20vw, 250px);
+            max-width: 300px;
+            max-height: 200px;
             width: auto;
             height: auto;
-            border-radius: max(0.75vw, 10px);
+            border-radius: 12px;
             border: 1px solid var(--border);
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             cursor: pointer;
@@ -382,20 +387,19 @@
             margin: auto;
             max-width: 90%;
             max-height: 90%;
-            border-radius: max(0.5vw, 6px);
+            border-radius: 8px;
             animation: zoomIn 0.3s;
         }
         
         .close-modal {
             position: absolute;
-            top: max(1.25vw, 15px);
-            right: max(2.5vw, 25px);
+            top: 20px;
+            right: 35px;
             color: white;
-            font-size: clamp(2rem, 4vw, 3rem);
+            font-size: 40px;
             font-weight: bold;
             cursor: pointer;
             transition: color 0.3s;
-            z-index: 1001;
         }
         
         .close-modal:hover {
@@ -415,7 +419,7 @@
         .post-actions {
             display: flex;
             justify-content: flex-end;
-            padding-top: max(1vw, 12px);
+            padding-top: 15px;
             border-top: 1px solid #eee;
         }
         
@@ -427,11 +431,10 @@
             font-weight: 600;
             display: flex;
             align-items: center;
-            gap: max(0.25vw, 4px);
-            padding: clamp(6px, 1vw, 10px) clamp(8px, 1.2vw, 12px);
-            border-radius: max(0.5vw, 6px);
+            gap: 5px;
+            padding: 8px 12px;
+            border-radius: 6px;
             transition: all 0.3s;
-            font-size: clamp(0.75rem, 1vw, 0.85rem);
         }
         
         .reply-btn:hover {
@@ -440,31 +443,31 @@
         }
         
         .reply-form {
-            margin-top: max(1vw, 12px);
-            padding: clamp(15px, 2vw, 20px);
+            margin-top: 15px;
+            padding: 20px;
             background: #f8f9fa;
-            border-radius: max(0.75vw, 10px);
+            border-radius: 12px;
             display: none;
         }
         
         .form-row {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: max(0.75vw, 8px);
-            margin-bottom: max(0.75vw, 8px);
+            gap: 10px;
+            margin-bottom: 10px;
         }
         
         .replies {
-            margin-top: max(1.25vw, 15px);
-            padding-top: max(1.25vw, 15px);
+            margin-top: 20px;
+            padding-top: 20px;
             border-top: 1px solid #eee;
         }
         
         .reply {
             display: flex;
-            gap: max(0.75vw, 10px);
-            margin-bottom: max(1vw, 12px);
-            padding-bottom: max(1vw, 12px);
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
             border-bottom: 1px solid #f0f0f0;
         }
         
@@ -475,8 +478,8 @@
         }
         
         .reply-avatar {
-            width: clamp(28px, 3.5vw, 40px);
-            height: clamp(28px, 3.5vw, 40px);
+            width: 35px;
+            height: 35px;
             border-radius: 50%;
             background: var(--primary);
             color: white;
@@ -484,39 +487,32 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: clamp(0.7rem, 1vw, 0.8rem);
+            font-size: 14px;
             flex-shrink: 0;
         }
         
         .reply-content {
             flex: 1;
-            min-width: 0;
         }
         
         .reply-name {
             font-weight: bold;
-            font-size: clamp(0.75rem, 1vw, 0.85rem);
-            margin-bottom: max(0.2vw, 2px);
+            font-size: 14px;
         }
         
         .reply-meta {
-            font-size: clamp(0.65rem, 0.9vw, 0.75rem);
+            font-size: 12px;
             color: var(--text-light);
-            margin-bottom: max(0.3vw, 4px);
-        }
-        
-        .reply-content div {
-            font-size: clamp(0.75rem, 1vw, 0.85rem);
-            line-height: 1.4;
-            word-wrap: break-word;
+            margin-bottom: 5px;
         }
         
         /* Status Messages */
         .status {
-            padding: clamp(8px, 1.2vw, 12px);
-            border-radius: max(0.5vw, 6px);
-            margin: max(1vw, 12px) 0;
-            font-size: clamp(0.75rem, 1vw, 0.85rem);
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-size: 14px;
+            flex-shrink: 0;
         }
         
         .status.success {
@@ -533,108 +529,73 @@
         
         .empty-state {
             text-align: center;
-            padding: clamp(40px, 6vw, 80px) clamp(15px, 2vw, 25px);
+            padding: 60px 20px;
             color: var(--text-light);
             background: white;
-            border-radius: max(1vw, 12px);
+            border-radius: 16px;
         }
         
-        .empty-state h3 {
-            font-size: clamp(1rem, 1.5vw, 1.2rem);
-            margin-bottom: max(0.75vw, 8px);
-        }
-        
-        .empty-state p {
-            font-size: clamp(0.8rem, 1.1vw, 0.9rem);
-        }
-        
-        /* Responsive Breakpoints untuk Zoom */
-        @media (max-width: 1024px) {
-            .container {
-                grid-template-columns: minmax(280px, 320px) 1fr;
-                gap: max(1vw, 12px);
-            }
-        }
-        
+        /* Responsive */
         @media (max-width: 768px) {
             body {
-                overflow-x: hidden;
+                overflow: auto;
+                height: auto;
             }
             
             .container {
                 grid-template-columns: 1fr;
-                gap: max(1.5vw, 15px);
-                padding: max(1vw, 10px);
+                height: auto;
+                gap: 0;
             }
             
             .form-section {
+                height: auto;
                 position: static;
-                max-height: none;
+                margin-bottom: 20px;
             }
             
             .form-card {
                 position: static;
+                max-height: none;
             }
             
             .posts-section {
-                max-height: none;
+                height: auto;
                 overflow-y: visible;
                 padding-right: 0;
-                min-height: auto;
             }
             
             .filters {
                 position: static;
-                justify-content: center;
             }
             
             .form-row {
                 grid-template-columns: 1fr;
             }
+            
+            /* Gambar lebih kecil di mobile */
+            .post-image {
+                max-width: 250px;
+                max-height: 180px;
+            }
         }
         
         @media (max-width: 480px) {
+            .post-image {
+                max-width: 200px;
+                max-height: 150px;
+            }
+            
             .container {
-                padding: max(0.8vw, 8px);
-            }
-            
-            .filters {
-                gap: max(0.8vw, 6px);
-            }
-            
-            .filter-btn {
-                padding: max(0.6vw, 5px) max(1vw, 10px);
-                font-size: clamp(0.7rem, 0.9vw, 0.8rem);
-            }
-            
-            .post {
-                padding: max(1.5vw, 12px);
-            }
-        }
-        
-        /* High Zoom Level Protection */
-        @media (min-width: 2000px) {
-            .container {
-                max-width: 1400px;
-            }
-        }
-        
-        /* Very Small Screen Protection */
-        @media (max-width: 320px) {
-            .container {
-                padding: 5px;
-            }
-            
-            .form-card,
-            .post {
                 padding: 10px;
             }
             
-            .avatar,
-            .reply-avatar {
-                width: 30px;
-                height: 30px;
-                font-size: 0.8rem;
+            .form-card {
+                padding: 20px;
+            }
+            
+            .post {
+                padding: 20px;
             }
         }
     </style>
@@ -655,46 +616,48 @@
             </div>
         </div>
         
-        <!-- Form Section - ZOOM RESPONSIVE -->
+        <!-- Form Section - FIXED HEIGHT NO SCROLL -->
         <div class="form-section">
             <div class="form-card">
-                <h2 class="form-title">📢 Tulis Aspirasimu</h2>
-                <form id="aspirasiForm">
-                    <div class="form-group">
-                        <label for="nama">Nama Lengkap</label>
-                        <input type="text" id="nama" required placeholder="Nama Anda">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="nim">NIM</label>
-                        <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="isi">Aspirasi</label>
-                        <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="upload-area" id="uploadArea">
-                            <div>📷 Klik atau seret gambar ke sini</div>
-                            <div style="font-size: clamp(0.7rem, 0.9vw, 0.8rem); color: var(--text-light); margin-top: 4px;">
-                                Maksimal 5MB - JPG, PNG
-                            </div>
-                            <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <div class="form-content">
+                    <h2 class="form-title">📢 Tulis Aspirasimu</h2>
+                    <form id="aspirasiForm">
+                        <div class="form-group">
+                            <label for="nama">Nama Lengkap</label>
+                            <input type="text" id="nama" required placeholder="Nama Anda">
                         </div>
-                        <img id="preview" class="preview">
-                    </div>
-                    
-                    <button type="submit" class="btn" id="submitBtn">
-                        Posting Aspirasi
-                    </button>
-                </form>
-                <div id="formStatus"></div>
+                        
+                        <div class="form-group">
+                            <label for="nim">NIM</label>
+                            <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="isi">Aspirasi</label>
+                            <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="upload-area" id="uploadArea">
+                                <div>📷 Klik atau seret gambar ke sini</div>
+                                <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                                    Maksimal 5MB - JPG, PNG
+                                </div>
+                                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                            </div>
+                            <img id="preview" class="preview">
+                        </div>
+                        
+                        <button type="submit" class="btn" id="submitBtn">
+                            Posting Aspirasi
+                        </button>
+                    </form>
+                    <div id="formStatus"></div>
+                </div>
             </div>
         </div>
         
-        <!-- Posts Section - SCROLLABLE & ZOOM RESPONSIVE -->
+        <!-- Posts Section - SCROLLABLE -->
         <div class="posts-section">
             <div class="filters">
                 <button class="filter-btn active" onclick="setFilter('semua')">Semua</button>
@@ -826,7 +789,7 @@
                     console.error('Failed to load data:', response);
                     container.innerHTML = `
                         <div class="empty-state">
-                            <div style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 15px;">❌</div>
+                            <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
                             <h3>Gagal memuat data</h3>
                             <p>Silakan refresh halaman</p>
                         </div>
@@ -858,7 +821,7 @@
             if (filteredAspirasi.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
-                        <div style="font-size: clamp(2rem, 4vw, 3rem); margin-bottom: 15px;">🔍</div>
+                        <div style="font-size: 48px; margin-bottom: 10px;">🔍</div>
                         <h3>Tidak ada aspirasi</h3>
                         <p>Tidak ada aspirasi dalam kategori ${currentFilter}</p>
                     </div>
@@ -1013,7 +976,7 @@
                         currentBase64Image = e.target.result; // Store base64 globally
                         uploadArea.innerHTML = `
                             <div>✅ Gambar terpilih</div>
-                            <div style="font-size: clamp(0.7rem, 0.9vw, 0.8rem); color: var(--text-light); margin-top: 4px;">
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
                                 ${file.name} (${Math.round(file.size/1024)}KB)
                             </div>
                         `;
@@ -1123,7 +1086,7 @@
                     document.getElementById('preview').style.display = 'none';
                     document.getElementById('uploadArea').innerHTML = `
                         <div>📷 Klik atau seret gambar ke sini</div>
-                        <div style="font-size: clamp(0.7rem, 0.9vw, 0.8rem); color: var(--text-light); margin-top: 4px;">
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
                             Maksimal 5MB - JPG, PNG
                         </div>
                         <input type="file" id="fileInput" class="file-input" accept="image/*">
