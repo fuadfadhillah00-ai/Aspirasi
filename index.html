@@ -25,7 +25,7 @@
             color: var(--dark);
             line-height: 1.6;
             height: 100vh;
-            overflow: hidden; /* Prevent body scroll */
+            overflow: hidden;
         }
         
         .container {
@@ -55,12 +55,13 @@
             gap: 10px;
         }
         
-        /* Form Styles - FIXED */
+        /* Form Styles - FIXED HEIGHT NO SCROLL */
         .form-section {
             height: 100vh;
             position: sticky;
             top: 0;
-            overflow-y: auto; /* Scroll jika form terlalu panjang */
+            display: flex;
+            flex-direction: column;
         }
         
         .form-card {
@@ -70,28 +71,42 @@
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
             position: sticky;
             top: 20px;
+            /* Form akan menyesuaikan tinggi konten tanpa scroll */
+            max-height: calc(100vh - 40px);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .form-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* Prevent internal scrolling */
         }
         
         .form-title {
             font-size: 1.3rem;
             margin-bottom: 20px;
             color: var(--dark);
+            flex-shrink: 0;
         }
         
         .form-group {
-            margin-bottom: 20px;
+            margin-bottom: 15px; /* Reduced margin to fit better */
+            flex-shrink: 0;
         }
         
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 6px; /* Reduced margin */
             font-weight: 600;
             color: var(--dark);
+            font-size: 14px;
         }
         
         input, textarea {
             width: 100%;
-            padding: 12px;
+            padding: 10px; /* Reduced padding */
             border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
@@ -105,17 +120,20 @@
         
         textarea {
             resize: vertical;
-            min-height: 100px;
+            min-height: 80px; /* Reduced min-height */
+            max-height: 120px; /* Limit max height */
         }
         
         .upload-area {
             border: 2px dashed var(--border);
             border-radius: 8px;
-            padding: 30px;
+            padding: 20px; /* Reduced padding */
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             background: #fafbfc;
+            font-size: 14px;
+            flex-shrink: 0;
         }
         
         .upload-area:hover {
@@ -134,15 +152,16 @@
         
         .preview {
             max-width: 100%;
-            max-height: 200px;
+            max-height: 150px; /* Reduced max-height */
             border-radius: 8px;
-            margin-top: 10px;
+            margin-top: 8px;
             display: none;
+            flex-shrink: 0;
         }
         
         .btn {
             width: 100%;
-            padding: 14px;
+            padding: 12px; /* Reduced padding */
             background: var(--primary);
             color: white;
             border: none;
@@ -151,6 +170,8 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s;
+            flex-shrink: 0;
+            margin-top: 10px;
         }
         
         .btn:hover {
@@ -216,12 +237,75 @@
             border-color: var(--primary);
         }
         
+        /* Loading Animation */
+        .loading-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        .loading-text {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* New Post Animation */
+        .new-post-indicator {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+            animation: slideDown 0.5s ease-out;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+        
+        @keyframes slideDown {
+            from {
+                transform: translateY(-20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
         .post {
             background: white;
             border-radius: 16px;
             padding: 25px;
             margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
         
         .post-header {
@@ -428,6 +512,7 @@
             border-radius: 8px;
             margin: 15px 0;
             font-size: 14px;
+            flex-shrink: 0;
         }
         
         .status.success {
@@ -471,6 +556,7 @@
             
             .form-card {
                 position: static;
+                max-height: none;
             }
             
             .posts-section {
@@ -530,42 +616,44 @@
             </div>
         </div>
         
-        <!-- Form Section - FIXED -->
+        <!-- Form Section - FIXED HEIGHT NO SCROLL -->
         <div class="form-section">
             <div class="form-card">
-                <h2 class="form-title">📢 Tulis Aspirasimu</h2>
-                <form id="aspirasiForm">
-                    <div class="form-group">
-                        <label for="nama">Nama Lengkap</label>
-                        <input type="text" id="nama" required placeholder="Nama Anda">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="nim">NIM</label>
-                        <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="isi">Aspirasi</label>
-                        <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
-                    </div>
-                    
-                    <div class="form-group">
-                        <div class="upload-area" id="uploadArea">
-                            <div>📷 Klik atau seret gambar ke sini</div>
-                            <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
-                                Maksimal 5MB - JPG, PNG
-                            </div>
-                            <input type="file" id="fileInput" class="file-input" accept="image/*">
+                <div class="form-content">
+                    <h2 class="form-title">📢 Tulis Aspirasimu</h2>
+                    <form id="aspirasiForm">
+                        <div class="form-group">
+                            <label for="nama">Nama Lengkap</label>
+                            <input type="text" id="nama" required placeholder="Nama Anda">
                         </div>
-                        <img id="preview" class="preview">
-                    </div>
-                    
-                    <button type="submit" class="btn" id="submitBtn">
-                        Posting Aspirasi
-                    </button>
-                </form>
-                <div id="formStatus"></div>
+                        
+                        <div class="form-group">
+                            <label for="nim">NIM</label>
+                            <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="isi">Aspirasi</label>
+                            <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
+                        </div>
+                        
+                        <div class="form-group">
+                            <div class="upload-area" id="uploadArea">
+                                <div>📷 Klik atau seret gambar ke sini</div>
+                                <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                                    Maksimal 5MB - JPG, PNG
+                                </div>
+                                <input type="file" id="fileInput" class="file-input" accept="image/*">
+                            </div>
+                            <img id="preview" class="preview">
+                        </div>
+                        
+                        <button type="submit" class="btn" id="submitBtn">
+                            Posting Aspirasi
+                        </button>
+                    </form>
+                    <div id="formStatus"></div>
+                </div>
             </div>
         </div>
         
@@ -579,10 +667,9 @@
             </div>
             
             <div id="postsContainer">
-                <div class="empty-state">
-                    <div style="font-size: 48px; margin-bottom: 10px;">📝</div>
-                    <h3>Belum ada aspirasi</h3>
-                    <p>Jadilah yang pertama menulis aspirasi!</p>
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Memuat aspirasi...</div>
                 </div>
             </div>
         </div>
@@ -594,6 +681,8 @@
         let allAspirasi = [];
         let allKomentar = [];
         let currentFilter = 'semua';
+        let isLoading = false;
+        let lastPostCount = 0;
         
         // Global variables for file handling
         let currentFileInput = null;
@@ -661,18 +750,50 @@
             }
         }
         
-        // Load data
+        // Load data dengan loading animation
         function loadData() {
+            if (isLoading) return;
+            
+            isLoading = true;
+            const container = document.getElementById('postsContainer');
+            
+            // Show loading spinner hanya jika belum ada data
+            if (allAspirasi.length === 0) {
+                container.innerHTML = `
+                    <div class="loading-container">
+                        <div class="loading-spinner"></div>
+                        <div class="loading-text">Memuat aspirasi...</div>
+                    </div>
+                `;
+            }
+            
             const timestamp = Date.now();
             const callbackName = `handleData_${timestamp}`;
             
             window[callbackName] = function(response) {
+                isLoading = false;
+                
                 if (response && response.success) {
-                    allAspirasi = response.data.aspirasi || [];
-                    allKomentar = response.data.komentar || [];
-                    renderPosts();
+                    const newAspirasi = response.data.aspirasi || [];
+                    const newKomentar = response.data.komentar || [];
+                    
+                    // Check if there are new posts
+                    const hasNewPosts = newAspirasi.length > lastPostCount;
+                    lastPostCount = newAspirasi.length;
+                    
+                    allAspirasi = newAspirasi;
+                    allKomentar = newKomentar;
+                    
+                    renderPosts(hasNewPosts);
                 } else {
                     console.error('Failed to load data:', response);
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                            <h3>Gagal memuat data</h3>
+                            <p>Silakan refresh halaman</p>
+                        </div>
+                    `;
                 }
                 delete window[callbackName];
             };
@@ -680,14 +801,15 @@
             const script = document.createElement('script');
             script.src = `${APP_SCRIPT_URL}?callback=${callbackName}`;
             script.onerror = function() {
+                isLoading = false;
                 console.error('Failed to load script');
                 delete window[callbackName];
             };
             document.head.appendChild(script);
         }
         
-        // Render posts
-        function renderPosts() {
+        // Render posts dengan animation
+        function renderPosts(showNewIndicator = false) {
             const container = document.getElementById('postsContainer');
             if (!container) return;
             
@@ -707,7 +829,18 @@
                 return;
             }
             
-            container.innerHTML = filteredAspirasi.map(aspirasi => {
+            let postsHTML = '';
+            
+            // Add new post indicator jika ada post baru
+            if (showNewIndicator && filteredAspirasi.length > 0) {
+                postsHTML += `
+                    <div class="new-post-indicator">
+                        ✨ Ada aspirasi baru!
+                    </div>
+                `;
+            }
+            
+            postsHTML += filteredAspirasi.map((aspirasi, index) => {
                 const waktu = new Date(aspirasi.waktu);
                 const tanggal = waktu.toLocaleDateString('id-ID');
                 const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
@@ -782,6 +915,8 @@
                     </div>
                 `;
             }).join('');
+            
+            container.innerHTML = postsHTML;
         }
         
         // Toggle reply form
@@ -961,8 +1096,8 @@
                     currentFileInput = document.getElementById('fileInput');
                     // Setup file upload again
                     setupFileUpload();
-                    // Reload data
-                    setTimeout(loadData, 2000);
+                    // Reload data dengan indicator new post
+                    setTimeout(() => loadData(), 2000);
                 } else {
                     showStatus(result.message, 'error');
                 }
