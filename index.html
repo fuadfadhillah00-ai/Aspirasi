@@ -11,6 +11,8 @@
             --light-bg: #f7f9fa;
             --border: #ccd6dd;
             --text-light: #536471;
+            --upvote: #1da1f2;
+            --downvote: #f91880;
         }
         
         * {
@@ -29,12 +31,7 @@
         }
         
         .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 20px;
-            display: grid;
-            grid-template-columns: 350px 1fr;
-            gap: 20px;
+            display: flex;
             height: 100vh;
         }
         
@@ -42,7 +39,6 @@
         .header {
             text-align: center;
             margin-bottom: 30px;
-            grid-column: 1 / -1;
         }
         
         .logo {
@@ -55,13 +51,18 @@
             gap: 10px;
         }
         
-        /* Form Styles - FIXED HEIGHT NO SCROLL */
+        /* Form Section - FIXED SIDEBAR */
         .form-section {
+            width: 350px;
             height: 100vh;
-            position: sticky;
+            position: fixed;
+            left: 0;
             top: 0;
-            display: flex;
-            flex-direction: column;
+            background: white;
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
         }
         
         .form-card {
@@ -69,36 +70,21 @@
             border-radius: 16px;
             padding: 25px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-            position: sticky;
-            top: 20px;
-            /* Form akan menyesuaikan tinggi konten tanpa scroll */
-            max-height: calc(100vh - 40px);
-            display: flex;
-            flex-direction: column;
-        }
-        
-        .form-content {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden; /* Prevent internal scrolling */
         }
         
         .form-title {
             font-size: 1.3rem;
             margin-bottom: 20px;
             color: var(--dark);
-            flex-shrink: 0;
         }
         
         .form-group {
-            margin-bottom: 15px; /* Reduced margin to fit better */
-            flex-shrink: 0;
+            margin-bottom: 15px;
         }
         
         label {
             display: block;
-            margin-bottom: 6px; /* Reduced margin */
+            margin-bottom: 6px;
             font-weight: 600;
             color: var(--dark);
             font-size: 14px;
@@ -106,7 +92,7 @@
         
         input, textarea {
             width: 100%;
-            padding: 10px; /* Reduced padding */
+            padding: 10px;
             border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
@@ -120,20 +106,19 @@
         
         textarea {
             resize: vertical;
-            min-height: 80px; /* Reduced min-height */
-            max-height: 120px; /* Limit max height */
+            min-height: 80px;
+            max-height: 120px;
         }
         
         .upload-area {
             border: 2px dashed var(--border);
             border-radius: 8px;
-            padding: 20px; /* Reduced padding */
+            padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.3s;
             background: #fafbfc;
             font-size: 14px;
-            flex-shrink: 0;
         }
         
         .upload-area:hover {
@@ -152,16 +137,15 @@
         
         .preview {
             max-width: 100%;
-            max-height: 150px; /* Reduced max-height */
+            max-height: 150px;
             border-radius: 8px;
             margin-top: 8px;
             display: none;
-            flex-shrink: 0;
         }
         
         .btn {
             width: 100%;
-            padding: 12px; /* Reduced padding */
+            padding: 12px;
             background: var(--primary);
             color: white;
             border: none;
@@ -170,7 +154,6 @@
             font-weight: 600;
             cursor: pointer;
             transition: background 0.3s;
-            flex-shrink: 0;
             margin-top: 10px;
         }
         
@@ -183,11 +166,13 @@
             cursor: not-allowed;
         }
         
-        /* Posts Section - SCROLLABLE */
+        /* Posts Section - SCROLLABLE MAIN CONTENT */
         .posts-section {
+            flex: 1;
+            margin-left: 350px;
             height: 100vh;
             overflow-y: auto;
-            padding-right: 10px;
+            padding: 20px;
         }
         
         /* Custom scrollbar untuk posts section */
@@ -347,15 +332,15 @@
             white-space: pre-line;
         }
         
-        /* Ukuran gambar lebih kecil */
+        /* Gambar postingan fit to window */
         .post-image-container {
             margin: 15px 0;
             text-align: center;
         }
         
         .post-image {
-            max-width: 300px;
-            max-height: 200px;
+            max-width: 100%;
+            max-height: 70vh;
             width: auto;
             height: auto;
             border-radius: 12px;
@@ -363,62 +348,63 @@
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             cursor: pointer;
             transition: transform 0.2s ease;
+            object-fit: contain;
         }
         
         .post-image:hover {
             transform: scale(1.02);
         }
         
-        /* Modal untuk gambar full size */
-        .image-modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.9);
-            animation: fadeIn 0.3s;
+        /* Voting Styles */
+        .post-voting {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-right: auto;
         }
         
-        .modal-content {
-            display: block;
-            margin: auto;
-            max-width: 90%;
-            max-height: 90%;
-            border-radius: 8px;
-            animation: zoomIn 0.3s;
-        }
-        
-        .close-modal {
-            position: absolute;
-            top: 20px;
-            right: 35px;
-            color: white;
-            font-size: 40px;
-            font-weight: bold;
+        .vote-btn {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
             cursor: pointer;
-            transition: color 0.3s;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+            font-weight: 600;
+            font-size: 14px;
         }
         
-        .close-modal:hover {
-            color: #ccc;
+        .upvote-btn {
+            color: var(--text-light);
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        .upvote-btn.active {
+            color: var(--upvote);
+            background: #e8f4fe;
         }
         
-        @keyframes zoomIn {
-            from { transform: scale(0.8); opacity: 0; }
-            to { transform: scale(1); opacity: 1; }
+        .downvote-btn {
+            color: var(--text-light);
+        }
+        
+        .downvote-btn.active {
+            color: var(--downvote);
+            background: #fef0f7;
+        }
+        
+        .vote-count {
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
         }
         
         .post-actions {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             padding-top: 15px;
             border-top: 1px solid #eee;
         }
@@ -506,13 +492,108 @@
             margin-bottom: 5px;
         }
         
+        /* Modal untuk gambar full size */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            display: block;
+            margin: auto;
+            max-width: 95%;
+            max-height: 95%;
+            border-radius: 8px;
+            animation: zoomIn 0.3s;
+            object-fit: contain;
+        }
+        
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        
+        .close-modal:hover {
+            color: #ccc;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        /* Welcome Modal */
+        .welcome-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            animation: fadeIn 0.3s;
+        }
+        
+        .welcome-content {
+            background: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .welcome-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            text-align: center;
+        }
+        
+        .welcome-subtitle {
+            color: var(--text-light);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        
         /* Status Messages */
         .status {
             padding: 12px;
             border-radius: 8px;
             margin: 15px 0;
             font-size: 14px;
-            flex-shrink: 0;
         }
         
         .status.success {
@@ -543,26 +624,22 @@
             }
             
             .container {
-                grid-template-columns: 1fr;
+                flex-direction: column;
                 height: auto;
-                gap: 0;
             }
             
             .form-section {
+                position: static;
+                width: 100%;
                 height: auto;
-                position: static;
-                margin-bottom: 20px;
-            }
-            
-            .form-card {
-                position: static;
-                max-height: none;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
             }
             
             .posts-section {
+                margin-left: 0;
                 height: auto;
                 overflow-y: visible;
-                padding-right: 0;
             }
             
             .filters {
@@ -575,32 +652,76 @@
             
             /* Gambar lebih kecil di mobile */
             .post-image {
-                max-width: 250px;
-                max-height: 180px;
+                max-height: 60vh;
+            }
+            
+            .welcome-content {
+                margin: 10% auto;
+                width: 95%;
             }
         }
         
         @media (max-width: 480px) {
             .post-image {
-                max-width: 200px;
-                max-height: 150px;
+                max-height: 50vh;
             }
             
             .container {
-                padding: 10px;
+                padding: 0;
+            }
+            
+            .form-section {
+                padding: 15px;
             }
             
             .form-card {
                 padding: 20px;
             }
             
+            .posts-section {
+                padding: 15px;
+            }
+            
             .post {
                 padding: 20px;
+            }
+            
+            .post-voting {
+                gap: 10px;
+            }
+            
+            .vote-btn {
+                padding: 6px 8px;
+                font-size: 12px;
             }
         }
     </style>
 </head>
 <body>
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="welcome-modal">
+        <div class="welcome-content">
+            <h2 class="welcome-title">👋 Selamat Datang di AspirasiFEB</h2>
+            <p class="welcome-subtitle">Silakan isi data diri Anda untuk mulai berpartisipasi</p>
+            
+            <form id="welcomeForm">
+                <div class="form-group">
+                    <label for="welcomeNama">Nama Lengkap</label>
+                    <input type="text" id="welcomeNama" required placeholder="Nama Anda">
+                </div>
+                
+                <div class="form-group">
+                    <label for="welcomeNIM">NIM</label>
+                    <input type="text" id="welcomeNIM" required placeholder="Nomor Induk Mahasiswa">
+                </div>
+                
+                <button type="submit" class="btn" id="welcomeBtn">
+                    Mulai Berpartisipasi
+                </button>
+            </form>
+        </div>
+    </div>
+
     <!-- Modal untuk gambar full size -->
     <div id="imageModal" class="image-modal">
         <span class="close-modal">&times;</span>
@@ -608,62 +729,57 @@
     </div>
 
     <div class="container">
-        <!-- Header -->
-        <div class="header">
-            <div class="logo">
-                <span>🐦</span>
-                <span>AspirasiFEB</span>
-            </div>
-        </div>
-        
-        <!-- Form Section - FIXED HEIGHT NO SCROLL -->
+        <!-- Form Section - FIXED SIDEBAR -->
         <div class="form-section">
-            <div class="form-card">
-                <div class="form-content">
-                    <h2 class="form-title">📢 Tulis Aspirasimu</h2>
-                    <form id="aspirasiForm">
-                        <div class="form-group">
-                            <label for="nama">Nama Lengkap</label>
-                            <input type="text" id="nama" required placeholder="Nama Anda">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="nim">NIM</label>
-                            <input type="text" id="nim" required placeholder="Nomor Induk Mahasiswa">
-                        </div>
-                        
-                        <div class="form-group">
-                            <label for="isi">Aspirasi</label>
-                            <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
-                        </div>
-                        
-                        <div class="form-group">
-                            <div class="upload-area" id="uploadArea">
-                                <div>📷 Klik atau seret gambar ke sini</div>
-                                <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
-                                    Maksimal 5MB - JPG, PNG
-                                </div>
-                                <input type="file" id="fileInput" class="file-input" accept="image/*">
-                            </div>
-                            <img id="preview" class="preview">
-                        </div>
-                        
-                        <button type="submit" class="btn" id="submitBtn">
-                            Posting Aspirasi
-                        </button>
-                    </form>
-                    <div id="formStatus"></div>
+            <div class="header">
+                <div class="logo">
+                    <span>🐦</span>
+                    <span>AspirasiFEB</span>
                 </div>
             </div>
+            
+            <div class="form-card">
+                <h2 class="form-title">📢 Tulis Aspirasimu</h2>
+                <form id="aspirasiForm">
+                    <div class="form-group">
+                        <label for="nama">Nama Lengkap</label>
+                        <input type="text" id="nama" required readonly style="background: #f5f5f5;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nim">NIM</label>
+                        <input type="text" id="nim" required readonly style="background: #f5f5f5;">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="isi">Aspirasi</label>
+                        <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
+                    </div>
+                    
+                    <div class="form-group">
+                        <div class="upload-area" id="uploadArea">
+                            <div>📷 Klik atau seret gambar ke sini</div>
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                                Maksimal 5MB - JPG, PNG
+                            </div>
+                            <input type="file" id="fileInput" class="file-input" accept="image/*">
+                        </div>
+                        <img id="preview" class="preview">
+                    </div>
+                    
+                    <button type="submit" class="btn" id="submitBtn">
+                        Posting Aspirasi
+                    </button>
+                </form>
+                <div id="formStatus"></div>
+            </div>
         </div>
         
-        <!-- Posts Section - SCROLLABLE -->
+        <!-- Posts Section - SCROLLABLE MAIN CONTENT -->
         <div class="posts-section">
             <div class="filters">
-                <button class="filter-btn active" onclick="setFilter('semua')">Semua</button>
-                <button class="filter-btn" onclick="setFilter('dosen')">Dosen</button>
-                <button class="filter-btn" onclick="setFilter('tendik')">Tendik</button>
-                <button class="filter-btn" onclick="setFilter('fasilitas')">Fasilitas</button>
+                <button class="filter-btn active" onclick="setSort('votes')">🔥 Terpopuler</button>
+                <button class="filter-btn" onclick="setSort('time')">🕒 Terbaru</button>
             </div>
             
             <div id="postsContainer">
@@ -680,9 +796,11 @@
         
         let allAspirasi = [];
         let allKomentar = [];
-        let currentFilter = 'semua';
+        let allVoting = [];
+        let currentSort = 'votes';
         let isLoading = false;
         let lastPostCount = 0;
+        let currentUser = null;
         
         // Global variables for file handling
         let currentFileInput = null;
@@ -704,12 +822,37 @@
             return nama ? `${nama.charAt(0).toUpperCase()}***` : 'Anonim';
         }
         
-        function inferKategori(isi) {
-            isi = isi.toLowerCase();
-            if (isi.includes('dosen') || isi.includes('mengajar')) return 'dosen';
-            if (isi.includes('tendik') || isi.includes('admin')) return 'tendik';
-            if (isi.includes('fasilitas') || isi.includes('ruang') || isi.includes('ac') || isi.includes('lcd')) return 'fasilitas';
-            return 'lainnya';
+        // User Management
+        function initializeUser() {
+            const savedUser = localStorage.getItem('aspirasiFEB_user');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('nama').value = currentUser.nama;
+                document.getElementById('nim').value = currentUser.nim;
+                return true;
+            }
+            return false;
+        }
+        
+        function saveUser(nama, nim) {
+            currentUser = { nama, nim };
+            localStorage.setItem('aspirasiFEB_user', JSON.stringify(currentUser));
+            document.getElementById('nama').value = nama;
+            document.getElementById('nim').value = nim;
+        }
+        
+        function showWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        }
+        
+        function hideWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
         }
         
         // Image Modal Functions
@@ -776,6 +919,7 @@
                 if (response && response.success) {
                     const newAspirasi = response.data.aspirasi || [];
                     const newKomentar = response.data.komentar || [];
+                    const newVoting = response.data.voting || [];
                     
                     // Check if there are new posts
                     const hasNewPosts = newAspirasi.length > lastPostCount;
@@ -783,6 +927,7 @@
                     
                     allAspirasi = newAspirasi;
                     allKomentar = newKomentar;
+                    allVoting = newVoting;
                     
                     renderPosts(hasNewPosts);
                 } else {
@@ -813,17 +958,26 @@
             const container = document.getElementById('postsContainer');
             if (!container) return;
             
-            let filteredAspirasi = allAspirasi;
-            if (currentFilter !== 'semua') {
-                filteredAspirasi = allAspirasi.filter(a => inferKategori(a.isi) === currentFilter);
+            let sortedAspirasi = [...allAspirasi];
+            
+            // Sort berdasarkan pilihan
+            if (currentSort === 'votes') {
+                sortedAspirasi.sort((a, b) => {
+                    const netA = (a.upvote_count || 0) - (a.downvote_count || 0);
+                    const netB = (b.upvote_count || 0) - (b.downvote_count || 0);
+                    return netB - netA;
+                });
+            } else {
+                // Sort by time (newest first)
+                sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
             }
             
-            if (filteredAspirasi.length === 0) {
+            if (sortedAspirasi.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <div style="font-size: 48px; margin-bottom: 10px;">🔍</div>
-                        <h3>Tidak ada aspirasi</h3>
-                        <p>Tidak ada aspirasi dalam kategori ${currentFilter}</p>
+                        <h3>Belum ada aspirasi</h3>
+                        <p>Jadilah yang pertama menulis aspirasi!</p>
                     </div>
                 `;
                 return;
@@ -832,7 +986,7 @@
             let postsHTML = '';
             
             // Add new post indicator jika ada post baru
-            if (showNewIndicator && filteredAspirasi.length > 0) {
+            if (showNewIndicator && sortedAspirasi.length > 0) {
                 postsHTML += `
                     <div class="new-post-indicator">
                         ✨ Ada aspirasi baru!
@@ -840,20 +994,26 @@
                 `;
             }
             
-            postsHTML += filteredAspirasi.map((aspirasi, index) => {
+            postsHTML += sortedAspirasi.map((aspirasi, index) => {
                 const waktu = new Date(aspirasi.waktu);
                 const tanggal = waktu.toLocaleDateString('id-ID');
                 const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const namaTersamarkan = maskName(aspirasi.nama);
                 const inisial = namaTersamarkan.charAt(0);
-                const kategori = {
-                    'dosen': 'Dosen',
-                    'tendik': 'Tendik', 
-                    'fasilitas': 'Fasilitas',
-                    'lainnya': 'Lainnya'
-                }[inferKategori(aspirasi.isi)];
                 
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
+                
+                // Cek vote user saat ini
+                let userVote = null;
+                if (currentUser) {
+                    const userVoteData = allVoting.find(v => 
+                        v.id_aspirasi === aspirasi.id && v.nim_user === currentUser.nim
+                    );
+                    userVote = userVoteData ? userVoteData.vote_type : null;
+                }
+                
+                const upvoteCount = aspirasi.upvote_count || 0;
+                const downvoteCount = aspirasi.downvote_count || 0;
                 
                 return `
                     <div class="post" id="post-${aspirasi.id}">
@@ -861,7 +1021,7 @@
                             <div class="avatar">${inisial}</div>
                             <div class="post-info">
                                 <div class="post-name">${namaTersamarkan}</div>
-                                <div class="post-meta">${tanggal} • ${jam} • ${kategori}</div>
+                                <div class="post-meta">${tanggal} • ${jam}</div>
                             </div>
                         </div>
                         
@@ -878,17 +1038,28 @@
                         ` : ''}
                         
                         <div class="post-actions">
-                            <button class="reply-btn" onclick="toggleReplyForm('${aspirasi.id}')">
+                            <div class="post-voting">
+                                <button class="vote-btn upvote-btn ${userVote === 'upvote' ? 'active' : ''}" 
+                                        onclick="handleVote('${aspirasi.id}', 'upvote')"
+                                        ${!currentUser ? 'disabled' : ''}>
+                                    <span>↑</span>
+                                    <span class="vote-count">${upvoteCount}</span>
+                                </button>
+                                <button class="vote-btn downvote-btn ${userVote === 'downvote' ? 'active' : ''}" 
+                                        onclick="handleVote('${aspirasi.id}', 'downvote')"
+                                        ${!currentUser ? 'disabled' : ''}>
+                                    <span>↓</span>
+                                    <span class="vote-count">${downvoteCount}</span>
+                                </button>
+                            </div>
+                            
+                            <button class="reply-btn" onclick="toggleReplyForm('${aspirasi.id}')" ${!currentUser ? 'disabled' : ''}>
                                 💬 Balas (${komentar.length})
                             </button>
                         </div>
                         
                         <div class="reply-form" id="reply-form-${aspirasi.id}">
                             <form onsubmit="submitKomentar(event, '${aspirasi.id}')">
-                                <div class="form-row">
-                                    <input type="text" name="nama" placeholder="Nama Anda" required>
-                                    <input type="text" name="nim" placeholder="NIM" required>
-                                </div>
                                 <textarea name="isi" placeholder="Tulis komentar..." required rows="3"></textarea>
                                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                                     <button type="submit" class="btn" style="flex: 1;">Kirim Komentar</button>
@@ -927,9 +1098,9 @@
             }
         }
         
-        // Set filter
-        function setFilter(filter) {
-            currentFilter = filter;
+        // Set sort type
+        function setSort(sortType) {
+            currentSort = sortType;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -937,6 +1108,40 @@
                 event.target.classList.add('active');
             }
             renderPosts();
+        }
+        
+        // Handle voting
+        async function handleVote(postId, voteType) {
+            if (!currentUser) {
+                showStatus('Silakan isi data diri terlebih dahulu', 'error');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('action', 'vote');
+                formData.append('id_aspirasi', postId);
+                formData.append('nim_user', currentUser.nim);
+                formData.append('vote_type', voteType);
+                
+                const response = await fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Reload data untuk update counts
+                    setTimeout(() => loadData(), 1000);
+                } else {
+                    showStatus(result.message, 'error');
+                }
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showStatus('Gagal melakukan vote', 'error');
+            }
         }
         
         // File upload handling
@@ -1021,9 +1226,14 @@
             });
         }
         
-        // Submit aspirasi - FIXED VERSION
+        // Submit aspirasi
         async function submitAspirasi(event) {
             event.preventDefault();
+            
+            if (!currentUser) {
+                showStatus('Silakan isi data diri terlebih dahulu', 'error');
+                return;
+            }
             
             const submitBtn = document.getElementById('submitBtn');
             const form = document.getElementById('aspirasiForm');
@@ -1033,18 +1243,11 @@
                 return;
             }
             
-            const nama = document.getElementById('nama')?.value.trim();
-            const nim = document.getElementById('nim')?.value.trim();
             const isi = document.getElementById('isi')?.value.trim();
             
             // Validasi
-            if (!nama || !nim || !isi) {
-                showStatus('Harap isi semua field', 'error');
-                return;
-            }
-            
-            if (nim.length < 8 || !/^\d+$/.test(nim)) {
-                showStatus('NIM harus angka minimal 8 digit', 'error');
+            if (!isi) {
+                showStatus('Harap isi aspirasi', 'error');
                 return;
             }
             
@@ -1063,10 +1266,10 @@
                 // Submit data
                 const formData = new FormData();
                 formData.append('action', 'kirim_aspirasi');
-                formData.append('nama', nama);
-                formData.append('nim', nim);
+                formData.append('nama', currentUser.nama);
+                formData.append('nim', currentUser.nim);
                 formData.append('isi', isi);
-                if (base64Image && base64Image.length > 0) {
+                if (base64Image && base64Image.length > 100) {
                     formData.append('base64Image', base64Image);
                 }
                 
@@ -1115,28 +1318,24 @@
         async function submitKomentar(event, aspirasiId) {
             event.preventDefault();
             
+            if (!currentUser) {
+                showStatus('Silakan isi data diri terlebih dahulu', 'error');
+                return;
+            }
+            
             const form = event.target;
             const submitBtn = form.querySelector('button[type="submit"]');
-            const namaInput = form.querySelector('input[name="nama"]');
-            const nimInput = form.querySelector('input[name="nim"]');
             const isiInput = form.querySelector('textarea[name="isi"]');
             
-            if (!submitBtn || !namaInput || !nimInput || !isiInput) {
+            if (!submitBtn || !isiInput) {
                 showStatus('Form komentar tidak lengkap', 'error');
                 return;
             }
             
-            const nama = namaInput.value.trim();
-            const nim = nimInput.value.trim();
             const isi = isiInput.value.trim();
             
-            if (!nama || !nim || !isi) {
-                showStatus('Harap isi semua field', 'error');
-                return;
-            }
-            
-            if (nim.length < 8 || !/^\d+$/.test(nim)) {
-                showStatus('NIM harus angka minimal 8 digit', 'error');
+            if (!isi) {
+                showStatus('Harap isi komentar', 'error');
                 return;
             }
             
@@ -1147,8 +1346,8 @@
                 const formData = new FormData();
                 formData.append('action', 'kirim_komentar');
                 formData.append('id_aspirasi', aspirasiId);
-                formData.append('modal_nama', nama);
-                formData.append('modal_nim', nim);
+                formData.append('modal_nama', currentUser.nama);
+                formData.append('modal_nim', currentUser.nim);
                 formData.append('modal_isi', isi);
                 
                 const response = await fetch(APP_SCRIPT_URL, {
@@ -1176,13 +1375,40 @@
             }
         }
         
+        // Handle welcome form
+        function handleWelcomeForm(event) {
+            event.preventDefault();
+            
+            const nama = document.getElementById('welcomeNama').value.trim();
+            const nim = document.getElementById('welcomeNIM').value.trim();
+            
+            if (!nama || !nim) {
+                showStatus('Harap isi nama dan NIM', 'error', 'welcomeStatus');
+                return;
+            }
+            
+            saveUser(nama, nim);
+            hideWelcomeModal();
+            loadData();
+        }
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
+            // Check if user already exists
+            if (!initializeUser()) {
+                showWelcomeModal();
+            }
+            
             const aspirasiForm = document.getElementById('aspirasiForm');
             if (aspirasiForm) {
                 aspirasiForm.addEventListener('submit', submitAspirasi);
             } else {
                 console.error('Aspirasi form not found');
+            }
+            
+            const welcomeForm = document.getElementById('welcomeForm');
+            if (welcomeForm) {
+                welcomeForm.addEventListener('submit', handleWelcomeForm);
             }
             
             setupFileUpload();
