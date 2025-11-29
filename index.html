@@ -290,23 +290,17 @@
         .post-image:hover {
             transform: scale(1.02);
         }
-        /* Unicode Arrow Icons */
-        .arrow-icon {
+        /* Like Icon */
+        .like-icon {
             font-size: 18px;
             transition: all 0.3s ease;
             display: inline-block;
         }
-        .arrow-up {
-            color: var(--text-light);
+        .like-icon.liked {
+            color: var(--downvote); /* Merah untuk disukai */
         }
-        .arrow-up.active {
-            color: var(--upvote);
-        }
-        .arrow-down {
-            color: var(--text-light);
-        }
-        .arrow-down.active {
-            color: var(--downvote);
+        .like-icon.not-liked {
+            color: var(--text-light); /* Abu-abu untuk belum disukai */
         }
         /* Voting Styles - Clean Twitter Style */
         .post-voting {
@@ -315,7 +309,7 @@
             gap: 15px;
             margin-right: auto;
         }
-        .vote-btn {
+        .like-btn {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -328,27 +322,24 @@
             font-weight: 600;
             font-size: 14px;
         }
-        .vote-btn:hover:not(:disabled) {
+        .like-btn:hover:not(:disabled) {
             background: #f8f9fa;
         }
-        .vote-btn:disabled {
+        .like-btn:disabled {
             cursor: not-allowed;
             opacity: 0.6;
         }
-        .vote-btn:disabled:hover {
+        .like-btn:disabled:hover {
             background: none;
         }
-        .vote-count {
+        .like-count {
             font-weight: bold;
             min-width: 20px;
             text-align: center;
             transition: color 0.3s ease;
         }
-        .upvote-btn.active .vote-count {
-            color: var(--upvote);
-        }
-        .downvote-btn.active .vote-count {
-            color: var(--downvote);
+        .like-btn.active .like-count {
+            color: var(--downvote); /* Warna jumlah like saat aktif */
         }
         .post-actions {
             display: flex;
@@ -674,11 +665,11 @@
             .post-voting {
                 gap: 10px;
             }
-            .vote-btn {
+            .like-btn {
                 padding: 6px 8px;
                 font-size: 12px;
             }
-            .arrow-icon {
+            .like-icon {
                 font-size: 16px;
             }
         }
@@ -819,26 +810,26 @@
             document.getElementById('nama').value = nama;
             document.getElementById('nim').value = nim;
         }
-        // Voting Management dengan Local Storage - FIXED VERSION
-        function getUserVotes() {
+        // Like Management dengan Local Storage - FIXED VERSION
+        function getUserLikes() {
             if (!currentUser) return {};
-            const votes = localStorage.getItem(`aspirasiFEB_votes_${currentUser.nim}`);
-            return votes ? JSON.parse(votes) : {};
+            const likes = localStorage.getItem(`aspirasiFEB_likes_${currentUser.nim}`);
+            return likes ? JSON.parse(likes) : {};
         }
-        function saveUserVote(postId, voteType) {
+        function saveUserLike(postId, likeState) {
             if (!currentUser) return;
-            const votes = getUserVotes();
-            // Hanya boleh ada satu vote per post: 'upvote', 'downvote', atau tidak ada
-            if (voteType === 'none') {
-                delete votes[postId];
+            const likes = getUserLikes();
+            // Hanya boleh ada satu like per post: 'like', atau tidak ada
+            if (likeState === 'none') {
+                delete likes[postId];
             } else {
-                votes[postId] = voteType;
+                likes[postId] = likeState; // 'like'
             }
-            localStorage.setItem(`aspirasiFEB_votes_${currentUser.nim}`, JSON.stringify(votes));
+            localStorage.setItem(`aspirasiFEB_likes_${currentUser.nim}`, JSON.stringify(likes));
         }
-        function getUserVoteForPost(postId) {
-            const votes = getUserVotes();
-            return votes[postId] || null;
+        function getUserLikeForPost(postId) {
+            const likes = getUserLikes();
+            return likes[postId] || null; // 'like' atau null
         }
         function showWelcomeModal() {
             const modal = document.getElementById('welcomeModal');
@@ -954,11 +945,7 @@
             let sortedAspirasi = [...allAspirasi];
             // Sort berdasarkan pilihan
             if (currentSort === 'votes') {
-                sortedAspirasi.sort((a, b) => {
-                    const netA = (a.upvote_count || 0) - (a.downvote_count || 0);
-                    const netB = (b.upvote_count || 0) - (b.downvote_count || 0);
-                    return netB - netA;
-                });
+                sortedAspirasi.sort((a, b) => (b.like_count || 0) - (a.like_count || 0)); // Urutkan berdasarkan like count
             } else {
                 sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
             }
@@ -986,11 +973,10 @@
                 const namaTersamarkan = maskName(aspirasi.nama);
                 const inisial = namaTersamarkan.charAt(0);
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
-                // Cek vote user dari Local Storage
-                let userVote = getUserVoteForPost(aspirasi.id);
+                // Cek like user dari Local Storage
+                let userLike = getUserLikeForPost(aspirasi.id);
                 // Gunakan data asli dari server untuk count
-                const upvoteCount = aspirasi.upvote_count || 0;
-                const downvoteCount = aspirasi.downvote_count || 0;
+                const likeCount = aspirasi.like_count || 0;
                 // Cek apakah post sedang dalam proses voting
                 const isCurrentlyVoting = activeVoteRequests.has(aspirasi.id);
                 return `
@@ -1014,19 +1000,12 @@
                         ` : ''}
                         <div class="post-actions">
                             <div class="post-voting">
-                                <button class="vote-btn upvote-btn ${userVote === 'upvote' ? 'active' : ''} ${isCurrentlyVoting ? 'vote-loading' : ''}" 
-                                        onclick="handleVote('${aspirasi.id}', 'upvote')"
+                                <button class="like-btn ${userLike === 'like' ? 'active' : ''} ${isCurrentlyVoting ? 'vote-loading' : ''}" 
+                                        onclick="handleLike('${aspirasi.id}')"
                                         ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
-                                        id="upvote-${aspirasi.id}">
-                                    <span class="arrow-icon arrow-up ${userVote === 'upvote' ? 'active' : ''}">▲</span>
-                                    <span class="vote-count">${upvoteCount}</span>
-                                </button>
-                                <button class="vote-btn downvote-btn ${userVote === 'downvote' ? 'active' : ''} ${isCurrentlyVoting ? 'vote-loading' : ''}" 
-                                        onclick="handleVote('${aspirasi.id}', 'downvote')"
-                                        ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
-                                        id="downvote-${aspirasi.id}">
-                                    <span class="arrow-icon arrow-down ${userVote === 'downvote' ? 'active' : ''}">▼</span>
-                                    <span class="vote-count">${downvoteCount}</span>
+                                        id="like-${aspirasi.id}">
+                                    <span class="like-icon ${userLike === 'like' ? 'liked' : 'not-liked'}">❤️</span>
+                                    <span class="like-count">${likeCount}</span>
                                 </button>
                             </div>
                             <button class="reply-btn" onclick="toggleReplyForm('${aspirasi.id}')" ${!currentUser ? 'disabled' : ''}>
@@ -1140,15 +1119,15 @@
             renderPosts();
             renderPagination();
         }
-        // Handle voting dengan system yang diperbaiki - FIXED TOGGLE LOGIC
-        async function handleVote(postId, voteType) {
+        // Handle like dengan system yang diperbaiki - FIXED TOGGLE LOGIC
+        async function handleLike(postId) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
             // Prevent multiple simultaneous votes untuk post yang sama
             if (activeVoteRequests.has(postId)) {
-                console.log('Vote request already in progress for post:', postId);
+                console.log('Like request already in progress for post:', postId);
                 return;
             }
             // Set loading state
@@ -1160,9 +1139,9 @@
                 formData.append('action', 'vote');
                 formData.append('id_aspirasi', postId);
                 formData.append('nim_user', currentUser.nim);
-                formData.append('vote_type', voteType);
+                formData.append('vote_type', 'like'); // Kirim vote_type 'like'
                 formData.append('request_id', requestId);
-                console.log('Mengirim vote ke server...', { postId, voteType, requestId });
+                console.log('Mengirim like ke server...', { postId, voteType: 'like', requestId });
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
@@ -1171,16 +1150,16 @@
                 if (result.success) {
                     console.log('Server response:', result);
                     // Update local storage berdasarkan final state dari server
-                    saveUserVote(postId, result.final_state);
+                    saveUserLike(postId, result.final_state);
                     // Reload data untuk sync count dengan server
                     await loadData();
-                    showStatus(`Vote berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
+                    showStatus(`Like berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
                 } else {
                     throw new Error(result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showStatus('Gagal menyimpan vote: ' + error.message, 'error');
+                showStatus('Gagal menyimpan like: ' + error.message, 'error');
             } finally {
                 // Clear loading state
                 activeVoteRequests.delete(postId);
