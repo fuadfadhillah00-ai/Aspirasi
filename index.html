@@ -773,6 +773,7 @@
             <div id="paginationContainer"></div>
         </div>
     </div>
+<!-- ... (Bagian head dan body sebelum script tetap sama seperti kode sebelumnya) ... -->
     <script>
         const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
         // State management
@@ -920,7 +921,7 @@
                     renderPosts();
                     renderPagination();
                 } else {
-                    console.error('Failed to load ', response);
+                    console.error('Failed to load data:', response);
                     container.innerHTML = `
                         <div class="empty-state">
                             <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
@@ -1140,7 +1141,7 @@
             renderPosts();
             renderPagination();
         }
-        // Handle voting dengan system yang diperbaiki - FIXED TOGGLE LOGIC
+        // Handle voting dengan system yang diperbaiki - LOGIKA DIPERBARUI
         async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
@@ -1151,35 +1152,19 @@
                 console.log('Vote request already in progress for post:', postId);
                 return;
             }
-            // Ambil vote lokal sebelum mengirim request
-            let currentLocalVote = getUserVoteForPost(postId);
-            let newLocalVote = 'none';
-
-            // Logika Toggle berdasarkan vote lokal
-            if (currentLocalVote === voteType) {
-                // Jika klik vote yang sama, hapus vote (toggle off)
-                newLocalVote = 'none';
-            } else {
-                // Jika klik vote berbeda atau tidak ada vote, setel vote baru
-                newLocalVote = voteType;
-            }
-
-            // Simpan vote baru ke localStorage SEBELUM request dikirim
-            saveUserVote(postId, newLocalVote);
-
             // Set loading state
             activeVoteRequests.set(postId, true);
-            renderPosts(); // Re-render untuk show loading state dan status vote lokal yang baru
-
+            renderPosts(); // Re-render untuk show loading state
             try {
                 const requestId = Date.now().toString();
                 const formData = new FormData();
                 formData.append('action', 'vote');
                 formData.append('id_aspirasi', postId);
-                formData.append('nim_user', currentUser.nim);
+                formData.append('nim_user', currentUser.nim); // Kirim NIM
+                formData.append('nama_user', currentUser.nama); // Kirim Nama dari localStorage
                 formData.append('vote_type', voteType);
                 formData.append('request_id', requestId);
-                console.log('Mengirim vote ke server...', { postId, voteType, requestId, currentLocalVote, newLocalVote });
+                console.log('Mengirim vote ke server...', { postId, voteType, requestId, nim: currentUser.nim, nama: currentUser.nama });
 
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
@@ -1189,23 +1174,21 @@
 
                 if (result.success) {
                     console.log('Server response:', result);
-                    // Server telah memproses request. Kita tetap reload data untuk sinkronisasi.
-                    // Karena kita sudah update localStorage sebelum request, hasil render
-                    // akan menunjukkan status yang benar setelah data baru dimuat.
-                    await loadData(); // Reload data untuk sync count dan status dengan server
+                    // Update local storage berdasarkan final state dari server
+                    saveUserVote(postId, result.final_state);
+                    // Reload data untuk sync count dengan server
+                    await loadData();
                     showStatus(`Vote berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
                 } else {
                     throw new Error(result.message);
                 }
             } catch (error) {
                 console.error('Error:', error);
-                // Jika request gagal, kembalikan vote ke status sebelumnya
-                saveUserVote(postId, currentLocalVote);
                 showStatus('Gagal menyimpan vote: ' + error.message, 'error');
             } finally {
                 // Clear loading state
                 activeVoteRequests.delete(postId);
-                renderPosts(); // Re-render setelah selesai (baik sukses maupun gagal)
+                renderPosts();
             }
         }
         // File upload handling
@@ -1459,3 +1442,4 @@
     </script>
 </body>
 </html>
+
