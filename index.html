@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>🐦 AspirasiFEB</title>
     <style>
-        /* CSS sama seperti sebelumnya, tidak berubah */
         :root {
             --primary: #1da1f2;
             --primary-dark: #0d8bd9;
@@ -916,7 +915,6 @@
         
         // Voting system yang diperbaiki
         let activeVoteRequests = new Map(); // Untuk track dan cancel pending requests
-        let voteState = new Map(); // Current vote state per post
         
         // Global variables untuk file handling
         let currentFileInput = null;
@@ -957,7 +955,7 @@
             document.getElementById('nim').value = nim;
         }
         
-        // Voting Management dengan Local Storage
+        // Voting Management dengan Local Storage - FIXED VERSION
         function getUserVotes() {
             if (!currentUser) return {};
             const votes = localStorage.getItem(`aspirasiFEB_votes_${currentUser.nim}`);
@@ -967,11 +965,14 @@
         function saveUserVote(postId, voteType) {
             if (!currentUser) return;
             const votes = getUserVotes();
+            
+            // Hanya boleh ada satu vote per post: 'upvote', 'downvote', atau tidak ada
             if (voteType === 'none') {
                 delete votes[postId];
             } else {
                 votes[postId] = voteType;
             }
+            
             localStorage.setItem(`aspirasiFEB_votes_${currentUser.nim}`, JSON.stringify(votes));
         }
         
@@ -1334,17 +1335,17 @@
             renderPagination();
         }
         
-        // Handle voting dengan system yang diperbaiki - FIXED VERSION
+        // Handle voting dengan system yang diperbaiki - FIXED TOGGLE LOGIC
         async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
             
-            // Cancel pending request untuk post yang sama
+            // Prevent multiple simultaneous votes untuk post yang sama
             if (activeVoteRequests.has(postId)) {
-                console.log('Cancelling pending vote request for post:', postId);
-                // Kita tidak bisa benar-benar cancel fetch, tapi kita bisa ignore response-nya
+                console.log('Vote request already in progress for post:', postId);
+                return;
             }
             
             // Set loading state
@@ -1375,7 +1376,7 @@
                     // Update local storage berdasarkan final state dari server
                     saveUserVote(postId, result.final_state);
                     
-                    // Reload data untuk sync dengan server
+                    // Reload data untuk sync count dengan server
                     await loadData();
                     
                     showStatus(`Vote berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
@@ -1386,7 +1387,6 @@
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Gagal menyimpan vote: ' + error.message, 'error');
-                // Jangan rollback UI, biarkan user lihat state terakhir
             } finally {
                 // Clear loading state
                 activeVoteRequests.delete(postId);
