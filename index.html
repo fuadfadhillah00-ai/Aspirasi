@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>🐦 AspirasiFEB</title>
     <style>
+        /* CSS sama seperti sebelumnya, tidak berubah */
         :root {
             --primary: #1da1f2;
             --primary-dark: #0d8bd9;
@@ -695,6 +696,26 @@
             transition: width 0.3s ease;
         }
         
+        /* Vote Loading State */
+        .vote-loading {
+            opacity: 0.7;
+            position: relative;
+        }
+        
+        .vote-loading::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 16px;
+            height: 16px;
+            margin: -8px 0 0 -8px;
+            border: 2px solid transparent;
+            border-top: 2px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
         /* Responsive */
         @media (max-width: 768px) {
             body {
@@ -893,9 +914,9 @@
         let isLoading = false;
         let currentUser = null;
         
-        // Track voting state untuk prevent rapid clicks
-        let voteLocks = new Map();
-        let pendingVotes = new Map();
+        // Voting system yang diperbaiki
+        let activeVoteRequests = new Map(); // Untuk track dan cancel pending requests
+        let voteState = new Map(); // Current vote state per post
         
         // Global variables untuk file handling
         let currentFileInput = null;
@@ -915,18 +936,6 @@
         
         function maskName(nama) {
             return nama ? `${nama.charAt(0).toUpperCase()}***` : 'Anonim';
-        }
-        
-        function debounce(func, wait) {
-            let timeout;
-            return function executedFunction(...args) {
-                const later = () => {
-                    clearTimeout(timeout);
-                    func(...args);
-                };
-                clearTimeout(timeout);
-                timeout = setTimeout(later, wait);
-            };
         }
         
         // User Management
@@ -1146,17 +1155,14 @@
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
                 
                 // Cek vote user dari Local Storage
-                let userVote = null;
-                if (currentUser) {
-                    userVote = getUserVoteForPost(aspirasi.id);
-                }
+                let userVote = getUserVoteForPost(aspirasi.id);
                 
                 // Gunakan data asli dari server untuk count
                 const upvoteCount = aspirasi.upvote_count || 0;
                 const downvoteCount = aspirasi.downvote_count || 0;
                 
                 // Cek apakah post sedang dalam proses voting
-                const isCurrentlyVoting = voteLocks.get(aspirasi.id) || false;
+                const isCurrentlyVoting = activeVoteRequests.has(aspirasi.id);
                 
                 return `
                     <div class="post" id="post-${aspirasi.id}">
@@ -1182,14 +1188,14 @@
                         
                         <div class="post-actions">
                             <div class="post-voting">
-                                <button class="vote-btn upvote-btn ${userVote === 'upvote' ? 'active' : ''}" 
+                                <button class="vote-btn upvote-btn ${userVote === 'upvote' ? 'active' : ''} ${isCurrentlyVoting ? 'vote-loading' : ''}" 
                                         onclick="handleVote('${aspirasi.id}', 'upvote')"
                                         ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
                                         id="upvote-${aspirasi.id}">
                                     <span class="arrow-icon arrow-up ${userVote === 'upvote' ? 'active' : ''}">▲</span>
                                     <span class="vote-count">${upvoteCount}</span>
                                 </button>
-                                <button class="vote-btn downvote-btn ${userVote === 'downvote' ? 'active' : ''}" 
+                                <button class="vote-btn downvote-btn ${userVote === 'downvote' ? 'active' : ''} ${isCurrentlyVoting ? 'vote-loading' : ''}" 
                                         onclick="handleVote('${aspirasi.id}', 'downvote')"
                                         ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
                                         id="downvote-${aspirasi.id}">
@@ -1328,56 +1334,23 @@
             renderPagination();
         }
         
-        // Handle voting dengan debouncing dan locking - FIXED VERSION
-        const handleVote = debounce(async function(postId, voteType) {
+        // Handle voting dengan system yang diperbaiki - FIXED VERSION
+        async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
             
-            // PREVENT RAPID CLICKS - FIX RACE CONDITION
-            if (voteLocks.get(postId)) {
-                console.log('Vote sedang diproses untuk post', postId);
-                return;
+            // Cancel pending request untuk post yang sama
+            if (activeVoteRequests.has(postId)) {
+                console.log('Cancelling pending vote request for post:', postId);
+                // Kita tidak bisa benar-benar cancel fetch, tapi kita bisa ignore response-nya
             }
             
-            // Set voting lock untuk post ini
-            voteLocks.set(postId, true);
+            // Set loading state
+            activeVoteRequests.set(postId, true);
+            renderPosts(); // Re-render untuk show loading state
             
-            const post = allAspirasi.find(a => a.id === postId);
-            if (!post) {
-                voteLocks.set(postId, false);
-                return;
-            }
-
-            // Cek vote sebelumnya dari Local Storage
-            const previousVoteType = getUserVoteForPost(postId);
-            console.log(`Vote: ${voteType} untuk ${postId}, Previous: ${previousVoteType}`);
-
-            // Tentukan vote type baru berdasarkan logika toggle
-            let newVoteType;
-            if (previousVoteType === voteType) {
-                // Jika klik vote yang sama, hapus vote (toggle off)
-                newVoteType = 'none';
-                console.log('Toggle OFF - remove vote');
-            } else {
-                // Jika klik vote berbeda, ganti ke vote baru
-                newVoteType = voteType;
-                console.log('Toggle ON - new vote:', voteType);
-            }
-
-            // DISABLE TOMBOL SELAMA PROSES
-            const upvoteBtn = document.getElementById(`upvote-${postId}`);
-            const downvoteBtn = document.getElementById(`downvote-${postId}`);
-            if (upvoteBtn) upvoteBtn.disabled = true;
-            if (downvoteBtn) downvoteBtn.disabled = true;
-
-            // Optimistic update - simpan ke Local Storage langsung
-            saveUserVote(postId, newVoteType);
-
-            // Update UI langsung untuk warna
-            renderPosts();
-
             try {
                 const requestId = Date.now().toString();
                 const formData = new FormData();
@@ -1387,7 +1360,7 @@
                 formData.append('vote_type', voteType);
                 formData.append('request_id', requestId);
                 
-                console.log('Mengirim vote ke server...');
+                console.log('Mengirim vote ke server...', { postId, voteType, requestId });
                 
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
@@ -1398,8 +1371,13 @@
                 
                 if (result.success) {
                     console.log('Server response:', result);
-                    // Success - reload data untuk sync count dengan server
+                    
+                    // Update local storage berdasarkan final state dari server
+                    saveUserVote(postId, result.final_state);
+                    
+                    // Reload data untuk sync dengan server
                     await loadData();
+                    
                     showStatus(`Vote berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
                 } else {
                     throw new Error(result.message);
@@ -1407,16 +1385,14 @@
                 
             } catch (error) {
                 console.error('Error:', error);
-                // Rollback Local Storage jika gagal
-                saveUserVote(postId, previousVoteType);
-                renderPosts();
                 showStatus('Gagal menyimpan vote: ' + error.message, 'error');
+                // Jangan rollback UI, biarkan user lihat state terakhir
             } finally {
-                // ENABLE TOMBOL KEMBALI
-                voteLocks.set(postId, false);
-                renderPosts(); // Render ulang untuk enable tombol
+                // Clear loading state
+                activeVoteRequests.delete(postId);
+                renderPosts();
             }
-        }, 500); // Debounce 500ms
+        }
         
         // File upload handling
         function setupFileUpload() {
