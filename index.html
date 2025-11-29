@@ -302,14 +302,14 @@
         .like-icon.not-liked {
             color: var(--text-light); /* Abu-abu untuk belum disukai */
         }
-        /* Voting Styles - Clean Twitter Style */
-        .post-voting {
+        /* Voting Styles - Dihapus */
+        /* .post-voting {
             display: flex;
             align-items: center;
             gap: 15px;
             margin-right: auto;
         }
-        .like-btn {
+        .vote-btn {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -322,25 +322,28 @@
             font-weight: 600;
             font-size: 14px;
         }
-        .like-btn:hover:not(:disabled) {
+        .vote-btn:hover:not(:disabled) {
             background: #f8f9fa;
         }
-        .like-btn:disabled {
+        .vote-btn:disabled {
             cursor: not-allowed;
             opacity: 0.6;
         }
-        .like-btn:disabled:hover {
+        .vote-btn:disabled:hover {
             background: none;
         }
-        .like-count {
+        .vote-count {
             font-weight: bold;
             min-width: 20px;
             text-align: center;
             transition: color 0.3s ease;
         }
-        .like-btn.active .like-count {
-            color: var(--downvote); /* Warna jumlah like saat aktif */
+        .upvote-btn.active .vote-count {
+            color: var(--upvote);
         }
+        .downvote-btn.active .vote-count {
+            color: var(--downvote);
+        } */
         .post-actions {
             display: flex;
             justify-content: space-between;
@@ -590,12 +593,12 @@
             background: var(--primary);
             transition: width 0.3s ease;
         }
-        /* Vote Loading State */
-        .vote-loading {
+        /* Like Loading State */
+        .like-loading {
             opacity: 0.7;
             position: relative;
         }
-        .vote-loading::after {
+        .like-loading::after {
             content: '';
             position: absolute;
             top: 50%;
@@ -665,11 +668,11 @@
             .post-voting {
                 gap: 10px;
             }
-            .like-btn {
+            .vote-btn {
                 padding: 6px 8px;
                 font-size: 12px;
             }
-            .like-icon {
+            .arrow-icon {
                 font-size: 16px;
             }
         }
@@ -769,14 +772,14 @@
         // State management
         let allAspirasi = [];
         let allKomentar = [];
-        let allVoting = [];
+        let allLike = []; // Tambahkan state untuk like
         let currentSort = 'votes';
         let currentPage = 1;
         const postsPerPage = 10;
         let isLoading = false;
         let currentUser = null;
-        // Voting system yang diperbaiki
-        let activeVoteRequests = new Map(); // Untuk track dan cancel pending requests
+        // Like system yang diperbaiki
+        let activeLikeRequests = new Map(); // Untuk track dan cancel pending requests
         // Global variables untuk file handling
         let currentFileInput = null;
         let currentBase64Image = '';
@@ -816,20 +819,16 @@
             const likes = localStorage.getItem(`aspirasiFEB_likes_${currentUser.nim}`);
             return likes ? JSON.parse(likes) : {};
         }
-        function saveUserLike(postId, likeState) {
+        function saveUserLike(postId, isLiked) {
             if (!currentUser) return;
             const likes = getUserLikes();
-            // Hanya boleh ada satu like per post: 'like', atau tidak ada
-            if (likeState === 'none') {
-                delete likes[postId];
-            } else {
-                likes[postId] = likeState; // 'like'
-            }
+            // Hanya boleh ada satu status like per post: true (disukai) atau false (tidak disukai)
+            likes[postId] = isLiked;
             localStorage.setItem(`aspirasiFEB_likes_${currentUser.nim}`, JSON.stringify(likes));
         }
         function getUserLikeForPost(postId) {
             const likes = getUserLikes();
-            return likes[postId] || null; // 'like' atau null
+            return !!likes[postId]; // Mengembalikan boolean
         }
         function showWelcomeModal() {
             const modal = document.getElementById('welcomeModal');
@@ -907,11 +906,11 @@
                 if (response && response.success) {
                     allAspirasi = response.data.aspirasi || [];
                     allKomentar = response.data.komentar || [];
-                    allVoting = response.data.voting || [];
+                    allLike = response.data.like || []; // Ambil data like
                     renderPosts();
                     renderPagination();
                 } else {
-                    console.error('Failed to load ', response);
+                    console.error('Failed to load data:', response);
                     container.innerHTML = `
                         <div class="empty-state">
                             <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
@@ -974,11 +973,11 @@
                 const inisial = namaTersamarkan.charAt(0);
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
                 // Cek like user dari Local Storage
-                let userLike = getUserLikeForPost(aspirasi.id);
+                let userLiked = getUserLikeForPost(aspirasi.id);
                 // Gunakan data asli dari server untuk count
                 const likeCount = aspirasi.like_count || 0;
-                // Cek apakah post sedang dalam proses voting
-                const isCurrentlyVoting = activeVoteRequests.has(aspirasi.id);
+                // Cek apakah post sedang dalam proses like
+                const isCurrentlyLiking = activeLikeRequests.has(aspirasi.id);
                 return `
                     <div class="post" id="post-${aspirasi.id}">
                         <div class="post-header">
@@ -1000,11 +999,11 @@
                         ` : ''}
                         <div class="post-actions">
                             <div class="post-voting">
-                                <button class="like-btn ${userLike === 'like' ? 'active' : ''} ${isCurrentlyVoting ? 'vote-loading' : ''}" 
+                                <button class="like-btn ${userLiked ? 'active' : ''} ${isCurrentlyLiking ? 'like-loading' : ''}" 
                                         onclick="handleLike('${aspirasi.id}')"
-                                        ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
+                                        ${!currentUser || isCurrentlyLiking ? 'disabled' : ''}
                                         id="like-${aspirasi.id}">
-                                    <span class="like-icon ${userLike === 'like' ? 'liked' : 'not-liked'}">❤️</span>
+                                    <span class="like-icon ${userLiked ? 'liked' : 'not-liked'}">❤️</span>
                                     <span class="like-count">${likeCount}</span>
                                 </button>
                             </div>
@@ -1119,29 +1118,29 @@
             renderPosts();
             renderPagination();
         }
-        // Handle like dengan system yang diperbaiki - FIXED TOGGLE LOGIC
+        // Handle like/unlike dengan system yang diperbaiki - FIXED TOGGLE LOGIC
         async function handleLike(postId) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
-            // Prevent multiple simultaneous votes untuk post yang sama
-            if (activeVoteRequests.has(postId)) {
+            // Prevent multiple simultaneous likes untuk post yang sama
+            if (activeLikeRequests.has(postId)) {
                 console.log('Like request already in progress for post:', postId);
                 return;
             }
             // Set loading state
-            activeVoteRequests.set(postId, true);
+            activeLikeRequests.set(postId, true);
             renderPosts(); // Re-render untuk show loading state
             try {
                 const requestId = Date.now().toString();
                 const formData = new FormData();
-                formData.append('action', 'vote');
+                formData.append('action', 'like'); // Ganti action menjadi 'like'
                 formData.append('id_aspirasi', postId);
                 formData.append('nim_user', currentUser.nim);
-                formData.append('vote_type', 'like'); // Kirim vote_type 'like'
+                formData.append('nama_user', currentUser.nama); // Kirim nama juga
                 formData.append('request_id', requestId);
-                console.log('Mengirim like ke server...', { postId, voteType: 'like', requestId });
+                console.log('Mengirim like ke server...', { postId, requestId });
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
@@ -1149,11 +1148,12 @@
                 const result = await response.json();
                 if (result.success) {
                     console.log('Server response:', result);
-                    // Update local storage berdasarkan final state dari server
-                    saveUserLike(postId, result.final_state);
+                    // Update local storage berdasarkan status like/unlike
+                    const isNowLiked = result.action === 'LIKED';
+                    saveUserLike(postId, isNowLiked);
                     // Reload data untuk sync count dengan server
                     await loadData();
-                    showStatus(`Like berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
+                    showStatus(`Like berhasil ${result.action === 'UNLIKED' ? 'dihapus' : 'disimpan'}!`);
                 } else {
                     throw new Error(result.message);
                 }
@@ -1162,7 +1162,7 @@
                 showStatus('Gagal menyimpan like: ' + error.message, 'error');
             } finally {
                 // Clear loading state
-                activeVoteRequests.delete(postId);
+                activeLikeRequests.delete(postId);
                 renderPosts();
             }
         }
