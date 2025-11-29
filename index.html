@@ -1140,87 +1140,48 @@
             renderPosts();
             renderPagination();
         }
-        // Handle voting dengan system yang diperbaiki - LOGIKA DIPERBARUI, TANPA RELOAD, DENGAN OPTIMISTIC UPDATE
+        // Handle voting dengan system yang diperbaiki - FIXED TOGGLE LOGIC + KIRIM NAMA + TERIMA COUNT
         async function handleVote(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
-
-            // Prevent multiple simultaneous votes untuk post yang sama - DIPERKUAT
+            // Prevent multiple simultaneous votes untuk post yang sama
             if (activeVoteRequests.has(postId)) {
                 console.log('Vote request already in progress for post:', postId);
-                return; // Hentikan eksekusi jika sudah ada request pending
+                return;
             }
-
             // Ambil vote lokal sebelum mengirim request
             let currentLocalVote = getUserVoteForPost(postId);
-
             // Logika Toggle berdasarkan vote lokal
             let newLocalVote = 'none';
             if (currentLocalVote === voteType) {
                 // Toggle off
                 newLocalVote = 'none';
             } else {
-                // Toggle on / Switch
+                // Toggle on atau Switch
                 newLocalVote = voteType;
             }
-
             // Simpan vote baru ke localStorage SEBELUM request dikirim (Optimistic Update)
             saveUserVote(postId, newLocalVote);
-
-            // Update UI secara instan berdasarkan vote lokal
+            // Update UI secara instan berdasarkan vote lokal (warna tombol)
             const postElement = document.getElementById(`post-${postId}`);
             if (postElement) {
                 const upvoteBtn = postElement.querySelector(`#upvote-${postId}`);
                 const downvoteBtn = postElement.querySelector(`#downvote-${postId}`);
-                const upvoteCountSpan = upvoteBtn ? upvoteBtn.querySelector('.vote-count') : null;
-                const downvoteCountSpan = downvoteBtn ? downvoteBtn.querySelector('.vote-count') : null;
-
-                if (upvoteBtn && downvoteBtn && upvoteCountSpan && downvoteCountSpan) {
-                    // Update active class
+                if (upvoteBtn && downvoteBtn) {
+                    // Update active class dan warna ikon
                     upvoteBtn.classList.toggle('active', newLocalVote === 'upvote');
                     downvoteBtn.classList.toggle('active', newLocalVote === 'downvote');
-                    // Update arrow icon color
                     const upArrow = upvoteBtn.querySelector('.arrow-up');
                     const downArrow = downvoteBtn.querySelector('.arrow-down');
                     if (upArrow) upArrow.classList.toggle('active', newLocalVote === 'upvote');
                     if (downArrow) downArrow.classList.toggle('active', newLocalVote === 'downvote');
-
-                    // Update jumlah vote secara instan berdasarkan logika toggle
-                    // Catatan: Ini adalah optimistic update. Jumlah akhir bisa berbeda jika vote dari user lain terjadi secara bersamaan.
-                    let currentUpCount = parseInt(upvoteCountSpan.textContent) || 0;
-                    let currentDownCount = parseInt(downvoteCountSpan.textContent) || 0;
-
-                    // Kembalikan jumlah vote berdasarkan vote lokal sebelumnya
-                    if (currentLocalVote === 'upvote') {
-                        currentUpCount--;
-                    } else if (currentLocalVote === 'downvote') {
-                        currentDownCount--;
-                    }
-
-                    // Tambahkan jumlah vote berdasarkan vote lokal yang baru
-                    if (newLocalVote === 'upvote') {
-                        currentUpCount++;
-                    } else if (newLocalVote === 'downvote') {
-                        currentDownCount++;
-                    }
-
-                    // Update tampilan jumlah
-                    upvoteCountSpan.textContent = currentUpCount;
-                    downvoteCountSpan.textContent = currentDownCount;
-
-                    // Set loading state pada tombol
-                    upvoteBtn.disabled = true;
-                    downvoteBtn.disabled = true;
-                    upvoteBtn.classList.add('vote-loading');
-                    downvoteBtn.classList.add('vote-loading');
                 }
             }
-
-            // Set loading state global
+            // Set loading state
             activeVoteRequests.set(postId, true);
-
+            renderPosts(); // Re-render untuk show loading state dan warna tombol
             try {
                 const requestId = Date.now().toString();
                 const formData = new FormData();
@@ -1231,46 +1192,25 @@
                 formData.append('vote_type', voteType);
                 formData.append('request_id', requestId);
                 console.log('Mengirim vote ke server...', { postId, voteType, requestId, nim: currentUser.nim, nama: currentUser.nama });
-
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
                 const result = await response.json();
-
                 if (result.success) {
                     console.log('Server response:', result);
-                    // Update local storage berdasarkan final state dari server (mungkin berbeda dari optimistic update jika ada race condition)
+                    // Update local storage berdasarkan final state dari server
                     saveUserVote(postId, result.final_state);
-
-                    // Update UI berdasarkan respons server
+                    // Update jumlah vote berdasarkan respons server
                     const postElementAfter = document.getElementById(`post-${postId}`);
                     if (postElementAfter) {
                         const upvoteBtnAfter = postElementAfter.querySelector(`#upvote-${postId}`);
                         const downvoteBtnAfter = postElementAfter.querySelector(`#downvote-${postId}`);
-                        const upvoteCountSpanAfter = upvoteBtnAfter ? upvoteBtnAfter.querySelector('.vote-count') : null;
-                        const downvoteCountSpanAfter = downvoteBtnAfter ? downvoteBtnAfter.querySelector('.vote-count') : null;
-
-                        if (upvoteBtnAfter && downvoteBtnAfter && upvoteCountSpanAfter && downvoteCountSpanAfter) {
-                            // Update active class dan arrow icon berdasarkan final state dari server
-                            const isUpvoteActive = result.final_state === 'upvote';
-                            const isDownvoteActive = result.final_state === 'downvote';
-                            upvoteBtnAfter.classList.toggle('active', isUpvoteActive);
-                            downvoteBtnAfter.classList.toggle('active', isDownvoteActive);
-                            const upArrowAfter = upvoteBtnAfter.querySelector('.arrow-up');
-                            const downArrowAfter = downvoteBtnAfter.querySelector('.arrow-down');
-                            if (upArrowAfter) upArrowAfter.classList.toggle('active', isUpvoteActive);
-                            if (downArrowAfter) downArrowAfter.classList.toggle('active', isDownvoteActive);
-
-                            // Update jumlah vote berdasarkan respons server
-                            upvoteCountSpanAfter.textContent = result.new_upvote_count || 0;
-                            downvoteCountSpanAfter.textContent = result.new_downvote_count || 0;
-
-                            // Hapus loading state dan enable tombol
-                            upvoteBtnAfter.disabled = false;
-                            downvoteBtnAfter.disabled = false;
-                            upvoteBtnAfter.classList.remove('vote-loading');
-                            downvoteBtnAfter.classList.remove('vote-loading');
+                        const upvoteCountSpan = upvoteBtnAfter ? upvoteBtnAfter.querySelector('.vote-count') : null;
+                        const downvoteCountSpan = downvoteBtnAfter ? downvoteBtnAfter.querySelector('.vote-count') : null;
+                        if (upvoteCountSpan && downvoteCountSpan) {
+                            upvoteCountSpan.textContent = result.new_upvote_count || 0;
+                            downvoteCountSpan.textContent = result.new_downvote_count || 0;
                         }
                     }
                     showStatus(`Vote berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
@@ -1281,33 +1221,11 @@
                 console.error('Error:', error);
                 // Jika request gagal, kembalikan vote ke status sebelumnya (rollback optimistic update)
                 saveUserVote(postId, currentLocalVote);
-                // Update UI kembali ke status sebelumnya
-                const postElementRollback = document.getElementById(`post-${postId}`);
-                if (postElementRollback) {
-                    const upvoteBtnRollback = postElementRollback.querySelector(`#upvote-${postId}`);
-                    const downvoteBtnRollback = postElementRollback.querySelector(`#downvote-${postId}`);
-                    const upvoteCountSpanRollback = upvoteBtnRollback ? upvoteBtnRollback.querySelector('.vote-count') : null;
-                    const downvoteCountSpanRollback = downvoteBtnRollback ? downvoteBtnRollback.querySelector('.vote-count') : null;
-
-                    if (upvoteBtnRollback && downvoteBtnRollback && upvoteCountSpanRollback && downvoteCountSpanRollback) {
-                        // Update active class dan arrow icon ke status sebelumnya
-                        upvoteBtnRollback.classList.toggle('active', currentLocalVote === 'upvote');
-                        downvoteBtnRollback.classList.toggle('active', currentLocalVote === 'downvote');
-                        const upArrowRollback = upvoteBtnRollback.querySelector('.arrow-up');
-                        const downArrowRollback = downvoteBtnRollback.querySelector('.arrow-down');
-                        if (upArrowRollback) upArrowRollback.classList.toggle('active', currentLocalVote === 'upvote');
-                        if (downArrowRollback) downArrowRollback.classList.toggle('active', currentLocalVote === 'downvote');
-
-                        // Update jumlah vote kembali ke status sebelumnya (ini hanya tampilan lokal, bisa salah jika data server berubah)
-                        // Kita perlu reload data untuk akurasi penuh jika terjadi error.
-                        // Kita reload di sini untuk memastikan UI sinkron dengan server setelah error.
-                        await loadData(); // Reload untuk sinkronisasi penuh setelah error
-                    }
-                }
                 showStatus('Gagal menyimpan vote: ' + error.message, 'error');
             } finally {
-                // Clear loading state global
+                // Clear loading state
                 activeVoteRequests.delete(postId);
+                renderPosts(); // Re-render untuk melepaskan loading state
             }
         }
         // File upload handling
