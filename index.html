@@ -7,12 +7,16 @@
     <style>
         :root {
             --primary: #1da1f2;
+            --primary-dark: #0d8bd9;
             --dark: #0f1419;
             --light-bg: #f7f9fa;
             --border: #ccd6dd;
             --text-light: #536471;
             --upvote: #1da1f2;
             --downvote: #f91880;
+            --success: #00ba7c;
+            --warning: #f7b955;
+            --error: #f91880;
         }
         
         * {
@@ -153,12 +157,12 @@
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: background 0.3s;
+            transition: all 0.3s;
             margin-top: 10px;
         }
         
         .btn:hover {
-            background: #0d8bd9;
+            background: var(--primary-dark);
         }
         
         .btn:disabled {
@@ -660,12 +664,35 @@
             border: 1px solid #f5c6cb;
         }
         
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        
         .empty-state {
             text-align: center;
             padding: 60px 20px;
             color: var(--text-light);
             background: white;
             border-radius: 16px;
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
         }
         
         /* Responsive */
@@ -760,12 +787,12 @@
             <form id="welcomeForm">
                 <div class="form-group">
                     <label for="welcomeNama">Nama Lengkap</label>
-                    <input type="text" id="welcomeNama" required placeholder="Nama Anda">
+                    <input type="text" id="welcomeNama" required placeholder="Nama Anda" maxlength="50">
                 </div>
                 
                 <div class="form-group">
                     <label for="welcomeNIM">NIM</label>
-                    <input type="text" id="welcomeNIM" required placeholder="Nomor Induk Mahasiswa">
+                    <input type="text" id="welcomeNIM" required placeholder="Nomor Induk Mahasiswa" maxlength="15" pattern="[A-Za-z0-9]{5,15}">
                 </div>
                 
                 <button type="submit" class="btn" id="welcomeBtn">
@@ -807,16 +834,22 @@
                     
                     <div class="form-group">
                         <label for="isi">Aspirasi</label>
-                        <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..."></textarea>
+                        <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..." minlength="10" maxlength="1000"></textarea>
+                        <div style="font-size: 12px; color: var(--text-light); text-align: right; margin-top: 5px;">
+                            <span id="charCount">0</span>/1000 karakter
+                        </div>
                     </div>
                     
                     <div class="form-group">
                         <div class="upload-area" id="uploadArea">
                             <div>📷 Klik atau seret gambar ke sini</div>
                             <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
-                                Maksimal 5MB - JPG, PNG
+                                Maksimal 5MB - JPG, PNG, GIF, WebP
                             </div>
                             <input type="file" id="fileInput" class="file-input" accept="image/*">
+                        </div>
+                        <div class="progress-bar" id="uploadProgress">
+                            <div class="progress-fill" id="progressFill"></div>
                         </div>
                         <img id="preview" class="preview">
                     </div>
@@ -861,9 +894,10 @@
         let currentUser = null;
         
         // Track voting state untuk prevent rapid clicks
-        let isVoting = new Map();
+        let voteLocks = new Map();
+        let pendingVotes = new Map();
         
-        // Global variables for file handling
+        // Global variables untuk file handling
         let currentFileInput = null;
         let currentBase64Image = '';
         
@@ -881,6 +915,18 @@
         
         function maskName(nama) {
             return nama ? `${nama.charAt(0).toUpperCase()}***` : 'Anonim';
+        }
+        
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
         }
         
         // User Management
@@ -974,6 +1020,26 @@
             }
         }
         
+        // Character counter untuk textarea
+        function setupCharCounter() {
+            const textarea = document.getElementById('isi');
+            const charCount = document.getElementById('charCount');
+            
+            if (textarea && charCount) {
+                textarea.addEventListener('input', function() {
+                    charCount.textContent = this.value.length;
+                    
+                    if (this.value.length > 1000) {
+                        charCount.style.color = 'var(--error)';
+                    } else if (this.value.length > 900) {
+                        charCount.style.color = 'var(--warning)';
+                    } else {
+                        charCount.style.color = 'var(--text-light)';
+                    }
+                });
+            }
+        }
+        
         // Load data dengan pagination
         function loadData() {
             if (isLoading) return;
@@ -1009,6 +1075,7 @@
                             <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
                             <h3>Gagal memuat data</h3>
                             <p>Silakan refresh halaman</p>
+                            <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
                         </div>
                     `;
                 }
@@ -1016,10 +1083,18 @@
             };
             
             const script = document.createElement('script');
-            script.src = `${APP_SCRIPT_URL}?callback=${callbackName}`;
+            script.src = `${APP_SCRIPT_URL}?callback=${callbackName}&page=${currentPage}&limit=${postsPerPage}`;
             script.onerror = function() {
                 isLoading = false;
                 console.error('Failed to load script');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                        <h3>Gagal memuat data</h3>
+                        <p>Periksa koneksi internet Anda</p>
+                        <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
+                    </div>
+                `;
                 delete window[callbackName];
             };
             document.head.appendChild(script);
@@ -1040,11 +1115,7 @@
                 sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
             }
             
-            // Pagination
-            const startIndex = (currentPage - 1) * postsPerPage;
-            const endIndex = startIndex + postsPerPage;
-            
-            return sortedAspirasi.slice(startIndex, endIndex);
+            return sortedAspirasi;
         }
         
         // Render posts dengan pagination
@@ -1074,7 +1145,7 @@
                 
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
                 
-                // Cek vote user dari Local Storage - ini yang akan bertahan setelah reload
+                // Cek vote user dari Local Storage
                 let userVote = null;
                 if (currentUser) {
                     userVote = getUserVoteForPost(aspirasi.id);
@@ -1085,7 +1156,7 @@
                 const downvoteCount = aspirasi.downvote_count || 0;
                 
                 // Cek apakah post sedang dalam proses voting
-                const isCurrentlyVoting = isVoting.get(aspirasi.id) || false;
+                const isCurrentlyVoting = voteLocks.get(aspirasi.id) || false;
                 
                 return `
                     <div class="post" id="post-${aspirasi.id}">
@@ -1097,7 +1168,7 @@
                             </div>
                         </div>
                         
-                        <div class="post-content">${aspirasi.isi.replace(/\n/g, '<br>')}</div>
+                        <div class="post-content">${aspirasi.isi}</div>
                         
                         ${aspirasi.gambar && aspirasi.gambar !== '' ? `
                             <div class="post-image-container">
@@ -1134,7 +1205,7 @@
                         
                         <div class="reply-form" id="reply-form-${aspirasi.id}">
                             <form onsubmit="submitKomentar(event, '${aspirasi.id}')">
-                                <textarea name="isi" placeholder="Tulis komentar..." required rows="3"></textarea>
+                                <textarea name="isi" placeholder="Tulis komentar..." required rows="3" maxlength="500"></textarea>
                                 <div style="display: flex; gap: 10px; margin-top: 10px;">
                                     <button type="submit" class="btn" style="flex: 1;">Kirim Komentar</button>
                                     <button type="button" class="btn" style="background: #6c757d;" 
@@ -1257,25 +1328,25 @@
             renderPagination();
         }
         
-        // Handle voting dengan logika yang benar - FIXED VERSION
-        async function handleVote(postId, voteType) {
+        // Handle voting dengan debouncing dan locking - FIXED VERSION
+        const handleVote = debounce(async function(postId, voteType) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
             
             // PREVENT RAPID CLICKS - FIX RACE CONDITION
-            if (isVoting.get(postId)) {
+            if (voteLocks.get(postId)) {
                 console.log('Vote sedang diproses untuk post', postId);
                 return;
             }
             
-            // Set voting state untuk post ini
-            isVoting.set(postId, true);
+            // Set voting lock untuk post ini
+            voteLocks.set(postId, true);
             
             const post = allAspirasi.find(a => a.id === postId);
             if (!post) {
-                isVoting.set(postId, false);
+                voteLocks.set(postId, false);
                 return;
             }
 
@@ -1283,14 +1354,14 @@
             const previousVoteType = getUserVoteForPost(postId);
             console.log(`Vote: ${voteType} untuk ${postId}, Previous: ${previousVoteType}`);
 
-            // Tentukan vote type baru berdasarkan logika toggle 1-0-1
+            // Tentukan vote type baru berdasarkan logika toggle
             let newVoteType;
             if (previousVoteType === voteType) {
-                // Jika klik vote yang sama, hapus vote (toggle off) → 0
+                // Jika klik vote yang sama, hapus vote (toggle off)
                 newVoteType = 'none';
                 console.log('Toggle OFF - remove vote');
             } else {
-                // Jika klik vote berbeda, ganti ke vote baru → 1
+                // Jika klik vote berbeda, ganti ke vote baru
                 newVoteType = voteType;
                 console.log('Toggle ON - new vote:', voteType);
             }
@@ -1301,18 +1372,20 @@
             if (upvoteBtn) upvoteBtn.disabled = true;
             if (downvoteBtn) downvoteBtn.disabled = true;
 
-            // Simpan ke Local Storage langsung untuk UI responsiveness
+            // Optimistic update - simpan ke Local Storage langsung
             saveUserVote(postId, newVoteType);
 
-            // Update UI langsung untuk warna (tapi count tetap dari server)
+            // Update UI langsung untuk warna
             renderPosts();
 
             try {
+                const requestId = Date.now().toString();
                 const formData = new FormData();
                 formData.append('action', 'vote');
                 formData.append('id_aspirasi', postId);
                 formData.append('nim_user', currentUser.nim);
-                formData.append('vote_type', voteType); // Selalu kirim vote_type asli
+                formData.append('vote_type', voteType);
+                formData.append('request_id', requestId);
                 
                 console.log('Mengirim vote ke server...');
                 
@@ -1337,19 +1410,21 @@
                 // Rollback Local Storage jika gagal
                 saveUserVote(postId, previousVoteType);
                 renderPosts();
-                showStatus('Gagal menyimpan vote', 'error');
+                showStatus('Gagal menyimpan vote: ' + error.message, 'error');
             } finally {
                 // ENABLE TOMBOL KEMBALI
-                isVoting.set(postId, false);
+                voteLocks.set(postId, false);
                 renderPosts(); // Render ulang untuk enable tombol
             }
-        }
+        }, 500); // Debounce 500ms
         
         // File upload handling
         function setupFileUpload() {
             const uploadArea = document.getElementById('uploadArea');
             const fileInput = document.getElementById('fileInput');
             const preview = document.getElementById('preview');
+            const progressBar = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
             
             if (!uploadArea || !fileInput || !preview) {
                 console.error('File upload elements not found');
@@ -1372,8 +1447,29 @@
                         return;
                     }
                     
+                    // Show progress bar
+                    progressBar.style.display = 'block';
+                    progressFill.style.width = '0%';
+                    
                     const reader = new FileReader();
+                    
+                    reader.onloadstart = () => {
+                        progressFill.style.width = '30%';
+                    };
+                    
+                    reader.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = (e.loaded / e.total) * 100;
+                            progressFill.style.width = percent + '%';
+                        }
+                    };
+                    
                     reader.onload = (e) => {
+                        progressFill.style.width = '100%';
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                        }, 500);
+                        
                         preview.src = e.target.result;
                         preview.style.display = 'block';
                         currentBase64Image = e.target.result;
@@ -1384,12 +1480,15 @@
                             </div>
                         `;
                     };
+                    
                     reader.onerror = () => {
+                        progressBar.style.display = 'none';
                         showStatus('Gagal membaca file', 'error');
                     };
+                    
                     reader.readAsDataURL(file);
                 } else {
-                    showStatus('File harus berupa gambar (JPG, PNG)', 'error');
+                    showStatus('File harus berupa gambar (JPG, PNG, GIF, WebP)', 'error');
                 }
             });
             
@@ -1452,6 +1551,11 @@
                 return;
             }
             
+            if (isi.length > 1000) {
+                showStatus('Aspirasi maksimal 1000 karakter', 'error');
+                return;
+            }
+            
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
             
@@ -1477,11 +1581,12 @@
                 if (result.success) {
                     showStatus(result.message + (result.gambar_url ? ' dengan gambar' : ''));
                     form.reset();
+                    document.getElementById('charCount').textContent = '0';
                     document.getElementById('preview').style.display = 'none';
                     document.getElementById('uploadArea').innerHTML = `
                         <div>📷 Klik atau seret gambar ke sini</div>
                         <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
-                            Maksimal 5MB - JPG, PNG
+                            Maksimal 5MB - JPG, PNG, GIF, WebP
                         </div>
                         <input type="file" id="fileInput" class="file-input" accept="image/*">
                     `;
@@ -1524,6 +1629,11 @@
             
             if (!isi) {
                 showStatus('Harap isi komentar', 'error');
+                return;
+            }
+            
+            if (isi.length > 500) {
+                showStatus('Komentar maksimal 500 karakter', 'error');
                 return;
             }
             
@@ -1575,6 +1685,16 @@
                 return;
             }
             
+            if (nama.length < 2 || nama.length > 50) {
+                showStatus('Nama harus 2-50 karakter', 'error', 'welcomeStatus');
+                return;
+            }
+            
+            if (!/^[A-Za-z0-9]{5,15}$/.test(nim)) {
+                showStatus('NIM harus 5-15 karakter alfanumerik', 'error', 'welcomeStatus');
+                return;
+            }
+            
             saveUser(nama, nim);
             hideWelcomeModal();
             loadData();
@@ -1598,6 +1718,7 @@
             
             setupFileUpload();
             setupImageModal();
+            setupCharCounter();
             loadData();
         });
     </script>
