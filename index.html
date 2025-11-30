@@ -12,7 +12,8 @@
             --light-bg: #f7f9fa;
             --border: #ccd6dd;
             --text-light: #536471;
-            --like: #f91880;
+            --upvote: #1da1f2;
+            --downvote: #f91880;
             --success: #00ba7c;
             --warning: #f7b955;
             --error: #f91880;
@@ -289,20 +290,14 @@
         .post-image:hover {
             transform: scale(1.02);
         }
-        /* Like Styles */
-        .post-actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding-top: 15px;
-            border-top: 1px solid #eee;
-        }
-        .post-liking {
+        /* Voting Styles - Dihapus */
+        /* .post-voting {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
+            margin-right: auto;
         }
-        .like-btn {
+        .vote-btn {
             display: flex;
             align-items: center;
             gap: 8px;
@@ -315,44 +310,34 @@
             font-weight: 600;
             font-size: 14px;
         }
-        .like-btn:hover:not(:disabled) {
+        .vote-btn:hover:not(:disabled) {
             background: #f8f9fa;
         }
-        .like-btn:disabled {
+        .vote-btn:disabled {
             cursor: not-allowed;
             opacity: 0.6;
         }
-        .like-btn:disabled:hover {
+        .vote-btn:disabled:hover {
             background: none;
         }
-        .like-btn.liked {
-            color: var(--like);
-        }
-        .like-btn.liked .like-icon {
-            background: var(--like);
-        }
-        .like-icon {
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 12px;
-            transition: all 0.3s;
-        }
-        .like-count {
+        .vote-count {
             font-weight: bold;
             min-width: 20px;
             text-align: center;
             transition: color 0.3s ease;
         }
-        .like-btn.liked .like-count {
-            color: var(--like);
+        .upvote-btn.active .vote-count {
+            color: var(--upvote);
         }
-        .like-loading {
-            opacity: 0.6;
-            pointer-events: none;
+        .downvote-btn.active .vote-count {
+            color: var(--downvote);
+        } */
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
         }
         .reply-btn {
             background: none;
@@ -650,12 +635,15 @@
             .post {
                 padding: 20px;
             }
-            .post-liking {
-                gap: 8px;
+            .post-voting {
+                gap: 10px;
             }
-            .like-btn {
+            .vote-btn {
                 padding: 6px 8px;
                 font-size: 12px;
+            }
+            .arrow-icon {
+                font-size: 16px;
             }
         }
     </style>
@@ -738,7 +726,7 @@
         <div class="posts-section">
             <div class="filters">
                 <button class="filter-btn active" onclick="setSort('time')">🕒 Terbaru</button>
-                <button class="filter-btn" onclick="setSort('likes')">❤️ Terbanyak Like</button>
+                <!-- Filter lain bisa ditambahkan di sini -->
             </div>
             <div id="postsContainer">
                 <div class="loading-container">
@@ -754,13 +742,12 @@
         // State management
         let allAspirasi = [];
         let allKomentar = [];
-        let allLike = [];
-        let currentSort = 'time';
+        // let allVoting = []; // Dihapus
+        let currentSort = 'time'; // Default sort by time
         let currentPage = 1;
         const postsPerPage = 10;
         let isLoading = false;
         let currentUser = null;
-        let activeLikeRequests = new Map();
         // Global variables untuk file handling
         let currentFileInput = null;
         let currentBase64Image = '';
@@ -805,23 +792,6 @@
             if (modal) {
                 modal.style.display = 'none';
             }
-        }
-        // Like Management
-        function getUserLikes() {
-            return JSON.parse(localStorage.getItem('aspirasiFEB_likes') || '{}');
-        }
-        function saveUserLike(postId, liked) {
-            const likes = getUserLikes();
-            if (liked) {
-                likes[postId] = true;
-            } else {
-                delete likes[postId];
-            }
-            localStorage.setItem('aspirasiFEB_likes', JSON.stringify(likes));
-        }
-        function getUserLikeForPost(postId) {
-            const likes = getUserLikes();
-            return !!likes[postId];
         }
         // Image Modal Functions
         function setupImageModal() {
@@ -887,7 +857,7 @@
                 if (response && response.success) {
                     allAspirasi = response.data.aspirasi || [];
                     allKomentar = response.data.komentar || [];
-                    allLike = response.data.like || [];
+                    // allVoting = response.data.voting || []; // Dihapus
                     renderPosts();
                     renderPagination();
                 } else {
@@ -925,10 +895,9 @@
             let sortedAspirasi = [...allAspirasi];
             // Sort berdasarkan pilihan
             if (currentSort === 'time') {
-                sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
-            } else if (currentSort === 'likes') {
-                sortedAspirasi.sort((a, b) => (b.like_count || 0) - (a.like_count || 0));
+                sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu)); // Urutkan berdasarkan waktu terbaru
             }
+            // Tambahkan sort lain jika diperlukan
             return sortedAspirasi;
         }
         // Render posts dengan pagination
@@ -953,9 +922,6 @@
                 const namaTersamarkan = maskName(aspirasi.nama);
                 const inisial = namaTersamarkan.charAt(0);
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
-                const userLiked = getUserLikeForPost(aspirasi.id);
-                const likeCount = aspirasi.like_count || 0;
-                const isLikeLoading = activeLikeRequests.has(aspirasi.id);
                 return `
                     <div class="post" id="post-${aspirasi.id}">
                         <div class="post-header">
@@ -976,13 +942,8 @@
                             </div>
                         ` : ''}
                         <div class="post-actions">
-                            <div class="post-liking">
-                                <button class="like-btn ${userLiked ? 'liked' : ''} ${isLikeLoading ? 'like-loading' : ''}" 
-                                        onclick="handleLike('${aspirasi.id}')" 
-                                        ${!currentUser ? 'disabled' : ''}>
-                                    <span class="like-icon">${userLiked ? '❤️' : '🤍'}</span>
-                                    <span class="like-count">${likeCount}</span>
-                                </button>
+                            <div class="post-voting">
+                                <!-- Voting/Like dihapus -->
                             </div>
                             <button class="reply-btn" onclick="toggleReplyForm('${aspirasi.id}')" ${!currentUser ? 'disabled' : ''}>
                                 💬 Balas (${komentar.length})
@@ -1094,48 +1055,6 @@
             event.target.classList.add('active');
             renderPosts();
             renderPagination();
-        }
-        // Handle like action
-        async function handleLike(postId) {
-            if (!currentUser) {
-                showStatus('Silakan isi data diri terlebih dahulu', 'error');
-                return;
-            }
-            // Prevent multiple like requests for the same post
-            if (activeLikeRequests.has(postId)) {
-                return;
-            }
-            activeLikeRequests.set(postId, true);
-            try {
-                const formData = new FormData();
-                formData.append('action', 'like');
-                formData.append('id_aspirasi', postId);
-                formData.append('nim_user', currentUser.nim);
-                formData.append('nama_user', currentUser.nama);
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-                const result = await response.json();
-                if (result.success) {
-                    // Update local storage based on action
-                    if (result.action === 'LIKED') {
-                        saveUserLike(postId, true);
-                    } else if (result.action === 'UNLIKED') {
-                        saveUserLike(postId, false);
-                    }
-                    // Reload data to get updated like counts
-                    loadData();
-                    showStatus(result.message);
-                } else {
-                    showStatus(result.message, 'error');
-                }
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('Gagal memproses like', 'error');
-            } finally {
-                activeLikeRequests.delete(postId);
-            }
         }
         // File upload handling
         function setupFileUpload() {
