@@ -1178,7 +1178,7 @@
             renderPagination();
         }
 
-        // Handle like PERMANEN - sekali like tidak bisa unlike
+        // Handle like PERMANEN - tanpa redirect
         function handleLike(postId) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
@@ -1211,62 +1211,71 @@
                     return;
                 }
 
-                // Buat form sementara untuk like
-                const tempForm = document.createElement('form');
-                tempForm.method = 'POST';
-                tempForm.action = APP_SCRIPT_URL;
-                tempForm.style.display = 'none';
-                
-                // Tambahkan fields
-                const addField = (name, value) => {
-                    const input = document.createElement('input');
-                    input.name = name;
-                    input.value = value;
-                    tempForm.appendChild(input);
-                };
-                
-                addField('action', 'like');
-                addField('id_aspirasi', postId);
-                addField('nim_user', currentUser.nim);
-                addField('nama_user', currentUser.nama);
-                
-                document.body.appendChild(tempForm);
-                
-                // Submit form
-                tempForm.submit();
-                
-                // OPTIMISTIC UPDATE: Langsung update UI tanpa tunggu response
-                if (likeBtn) {
-                    likeBtn.classList.add('liked');
-                    likeBtn.classList.remove('loading');
-                    likeBtn.disabled = true; // DISABLED PERMANEN setelah like
-                    likeBtn.querySelector('.like-icon').textContent = '❤️';
-                    
-                    // Update like count optimistically
-                    const likeCountElem = likeBtn.querySelector('.like-count');
-                    const currentCount = parseInt(likeCountElem.textContent) || 0;
-                    likeCountElem.textContent = currentCount + 1;
-                }
-                
-                showStatus('Berhasil menyukai aspirasi! Like bersifat permanen.', 'success');
-                
-                // Simpan status like di localStorage
-                saveUserLike(postId, true);
-                
-                // Reload data setelah delay untuk sync dengan server
-                setTimeout(() => {
-                    loadData();
+                // Kirim like menggunakan fetch API
+                const formData = new FormData();
+                formData.append('action', 'like');
+                formData.append('id_aspirasi', postId);
+                formData.append('nim_user', currentUser.nim);
+                formData.append('nama_user', currentUser.nama);
+
+                fetch(APP_SCRIPT_URL, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        // OPTIMISTIC UPDATE: Langsung update UI
+                        if (likeBtn) {
+                            likeBtn.classList.add('liked');
+                            likeBtn.classList.remove('loading');
+                            likeBtn.disabled = true; // DISABLED PERMANEN setelah like
+                            likeBtn.querySelector('.like-icon').textContent = '❤️';
+                            
+                            // Update like count
+                            const likeCountElem = likeBtn.querySelector('.like-count');
+                            likeCountElem.textContent = result.new_like_count || (parseInt(likeCountElem.textContent) + 1);
+                        }
+                        
+                        showStatus('Berhasil menyukai aspirasi! Like bersifat permanen.', 'success');
+                        
+                        // Simpan status like di localStorage
+                        saveUserLike(postId, true);
+                        
+                        // Reload data untuk sync dengan server
+                        setTimeout(() => {
+                            loadData();
+                        }, 1000);
+                        
+                    } else {
+                        showStatus(result.message || 'Gagal menyukai aspirasi', 'error');
+                        if (likeBtn) {
+                            likeBtn.classList.remove('loading');
+                            likeBtn.disabled = false;
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showStatus('Gagal memproses like', 'error');
+                    if (likeBtn) {
+                        likeBtn.classList.remove('loading');
+                        likeBtn.disabled = false;
+                    }
+                })
+                .finally(() => {
                     activeLikeRequests.delete(postId);
-                    document.body.removeChild(tempForm);
-                }, 2000);
+                });
                 
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Gagal memproses like', 'error');
                 activeLikeRequests.delete(postId);
                 
-                // Rollback dengan reload data
-                loadData();
+                if (likeBtn) {
+                    likeBtn.classList.remove('loading');
+                    likeBtn.disabled = false;
+                }
             }
         }
 
@@ -1373,7 +1382,7 @@
             });
         }
 
-        // Submit aspirasi dengan form submission sederhana
+        // Submit aspirasi tanpa redirect
         function submitAspirasi(event) {
             event.preventDefault();
             
@@ -1409,62 +1418,61 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
 
-            // Buat form sementara untuk submission
-            const tempForm = document.createElement('form');
-            tempForm.method = 'POST';
-            tempForm.action = APP_SCRIPT_URL;
-            tempForm.style.display = 'none';
-            
-            // Tambahkan fields
-            const addField = (name, value) => {
-                const input = document.createElement('input');
-                input.name = name;
-                input.value = value;
-                tempForm.appendChild(input);
-            };
-            
-            addField('action', 'kirim_aspirasi');
-            addField('nama', currentUser.nama);
-            addField('nim', currentUser.nim);
-            addField('isi', isi);
+            // Kirim data menggunakan fetch API
+            const formData = new FormData();
+            formData.append('action', 'kirim_aspirasi');
+            formData.append('nama', currentUser.nama);
+            formData.append('nim', currentUser.nim);
+            formData.append('isi', isi);
             
             if (currentBase64Image && currentBase64Image.length > 100) {
-                addField('base64Image', currentBase64Image);
+                formData.append('base64Image', currentBase64Image);
             }
-            
-            document.body.appendChild(tempForm);
-            
-            // Submit form
-            tempForm.submit();
-            
-            // Optimistic update
-            showStatus('Aspirasi berhasil dikirim!');
-            
-            // Reset form
-            form.reset();
-            document.getElementById('charCount').textContent = '0';
-            document.getElementById('preview').style.display = 'none';
-            document.getElementById('uploadArea').innerHTML = `
-                <div>📷 Klik atau seret gambar ke sini</div>
-                <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
-                    Maksimal 5MB - JPG, PNG, GIF, WebP
-                </div>
-                <input type="file" id="fileInput" class="file-input" accept="image/*">
-            `;
-            currentBase64Image = '';
-            currentFileInput = document.getElementById('fileInput');
-            setupFileUpload();
-            
-            // Reload data setelah delay
-            setTimeout(() => {
-                loadData();
+
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showStatus('Aspirasi berhasil dikirim!', 'success');
+                    
+                    // Reset form
+                    form.reset();
+                    document.getElementById('charCount').textContent = '0';
+                    document.getElementById('preview').style.display = 'none';
+                    document.getElementById('uploadArea').innerHTML = `
+                        <div>📷 Klik atau seret gambar ke sini</div>
+                        <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                            Maksimal 5MB - JPG, PNG, GIF, WebP
+                        </div>
+                        <input type="file" id="fileInput" class="file-input" accept="image/*">
+                    `;
+                    currentBase64Image = '';
+                    currentFileInput = document.getElementById('fileInput');
+                    setupFileUpload();
+                    
+                    // Reload data
+                    setTimeout(() => {
+                        loadData();
+                    }, 1500);
+                    
+                } else {
+                    showStatus(result.message || 'Gagal mengirim aspirasi', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showStatus('Gagal mengirim aspirasi', 'error');
+            })
+            .finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Posting Aspirasi';
-                document.body.removeChild(tempForm);
-            }, 2000);
+            });
         }
 
-        // Submit komentar
+        // Submit komentar tanpa redirect
         function submitKomentar(event, aspirasiId) {
             event.preventDefault();
             
@@ -1496,43 +1504,42 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
 
-            // Buat form sementara untuk submission
-            const tempForm = document.createElement('form');
-            tempForm.method = 'POST';
-            tempForm.action = APP_SCRIPT_URL;
-            tempForm.style.display = 'none';
-            
-            // Tambahkan fields
-            const addField = (name, value) => {
-                const input = document.createElement('input');
-                input.name = name;
-                input.value = value;
-                tempForm.appendChild(input);
-            };
-            
-            addField('action', 'kirim_komentar');
-            addField('id_aspirasi', aspirasiId);
-            addField('modal_nama', currentUser.nama);
-            addField('modal_nim', currentUser.nim);
-            addField('modal_isi', isi);
-            
-            document.body.appendChild(tempForm);
-            
-            // Submit form
-            tempForm.submit();
-            
-            // Optimistic update
-            showStatus('Komentar berhasil dikirim!');
-            form.reset();
-            toggleReplyForm(aspirasiId);
-            
-            // Reload data setelah delay
-            setTimeout(() => {
-                loadData();
+            // Kirim data menggunakan fetch API
+            const formData = new FormData();
+            formData.append('action', 'kirim_komentar');
+            formData.append('id_aspirasi', aspirasiId);
+            formData.append('modal_nama', currentUser.nama);
+            formData.append('modal_nim', currentUser.nim);
+            formData.append('modal_isi', isi);
+
+            fetch(APP_SCRIPT_URL, {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    showStatus('Komentar berhasil dikirim!', 'success');
+                    form.reset();
+                    toggleReplyForm(aspirasiId);
+                    
+                    // Reload data
+                    setTimeout(() => {
+                        loadData();
+                    }, 1000);
+                    
+                } else {
+                    showStatus(result.message || 'Gagal mengirim komentar', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showStatus('Gagal mengirim komentar', 'error');
+            })
+            .finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Kirim Komentar';
-                document.body.removeChild(tempForm);
-            }, 1500);
+            });
         }
 
         // Handle welcome form
