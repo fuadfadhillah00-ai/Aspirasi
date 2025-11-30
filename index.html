@@ -290,7 +290,7 @@
         .post-image:hover {
             transform: scale(1.02);
         }
-        /* Like Styles */
+        /* Like Button Permanen Styles */
         .post-like {
             display: flex;
             align-items: center;
@@ -310,7 +310,7 @@
             font-size: 14px;
             color: var(--text-light);
         }
-        .like-btn:hover:not(:disabled) {
+        .like-btn:hover:not(:disabled):not(.liked) {
             background: rgba(249, 24, 128, 0.1);
             color: var(--like-color);
         }
@@ -323,21 +323,30 @@
             color: var(--text-light);
         }
         .like-btn.liked {
-            color: var(--like-color);
+            color: var(--like-color) !important;
+            background: rgba(249, 24, 128, 0.1) !important;
+            cursor: not-allowed !important;
+        }
+        .like-btn.liked:hover {
+            background: rgba(249, 24, 128, 0.1) !important;
+            transform: none !important;
         }
         .like-btn.loading {
             pointer-events: none;
             opacity: 0.7;
         }
+        .like-btn.loading .like-icon {
+            animation: pulse 1s infinite;
+        }
         .like-icon {
             font-size: 18px;
             transition: transform 0.2s ease;
         }
-        .like-btn:hover .like-icon {
+        .like-btn:hover:not(.liked) .like-icon {
             transform: scale(1.2);
         }
         .like-btn.liked .like-icon {
-            animation: heartBeat 0.3s ease;
+            animation: heartBeat 0.5s ease !important;
         }
         .like-count {
             font-weight: bold;
@@ -350,8 +359,15 @@
         }
         @keyframes heartBeat {
             0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
+            25% { transform: scale(1.3); }
+            50% { transform: scale(1.1); }
+            75% { transform: scale(1.2); }
             100% { transform: scale(1); }
+        }
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
         }
         .post-actions {
             display: flex;
@@ -850,8 +866,9 @@
         }
 
         function getUserLikeFromServer(postId) {
+            if (!currentUser || !allLike) return false;
             return allLike.some(like => 
-                like.id_aspirasi === postId && like.nim_user === currentUser?.nim
+                like.id_aspirasi === postId && like.nim_user === currentUser.nim
             );
         }
 
@@ -1001,8 +1018,8 @@
                 const inisial = namaTersamarkan.charAt(0);
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
                 
-                // Determine like status
-                const userLiked = currentUser ? getUserLikeFromServer(aspirasi.id) : false;
+                // Determine like status - PERMANEN SYSTEM
+                const userLiked = currentUser ? (getUserLikeFromServer(aspirasi.id) || getUserLikeForPost(aspirasi.id)) : false;
                 const likeCount = aspirasi.like_count || 0;
                 const isProcessing = activeLikeRequests.has(aspirasi.id);
                 
@@ -1029,7 +1046,7 @@
                             <div class="post-like">
                                 <button class="like-btn ${userLiked ? 'liked' : ''} ${isProcessing ? 'loading' : ''}" 
                                         onclick="handleLike('${aspirasi.id}')" 
-                                        ${!currentUser || isProcessing ? 'disabled' : ''}>
+                                        ${!currentUser || userLiked || isProcessing ? 'disabled' : ''}>
                                     <span class="like-icon">${userLiked ? '❤️' : '🤍'}</span>
                                     <span class="like-count">${likeCount}</span>
                                 </button>
@@ -1161,7 +1178,7 @@
             renderPagination();
         }
 
-        // Handle like/unlike - SOLUSI SIMPLE TANPA CORS
+        // Handle like PERMANEN - sekali like tidak bisa unlike
         function handleLike(postId) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
@@ -1181,41 +1198,73 @@
                     likeBtn.disabled = true;
                 }
 
-                // SOLUSI: Gunakan Image request untuk trigger like tanpa CORS
-                const likeUrl = `${APP_SCRIPT_URL}?action=like&id_aspirasi=${encodeURIComponent(postId)}&nim_user=${encodeURIComponent(currentUser.nim)}&nama_user=${encodeURIComponent(currentUser.nama)}&callback=dummy`;
+                // Cek apakah user sudah like sebelumnya
+                const alreadyLiked = getUserLikeFromServer(postId);
+                if (alreadyLiked) {
+                    showStatus('Anda sudah menyukai aspirasi ini sebelumnya!', 'warning');
+                    activeLikeRequests.delete(postId);
+                    
+                    if (likeBtn) {
+                        likeBtn.classList.remove('loading');
+                        likeBtn.disabled = true; // Tetap disabled karena sudah like permanen
+                    }
+                    return;
+                }
+
+                // Buat form sementara untuk like
+                const tempForm = document.createElement('form');
+                tempForm.method = 'POST';
+                tempForm.action = APP_SCRIPT_URL;
+                tempForm.style.display = 'none';
                 
-                // Trigger request menggunakan Image object (tidak terblokir CORS)
-                const img = new Image();
-                img.src = likeUrl;
+                // Tambahkan fields
+                const addField = (name, value) => {
+                    const input = document.createElement('input');
+                    input.name = name;
+                    input.value = value;
+                    tempForm.appendChild(input);
+                };
                 
-                // Optimistic update - langsung update UI, kemudian sync dengan server
-                const currentLiked = getUserLikeFromServer(postId);
-                const newLikedState = !currentLiked;
+                addField('action', 'like');
+                addField('id_aspirasi', postId);
+                addField('nim_user', currentUser.nim);
+                addField('nama_user', currentUser.nama);
                 
-                // Update lokal langsung
-                saveUserLike(postId, newLikedState);
+                document.body.appendChild(tempForm);
                 
-                // Update UI sementara
+                // Submit form
+                tempForm.submit();
+                
+                // OPTIMISTIC UPDATE: Langsung update UI tanpa tunggu response
                 if (likeBtn) {
-                    likeBtn.classList.toggle('liked', newLikedState);
-                    likeBtn.querySelector('.like-icon').textContent = newLikedState ? '❤️' : '🤍';
+                    likeBtn.classList.add('liked');
+                    likeBtn.classList.remove('loading');
+                    likeBtn.disabled = true; // DISABLED PERMANEN setelah like
+                    likeBtn.querySelector('.like-icon').textContent = '❤️';
+                    
+                    // Update like count optimistically
                     const likeCountElem = likeBtn.querySelector('.like-count');
                     const currentCount = parseInt(likeCountElem.textContent) || 0;
-                    likeCountElem.textContent = newLikedState ? currentCount + 1 : currentCount - 1;
+                    likeCountElem.textContent = currentCount + 1;
                 }
                 
-                showStatus(newLikedState ? 'Berhasil menyukai aspirasi!' : 'Berhasil batal menyukai aspirasi!');
+                showStatus('Berhasil menyukai aspirasi! Like bersifat permanen.', 'success');
+                
+                // Simpan status like di localStorage
+                saveUserLike(postId, true);
                 
                 // Reload data setelah delay untuk sync dengan server
                 setTimeout(() => {
                     loadData();
                     activeLikeRequests.delete(postId);
-                }, 1000);
+                    document.body.removeChild(tempForm);
+                }, 2000);
                 
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Gagal memproses like', 'error');
                 activeLikeRequests.delete(postId);
+                
                 // Rollback dengan reload data
                 loadData();
             }
