@@ -3,8 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-    <title>🐦 AspirasiFEB - TEST LIKE</title>
+    <title>🐦 AspirasiFEB</title>
     <style>
+        /* CSS SAMA PERSIS SEPERTI SEBELUMNYA */
+        :root {
+            --primary: #1da1f2;
+            --primary-dark: #0d8bd9;
+            --dark: #0f1419;
+            --light-bg: #f7f9fa;
+            --border: #ccd6dd;
+            --text-light: #536471;
+            --like-color: #f91880;
+            --success: #00ba7c;
+            --warning: #f7b955;
+            --error: #f91880;
+        }
         * {
             margin: 0;
             padding: 0;
@@ -12,14 +25,17 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
         body {
-            background: #f7f9fa;
-            color: #0f1419;
-            padding: 20px;
+            background: var(--light-bg);
+            color: var(--dark);
+            line-height: 1.6;
+            height: 100vh;
+            overflow: hidden;
         }
         .container {
-            max-width: 600px;
-            margin: 0 auto;
+            display: flex;
+            height: 100vh;
         }
+        /* Header */
         .header {
             text-align: center;
             margin-bottom: 30px;
@@ -27,150 +43,722 @@
         .logo {
             font-size: 2rem;
             font-weight: bold;
-            color: #1da1f2;
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
         }
-        .user-setup {
+        /* Form Section - FIXED SIDEBAR */
+        .form-section {
+            width: 350px;
+            height: 100vh;
+            position: fixed;
+            left: 0;
+            top: 0;
             background: white;
+            border-right: 1px solid var(--border);
             padding: 20px;
+            overflow-y: auto;
+            z-index: 100;
+        }
+        .form-card {
+            background: white;
             border-radius: 16px;
-            margin-bottom: 20px;
+            padding: 25px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-title {
+            font-size: 1.3rem;
+            margin-bottom: 20px;
+            color: var(--dark);
         }
         .form-group {
             margin-bottom: 15px;
         }
         label {
             display: block;
-            margin-bottom: 5px;
+            margin-bottom: 6px;
             font-weight: 600;
+            color: var(--dark);
+            font-size: 14px;
         }
-        input {
+        input, textarea {
             width: 100%;
             padding: 10px;
-            border: 2px solid #ccd6dd;
+            border: 2px solid var(--border);
             border-radius: 8px;
             font-size: 14px;
+            transition: border-color 0.3s;
+        }
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+        textarea {
+            resize: vertical;
+            min-height: 80px;
+            max-height: 120px;
+        }
+        .upload-area {
+            border: 2px dashed var(--border);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #fafbfc;
+            font-size: 14px;
+        }
+        .upload-area:hover {
+            border-color: var(--primary);
+            background: #f0f8ff;
+        }
+        .upload-area.dragover {
+            border-color: var(--primary);
+            background: #e8f4fe;
+        }
+        .file-input {
+            display: none;
+        }
+        .preview {
+            max-width: 100%;
+            max-height: 150px;
+            border-radius: 8px;
+            margin-top: 8px;
+            display: none;
         }
         .btn {
             width: 100%;
             padding: 12px;
-            background: #1da1f2;
+            background: var(--primary);
             color: white;
             border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
+            transition: all 0.3s;
+            margin-top: 10px;
+        }
+        .btn:hover {
+            background: var(--primary-dark);
         }
         .btn:disabled {
             background: #a0a0a0;
             cursor: not-allowed;
         }
+        /* Posts Section - SCROLLABLE MAIN CONTENT */
+        .posts-section {
+            flex: 1;
+            margin-left: 350px;
+            height: 100vh;
+            overflow-y: auto;
+            padding: 20px;
+        }
+        /* Custom scrollbar untuk posts section */
+        .posts-section::-webkit-scrollbar {
+            width: 8px;
+        }
+        .posts-section::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+        .posts-section::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+        .posts-section::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            position: sticky;
+            top: 0;
+            background: var(--light-bg);
+            padding: 15px 0;
+            z-index: 10;
+            align-items: center;
+        }
+        .filter-btn {
+            padding: 8px 16px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: white;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        .filter-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        /* Loading Animation */
+        .loading-container {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        .loading-text {
+            color: var(--text-light);
+            font-size: 14px;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
         .post {
             background: white;
             border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            animation: fadeInUp 0.5s ease-out;
+        }
+        @keyframes fadeInUp {
+            from {
+                transform: translateY(20px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
         .post-header {
             display: flex;
             align-items: center;
-            gap: 10px;
-            margin-bottom: 10px;
+            gap: 12px;
+            margin-bottom: 15px;
         }
         .avatar {
-            width: 40px;
-            height: 40px;
+            width: 45px;
+            height: 45px;
             border-radius: 50%;
-            background: #1da1f2;
+            background: var(--primary);
             color: white;
             display: flex;
             align-items: center;
             justify-content: center;
             font-weight: bold;
+            font-size: 18px;
+        }
+        .post-info {
+            flex: 1;
         }
         .post-name {
             font-weight: bold;
+            font-size: 16px;
+        }
+        .post-meta {
+            font-size: 14px;
+            color: var(--text-light);
         }
         .post-content {
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            white-space: pre-line;
         }
-        .post-actions {
+        /* Gambar postingan fit to window */
+        .post-image-container {
+            margin: 15px 0;
+            text-align: center;
+        }
+        .post-image {
+            max-width: 100%;
+            max-height: 70vh;
+            width: auto;
+            height: auto;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            object-fit: contain;
+        }
+        .post-image:hover {
+            transform: scale(1.02);
+        }
+        /* Like Styles */
+        .post-like {
             display: flex;
-            gap: 15px;
+            align-items: center;
+            gap: 8px;
         }
         .like-btn {
             display: flex;
             align-items: center;
-            gap: 5px;
+            gap: 6px;
             background: none;
             border: none;
             cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 15px;
+            padding: 8px 12px;
+            border-radius: 20px;
             transition: all 0.3s;
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--text-light);
         }
         .like-btn:hover:not(:disabled) {
             background: rgba(249, 24, 128, 0.1);
+            color: var(--like-color);
         }
         .like-btn:disabled {
             cursor: not-allowed;
             opacity: 0.6;
         }
+        .like-btn:disabled:hover {
+            background: none;
+            color: var(--text-light);
+        }
         .like-btn.liked {
-            color: #f91880;
+            color: var(--like-color);
         }
         .like-btn.loading {
             pointer-events: none;
             opacity: 0.7;
         }
-        .status {
-            padding: 10px;
+        .like-icon {
+            font-size: 18px;
+            transition: transform 0.2s ease;
+        }
+        .like-btn:hover .like-icon {
+            transform: scale(1.2);
+        }
+        .like-btn.liked .like-icon {
+            animation: heartBeat 0.3s ease;
+        }
+        .like-count {
+            font-weight: bold;
+            min-width: 20px;
+            text-align: center;
+            transition: color 0.3s ease;
+        }
+        .like-btn.liked .like-count {
+            color: var(--like-color);
+        }
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
+        }
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+        }
+        .reply-btn {
+            background: none;
+            border: none;
+            color: var(--text-light);
+            cursor: pointer;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            padding: 8px 12px;
+            border-radius: 6px;
+            transition: all 0.3s;
+        }
+        .reply-btn:hover {
+            background: #f0f8ff;
+            color: var(--primary);
+        }
+        .reply-btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .reply-btn:disabled:hover {
+            background: none;
+            color: var(--text-light);
+        }
+        .reply-form {
+            margin-top: 15px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: none;
+        }
+        .replies {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+        .reply {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .reply:last-child {
+            margin-bottom: 0;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+        .reply-avatar {
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: var(--primary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .reply-content {
+            flex: 1;
+        }
+        .reply-name {
+            font-weight: bold;
+            font-size: 14px;
+        }
+        .reply-meta {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 5px;
+        }
+        /* Pagination Styles */
+        .pagination {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            margin: 30px 0;
+            flex-wrap: wrap;
+        }
+        .page-btn {
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            background: white;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 14px;
+            min-width: 40px;
+            text-align: center;
+        }
+        .page-btn:hover {
+            background: #f8f9fa;
+        }
+        .page-btn.active {
+            background: var(--primary);
+            color: white;
+            border-color: var(--primary);
+        }
+        .page-btn.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .page-btn.disabled:hover {
+            background: white;
+        }
+        .page-dots {
+            padding: 8px 4px;
+            color: var(--text-light);
+        }
+        /* Modal untuk gambar full size */
+        .image-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.9);
+            animation: fadeIn 0.3s;
+        }
+        .modal-content {
+            display: block;
+            margin: auto;
+            max-width: 95%;
+            max-height: 95%;
             border-radius: 8px;
-            margin: 10px 0;
+            animation: zoomIn 0.3s;
+            object-fit: contain;
+        }
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 35px;
+            color: white;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+        }
+        .close-modal:hover {
+            color: #ccc;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        /* Welcome Modal */
+        .welcome-modal {
+            display: none;
+            position: fixed;
+            z-index: 2000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.7);
+            animation: fadeIn 0.3s;
+        }
+        .welcome-content {
+            background: white;
+            margin: 15% auto;
+            padding: 30px;
+            border-radius: 16px;
+            width: 90%;
+            max-width: 500px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            animation: slideUp 0.3s ease-out;
+        }
+        @keyframes slideUp {
+            from {
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .welcome-title {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--dark);
+            text-align: center;
+        }
+        .welcome-subtitle {
+            color: var(--text-light);
+            margin-bottom: 25px;
+            text-align: center;
+        }
+        /* Status Messages */
+        .status {
+            padding: 12px;
+            border-radius: 8px;
+            margin: 15px 0;
             font-size: 14px;
         }
         .status.success {
             background: #e8f5e8;
             color: #2d5016;
+            border: 1px solid #c3e6cb;
         }
         .status.error {
             background: #f8d7da;
             color: #721c24;
+            border: 1px solid #f5c6cb;
         }
-        .loading {
+        .status.warning {
+            background: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeaa7;
+        }
+        .empty-state {
             text-align: center;
-            padding: 20px;
+            padding: 60px 20px;
+            color: var(--text-light);
+            background: white;
+            border-radius: 16px;
+        }
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
+            display: none;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            transition: width 0.3s ease;
+        }
+        /* Responsive */
+        @media (max-width: 768px) {
+            body {
+                overflow: auto;
+                height: auto;
+            }
+            .container {
+                flex-direction: column;
+                height: auto;
+            }
+            .form-section {
+                position: static;
+                width: 100%;
+                height: auto;
+                border-right: none;
+                border-bottom: 1px solid var(--border);
+            }
+            .posts-section {
+                margin-left: 0;
+                height: auto;
+                overflow-y: visible;
+            }
+            .filters {
+                position: static;
+            }
+            .welcome-content {
+                margin: 10% auto;
+                width: 95%;
+            }
+            .pagination {
+                gap: 4px;
+            }
+            .page-btn {
+                padding: 6px 10px;
+                min-width: 36px;
+                font-size: 13px;
+            }
+        }
+        @media (max-width: 480px) {
+            .container {
+                padding: 0;
+            }
+            .form-section {
+                padding: 15px;
+            }
+            .form-card {
+                padding: 20px;
+            }
+            .posts-section {
+                padding: 15px;
+            }
+            .post {
+                padding: 20px;
+            }
+            .post-like {
+                gap: 6px;
+            }
+            .like-btn {
+                padding: 6px 8px;
+                font-size: 12px;
+            }
+            .like-icon {
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Welcome Modal -->
+    <div id="welcomeModal" class="welcome-modal">
+        <div class="welcome-content">
+            <h2 class="welcome-title">👋 Selamat Datang di AspirasiFEB</h2>
+            <p class="welcome-subtitle">Silakan isi data diri Anda untuk mulai berpartisipasi</p>
+            <form id="welcomeForm">
+                <div class="form-group">
+                    <label for="welcomeNama">Nama Lengkap</label>
+                    <input type="text" id="welcomeNama" required placeholder="Nama Anda" maxlength="50">
+                </div>
+                <div class="form-group">
+                    <label for="welcomeNIM">NIM</label>
+                    <input type="text" id="welcomeNIM" required placeholder="Nomor Induk Mahasiswa" maxlength="15" pattern="[A-Za-z0-9]{5,15}">
+                </div>
+                <button type="submit" class="btn" id="welcomeBtn">
+                    Mulai Berpartisipasi
+                </button>
+            </form>
+            <div id="welcomeStatus"></div>
+        </div>
+    </div>
+    
+    <!-- Modal untuk gambar full size -->
+    <div id="imageModal" class="image-modal">
+        <span class="close-modal">&times;</span>
+        <img class="modal-content" id="modalImage">
+    </div>
+    
     <div class="container">
-        <div class="header">
-            <div class="logo">🐦 AspirasiFEB - TEST LIKE</div>
-        </div>
-
-        <!-- User Setup -->
-        <div class="user-setup">
-            <h3>👋 Setup User</h3>
-            <div class="form-group">
-                <label for="userNama">Nama Lengkap</label>
-                <input type="text" id="userNama" placeholder="Nama Anda">
+        <!-- Form Section - FIXED SIDEBAR -->
+        <div class="form-section">
+            <div class="header">
+                <div class="logo">
+                    <span>🐦</span>
+                    <span>AspirasiFEB</span>
+                </div>
             </div>
-            <div class="form-group">
-                <label for="userNIM">NIM</label>
-                <input type="text" id="userNIM" placeholder="Nomor Induk Mahasiswa">
+            <div class="form-card">
+                <h2 class="form-title">📢 Tulis Aspirasimu</h2>
+                <form id="aspirasiForm">
+                    <div class="form-group">
+                        <label for="nama">Nama Lengkap</label>
+                        <input type="text" id="nama" required readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label for="nim">NIM</label>
+                        <input type="text" id="nim" required readonly style="background: #f5f5f5;">
+                    </div>
+                    <div class="form-group">
+                        <label for="isi">Aspirasi</label>
+                        <textarea id="isi" required placeholder="Ceritakan aspirasi atau keluhan Anda..." minlength="10" maxlength="1000"></textarea>
+                        <div style="font-size: 12px; color: var(--text-light); text-align: right; margin-top: 5px;">
+                            <span id="charCount">0</span>/1000 karakter
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="upload-area" id="uploadArea">
+                            <div>📷 Klik atau seret gambar ke sini</div>
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                                Maksimal 5MB - JPG, PNG, GIF, WebP
+                            </div>
+                            <input type="file" id="fileInput" class="file-input" accept="image/*">
+                        </div>
+                        <div class="progress-bar" id="uploadProgress">
+                            <div class="progress-fill" id="progressFill"></div>
+                        </div>
+                        <img id="preview" class="preview">
+                    </div>
+                    <button type="submit" class="btn" id="submitBtn">
+                        Posting Aspirasi
+                    </button>
+                </form>
+                <div id="formStatus"></div>
             </div>
-            <button class="btn" onclick="setupUser()">Simpan Data User</button>
         </div>
-
-        <!-- Status Messages -->
-        <div id="status"></div>
-
-        <!-- Posts Container -->
-        <div id="postsContainer">
-            <div class="loading">Memuat data...</div>
+        
+        <!-- Posts Section - SCROLLABLE MAIN CONTENT -->
+        <div class="posts-section">
+            <div class="filters">
+                <button class="filter-btn active" onclick="setSort('time')">🕒 Terbaru</button>
+                <button class="filter-btn" onclick="setSort('likes')">❤️ Terbanyak Like</button>
+            </div>
+            <div id="postsContainer">
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Memuat aspirasi...</div>
+                </div>
+            </div>
+            <div id="paginationContainer"></div>
         </div>
     </div>
 
@@ -178,17 +766,29 @@
         // === GANTI DENGAN URL APPS SCRIPT ANDA ===
         const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
         
-        let currentUser = null;
+        // State management
         let allAspirasi = [];
+        let allKomentar = [];
         let allLike = [];
-        let activeLikeRequests = new Set();
+        let currentSort = 'time';
+        let currentPage = 1;
+        const postsPerPage = 10;
+        let isLoading = false;
+        let currentUser = null;
+        let activeLikeRequests = new Map();
+        
+        // Global variables untuk file handling
+        let currentFileInput = null;
+        let currentBase64Image = '';
 
         // Fungsi bantu
-        function showStatus(message, type = 'success') {
-            const element = document.getElementById('status');
-            element.innerHTML = `<div class="status ${type}">${message}</div>`;
-            if (type === 'success') {
-                setTimeout(() => element.innerHTML = '', 3000);
+        function showStatus(message, type = 'success', elementId = 'formStatus') {
+            const element = document.getElementById(elementId);
+            if (element) {
+                element.innerHTML = `<div class="status ${type}">${message}</div>`;
+                if (type === 'success') {
+                    setTimeout(() => element.innerHTML = '', 5000);
+                }
             }
         }
 
@@ -197,97 +797,271 @@
         }
 
         // User Management
-        function setupUser() {
-            const nama = document.getElementById('userNama').value.trim();
-            const nim = document.getElementById('userNIM').value.trim();
-            
-            if (!nama || !nim) {
-                showStatus('Harap isi nama dan NIM', 'error');
-                return;
-            }
-
-            currentUser = { nama, nim };
-            localStorage.setItem('aspirasiFEB_user', JSON.stringify(currentUser));
-            showStatus('Data user berhasil disimpan!');
-            loadData();
-        }
-
-        function loadCurrentUser() {
+        function initializeUser() {
             const savedUser = localStorage.getItem('aspirasiFEB_user');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                document.getElementById('userNama').value = currentUser.nama;
-                document.getElementById('userNIM').value = currentUser.nim;
+                document.getElementById('nama').value = currentUser.nama;
+                document.getElementById('nim').value = currentUser.nim;
+                return true;
+            }
+            return false;
+        }
+
+        function saveUser(nama, nim) {
+            currentUser = { nama, nim };
+            localStorage.setItem('aspirasiFEB_user', JSON.stringify(currentUser));
+            document.getElementById('nama').value = nama;
+            document.getElementById('nim').value = nim;
+        }
+
+        function showWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'block';
+            }
+        }
+
+        function hideWelcomeModal() {
+            const modal = document.getElementById('welcomeModal');
+            if (modal) {
+                modal.style.display = 'none';
+            }
+        }
+
+        // Like Management
+        function getUserLikes() {
+            return JSON.parse(localStorage.getItem('aspirasiFEB_likes') || '{}');
+        }
+
+        function saveUserLike(postId, liked) {
+            const likes = getUserLikes();
+            if (liked) {
+                likes[postId] = true;
+            } else {
+                delete likes[postId];
+            }
+            localStorage.setItem('aspirasiFEB_likes', JSON.stringify(likes));
+        }
+
+        function getUserLikeForPost(postId) {
+            const likes = getUserLikes();
+            return !!likes[postId];
+        }
+
+        function getUserLikeFromServer(postId) {
+            return allLike.some(like => 
+                like.id_aspirasi === postId && like.nim_user === currentUser?.nim
+            );
+        }
+
+        // Image Modal Functions
+        function setupImageModal() {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            const closeBtn = document.querySelector('.close-modal');
+            if (!modal || !modalImg || !closeBtn) return;
+            
+            closeBtn.onclick = function() {
+                modal.style.display = 'none';
+            }
+            
+            modal.onclick = function(event) {
+                if (event.target === modal) {
+                    modal.style.display = 'none';
+                }
+            }
+            
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+
+        function openImageModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            if (modal && modalImg) {
+                modal.style.display = 'block';
+                modalImg.src = src;
+            }
+        }
+
+        // Character counter untuk textarea
+        function setupCharCounter() {
+            const textarea = document.getElementById('isi');
+            const charCount = document.getElementById('charCount');
+            if (textarea && charCount) {
+                textarea.addEventListener('input', function() {
+                    charCount.textContent = this.value.length;
+                    if (this.value.length > 1000) {
+                        charCount.style.color = 'var(--error)';
+                    } else if (this.value.length > 900) {
+                        charCount.style.color = 'var(--warning)';
+                    } else {
+                        charCount.style.color = 'var(--text-light)';
+                    }
+                });
             }
         }
 
         // Load data dengan JSONP
         function loadData() {
+            if (isLoading) return;
+            isLoading = true;
+            
             const container = document.getElementById('postsContainer');
-            container.innerHTML = '<div class="loading">Memuat data...</div>';
+            container.innerHTML = `
+                <div class="loading-container">
+                    <div class="loading-spinner"></div>
+                    <div class="loading-text">Memuat aspirasi...</div>
+                </div>
+            `;
 
-            const callbackName = 'handleData_' + Date.now();
+            const timestamp = Date.now();
+            const callbackName = `handleData_${timestamp}`;
             
             window[callbackName] = function(response) {
+                isLoading = false;
                 if (response && response.success) {
                     allAspirasi = response.data.aspirasi || [];
+                    allKomentar = response.data.komentar || [];
                     allLike = response.data.like || [];
                     renderPosts();
+                    renderPagination();
                 } else {
                     console.error('Failed to load data:', response);
-                    container.innerHTML = '<div class="status error">Gagal memuat data</div>';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                            <h3>Gagal memuat data</h3>
+                            <p>Silakan refresh halaman</p>
+                            <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
+                        </div>
+                    `;
                 }
                 delete window[callbackName];
             };
 
             const script = document.createElement('script');
-            script.src = `${APP_SCRIPT_URL}?callback=${callbackName}`;
+            script.src = `${APP_SCRIPT_URL}?callback=${callbackName}&page=${currentPage}&limit=${postsPerPage}`;
             script.onerror = function() {
-                container.innerHTML = '<div class="status error">Gagal memuat data</div>';
+                isLoading = false;
+                console.error('Failed to load script');
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                        <h3>Gagal memuat data</h3>
+                        <p>Periksa koneksi internet Anda</p>
+                        <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
+                    </div>
+                `;
                 delete window[callbackName];
             };
             document.head.appendChild(script);
         }
 
-        // Render posts
+        // Get current page posts
+        function getCurrentPagePosts() {
+            let sortedAspirasi = [...allAspirasi];
+            
+            if (currentSort === 'time') {
+                sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+            } else if (currentSort === 'likes') {
+                sortedAspirasi.sort((a, b) => (b.like_count || 0) - (a.like_count || 0));
+            }
+            
+            return sortedAspirasi;
+        }
+
+        // Render posts dengan pagination
         function renderPosts() {
             const container = document.getElementById('postsContainer');
+            if (!container) return;
             
-            if (allAspirasi.length === 0) {
-                container.innerHTML = '<div class="post">Belum ada aspirasi</div>';
+            const currentPosts = getCurrentPagePosts();
+            
+            if (currentPosts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🔍</div>
+                        <h3>Belum ada aspirasi</h3>
+                        <p>Jadilah yang pertama menulis aspirasi!</p>
+                    </div>
+                `;
                 return;
             }
 
-            let postsHTML = allAspirasi.map(aspirasi => {
+            let postsHTML = currentPosts.map((aspirasi, index) => {
+                const waktu = new Date(aspirasi.waktu);
+                const tanggal = waktu.toLocaleDateString('id-ID');
+                const jam = waktu.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
                 const namaTersamarkan = maskName(aspirasi.nama);
                 const inisial = namaTersamarkan.charAt(0);
+                const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
                 
-                // Cek apakah user sudah like post ini
-                const userLiked = currentUser ? allLike.some(like => 
-                    like.id_aspirasi === aspirasi.id && like.nim_user === currentUser.nim
-                ) : false;
-                
+                // Determine like status
+                const userLiked = currentUser ? getUserLikeFromServer(aspirasi.id) : false;
                 const likeCount = aspirasi.like_count || 0;
                 const isProcessing = activeLikeRequests.has(aspirasi.id);
-
+                
                 return `
-                    <div class="post">
+                    <div class="post" id="post-${aspirasi.id}">
                         <div class="post-header">
                             <div class="avatar">${inisial}</div>
-                            <div>
+                            <div class="post-info">
                                 <div class="post-name">${namaTersamarkan}</div>
-                                <div style="font-size: 12px; color: #536471;">${aspirasi.nim}</div>
+                                <div class="post-meta">${tanggal} • ${jam}</div>
                             </div>
                         </div>
                         <div class="post-content">${aspirasi.isi}</div>
+                        ${aspirasi.gambar && aspirasi.gambar !== '' ? `
+                            <div class="post-image-container">
+                                <img src="${aspirasi.gambar}" 
+                                     alt="Gambar aspirasi" 
+                                     class="post-image"
+                                     onclick="openImageModal('${aspirasi.gambar}')"
+                                     onerror="this.style.display='none'">
+                            </div>
+                        ` : ''}
                         <div class="post-actions">
-                            <button class="like-btn ${userLiked ? 'liked' : ''} ${isProcessing ? 'loading' : ''}" 
-                                    onclick="handleLike('${aspirasi.id}')" 
-                                    ${!currentUser || isProcessing ? 'disabled' : ''}>
-                                <span>${userLiked ? '❤️' : '🤍'}</span>
-                                <span>${likeCount}</span>
+                            <div class="post-like">
+                                <button class="like-btn ${userLiked ? 'liked' : ''} ${isProcessing ? 'loading' : ''}" 
+                                        onclick="handleLike('${aspirasi.id}')" 
+                                        ${!currentUser || isProcessing ? 'disabled' : ''}>
+                                    <span class="like-icon">${userLiked ? '❤️' : '🤍'}</span>
+                                    <span class="like-count">${likeCount}</span>
+                                </button>
+                            </div>
+                            <button class="reply-btn" onclick="toggleReplyForm('${aspirasi.id}')" ${!currentUser ? 'disabled' : ''}>
+                                💬 Balas (${komentar.length})
                             </button>
                         </div>
+                        <div class="reply-form" id="reply-form-${aspirasi.id}">
+                            <form onsubmit="submitKomentar(event, '${aspirasi.id}')">
+                                <textarea name="isi" placeholder="Tulis komentar..." required rows="3" maxlength="500"></textarea>
+                                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                                    <button type="submit" class="btn" style="flex: 1;">Kirim Komentar</button>
+                                    <button type="button" class="btn" style="background: #6c757d;" 
+                                            onclick="toggleReplyForm('${aspirasi.id}')">Batal</button>
+                                </div>
+                            </form>
+                        </div>
+                        ${komentar.length > 0 ? `
+                            <div class="replies">
+                                ${komentar.map(k => `
+                                    <div class="reply">
+                                        <div class="reply-avatar">${maskName(k.nama).charAt(0)}</div>
+                                        <div class="reply-content">
+                                            <div class="reply-name">${maskName(k.nama)}</div>
+                                            <div class="reply-meta">${new Date(k.waktu).toLocaleDateString('id-ID')}</div>
+                                            <div>${k.isi}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
                     </div>
                 `;
             }).join('');
@@ -295,55 +1069,469 @@
             container.innerHTML = postsHTML;
         }
 
-        // Handle like/unlike - SANGAT SEDERHANA
-        async function handleLike(postId) {
-            if (!currentUser) {
-                showStatus('Silakan isi data user terlebih dahulu', 'error');
+        // Render pagination
+        function renderPagination() {
+            const container = document.getElementById('paginationContainer');
+            if (!container) return;
+            
+            const totalPosts = allAspirasi.length;
+            const totalPages = Math.ceil(totalPosts / postsPerPage);
+            
+            if (totalPages <= 1) {
+                container.innerHTML = '';
                 return;
             }
 
-            if (activeLikeRequests.has(postId)) return;
-            activeLikeRequests.add(postId);
+            let paginationHTML = '<div class="pagination">';
+            
+            // Previous button
+            if (currentPage > 1) {
+                paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">‹</button>`;
+            } else {
+                paginationHTML += `<button class="page-btn disabled">‹</button>`;
+            }
+            
+            // Page numbers
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            if (startPage > 1) {
+                paginationHTML += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
+                if (startPage > 2) {
+                    paginationHTML += `<span class="page-dots">...</span>`;
+                }
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === currentPage) {
+                    paginationHTML += `<button class="page-btn active">${i}</button>`;
+                } else {
+                    paginationHTML += `<button class="page-btn" onclick="goToPage(${i})">${i}</button>`;
+                }
+            }
+            
+            if (endPage < totalPages) {
+                if (endPage < totalPages - 1) {
+                    paginationHTML += `<span class="page-dots">...</span>`;
+                }
+                paginationHTML += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
+            }
+            
+            // Next button
+            if (currentPage < totalPages) {
+                paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">›</button>`;
+            } else {
+                paginationHTML += `<button class="page-btn disabled">›</button>`;
+            }
+            
+            paginationHTML += '</div>';
+            container.innerHTML = paginationHTML;
+        }
+
+        // Pagination functions
+        function goToPage(page) {
+            currentPage = page;
+            renderPosts();
+            renderPagination();
+            document.getElementById('postsContainer').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Toggle reply form
+        function toggleReplyForm(id) {
+            const form = document.getElementById(`reply-form-${id}`);
+            if (form) {
+                form.style.display = form.style.display === 'block' ? 'none' : 'block';
+            }
+        }
+
+        // Set sort type
+        function setSort(sortType) {
+            currentSort = sortType;
+            currentPage = 1;
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            renderPosts();
+            renderPagination();
+        }
+
+        // Handle like/unlike - SOLUSI SIMPLE TANPA CORS
+        function handleLike(postId) {
+            if (!currentUser) {
+                showStatus('Silakan isi data diri terlebih dahulu', 'error');
+                return;
+            }
+
+            if (activeLikeRequests.has(postId)) {
+                return;
+            }
+            
+            activeLikeRequests.set(postId, true);
 
             try {
-                // Update UI langsung
-                const likeBtn = document.querySelector(`.like-btn[onclick="handleLike('${postId}')"]`);
+                const likeBtn = document.querySelector(`#post-${postId} .like-btn`);
                 if (likeBtn) {
                     likeBtn.classList.add('loading');
                     likeBtn.disabled = true;
                 }
 
-                // Kirim request menggunakan FormData
-                const formData = new FormData();
-                formData.append('action', 'like');
-                formData.append('id_aspirasi', postId);
-                formData.append('nim_user', currentUser.nim);
-
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
+                // SOLUSI: Gunakan Image request untuk trigger like tanpa CORS
+                const likeUrl = `${APP_SCRIPT_URL}?action=like&id_aspirasi=${encodeURIComponent(postId)}&nim_user=${encodeURIComponent(currentUser.nim)}&nama_user=${encodeURIComponent(currentUser.nama)}&callback=dummy`;
                 
-                if (result.success) {
-                    showStatus(result.message);
-                    // Reload data untuk update yang terbaru
-                    loadData();
-                } else {
-                    showStatus(result.message, 'error');
+                // Trigger request menggunakan Image object (tidak terblokir CORS)
+                const img = new Image();
+                img.src = likeUrl;
+                
+                // Optimistic update - langsung update UI, kemudian sync dengan server
+                const currentLiked = getUserLikeFromServer(postId);
+                const newLikedState = !currentLiked;
+                
+                // Update lokal langsung
+                saveUserLike(postId, newLikedState);
+                
+                // Update UI sementara
+                if (likeBtn) {
+                    likeBtn.classList.toggle('liked', newLikedState);
+                    likeBtn.querySelector('.like-icon').textContent = newLikedState ? '❤️' : '🤍';
+                    const likeCountElem = likeBtn.querySelector('.like-count');
+                    const currentCount = parseInt(likeCountElem.textContent) || 0;
+                    likeCountElem.textContent = newLikedState ? currentCount + 1 : currentCount - 1;
                 }
+                
+                showStatus(newLikedState ? 'Berhasil menyukai aspirasi!' : 'Berhasil batal menyukai aspirasi!');
+                
+                // Reload data setelah delay untuk sync dengan server
+                setTimeout(() => {
+                    loadData();
+                    activeLikeRequests.delete(postId);
+                }, 1000);
+                
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Gagal memproses like', 'error');
-            } finally {
                 activeLikeRequests.delete(postId);
+                // Rollback dengan reload data
+                loadData();
             }
+        }
+
+        // File upload handling
+        function setupFileUpload() {
+            const uploadArea = document.getElementById('uploadArea');
+            const fileInput = document.getElementById('fileInput');
+            const preview = document.getElementById('preview');
+            const progressBar = document.getElementById('uploadProgress');
+            const progressFill = document.getElementById('progressFill');
+            
+            if (!uploadArea || !fileInput || !preview) {
+                console.error('File upload elements not found');
+                return;
+            }
+            
+            currentFileInput = fileInput;
+            
+            uploadArea.addEventListener('click', () => {
+                if (currentFileInput) {
+                    currentFileInput.click();
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const file = e.target.files[0];
+                if (file && file.type.startsWith('image/')) {
+                    if (file.size > 5 * 1024 * 1024) {
+                        showStatus('File terlalu besar. Maksimal 5MB', 'error');
+                        return;
+                    }
+                    
+                    progressBar.style.display = 'block';
+                    progressFill.style.width = '0%';
+                    
+                    const reader = new FileReader();
+                    reader.onloadstart = () => {
+                        progressFill.style.width = '30%';
+                    };
+                    
+                    reader.onprogress = (e) => {
+                        if (e.lengthComputable) {
+                            const percent = (e.loaded / e.total) * 100;
+                            progressFill.style.width = percent + '%';
+                        }
+                    };
+                    
+                    reader.onload = (e) => {
+                        progressFill.style.width = '100%';
+                        setTimeout(() => {
+                            progressBar.style.display = 'none';
+                        }, 500);
+                        
+                        preview.src = e.target.result;
+                        preview.style.display = 'block';
+                        currentBase64Image = e.target.result;
+                        
+                        uploadArea.innerHTML = `
+                            <div>✅ Gambar terpilih</div>
+                            <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                                ${file.name} (${Math.round(file.size/1024)}KB)
+                            </div>
+                        `;
+                    };
+                    
+                    reader.onerror = () => {
+                        progressBar.style.display = 'none';
+                        showStatus('Gagal membaca file', 'error');
+                    };
+                    
+                    reader.readAsDataURL(file);
+                } else {
+                    showStatus('File harus berupa gambar (JPG, PNG, GIF, WebP)', 'error');
+                }
+            });
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.add('dragover');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadArea.addEventListener(eventName, () => {
+                    uploadArea.classList.remove('dragover');
+                }, false);
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                if (files.length > 0 && currentFileInput) {
+                    currentFileInput.files = files;
+                    currentFileInput.dispatchEvent(new Event('change'));
+                }
+            });
+        }
+
+        // Submit aspirasi dengan form submission sederhana
+        function submitAspirasi(event) {
+            event.preventDefault();
+            
+            if (!currentUser) {
+                showStatus('Silakan isi data diri terlebih dahulu', 'error');
+                return;
+            }
+
+            const submitBtn = document.getElementById('submitBtn');
+            const form = document.getElementById('aspirasiForm');
+            
+            if (!submitBtn || !form) {
+                console.error('Form elements not found');
+                return;
+            }
+
+            const isi = document.getElementById('isi')?.value.trim();
+            if (!isi) {
+                showStatus('Harap isi aspirasi', 'error');
+                return;
+            }
+
+            if (isi.length < 10) {
+                showStatus('Aspirasi minimal 10 karakter', 'error');
+                return;
+            }
+
+            if (isi.length > 1000) {
+                showStatus('Aspirasi maksimal 1000 karakter', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Mengirim...';
+
+            // Buat form sementara untuk submission
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.action = APP_SCRIPT_URL;
+            tempForm.style.display = 'none';
+            
+            // Tambahkan fields
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.name = name;
+                input.value = value;
+                tempForm.appendChild(input);
+            };
+            
+            addField('action', 'kirim_aspirasi');
+            addField('nama', currentUser.nama);
+            addField('nim', currentUser.nim);
+            addField('isi', isi);
+            
+            if (currentBase64Image && currentBase64Image.length > 100) {
+                addField('base64Image', currentBase64Image);
+            }
+            
+            document.body.appendChild(tempForm);
+            
+            // Submit form
+            tempForm.submit();
+            
+            // Optimistic update
+            showStatus('Aspirasi berhasil dikirim!');
+            
+            // Reset form
+            form.reset();
+            document.getElementById('charCount').textContent = '0';
+            document.getElementById('preview').style.display = 'none';
+            document.getElementById('uploadArea').innerHTML = `
+                <div>📷 Klik atau seret gambar ke sini</div>
+                <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
+                    Maksimal 5MB - JPG, PNG, GIF, WebP
+                </div>
+                <input type="file" id="fileInput" class="file-input" accept="image/*">
+            `;
+            currentBase64Image = '';
+            currentFileInput = document.getElementById('fileInput');
+            setupFileUpload();
+            
+            // Reload data setelah delay
+            setTimeout(() => {
+                loadData();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Posting Aspirasi';
+                document.body.removeChild(tempForm);
+            }, 2000);
+        }
+
+        // Submit komentar
+        function submitKomentar(event, aspirasiId) {
+            event.preventDefault();
+            
+            if (!currentUser) {
+                showStatus('Silakan isi data diri terlebih dahulu', 'error');
+                return;
+            }
+
+            const form = event.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const isiInput = form.querySelector('textarea[name="isi"]');
+            
+            if (!submitBtn || !isiInput) {
+                showStatus('Form komentar tidak lengkap', 'error');
+                return;
+            }
+
+            const isi = isiInput.value.trim();
+            if (!isi) {
+                showStatus('Harap isi komentar', 'error');
+                return;
+            }
+
+            if (isi.length > 500) {
+                showStatus('Komentar maksimal 500 karakter', 'error');
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Mengirim...';
+
+            // Buat form sementara untuk submission
+            const tempForm = document.createElement('form');
+            tempForm.method = 'POST';
+            tempForm.action = APP_SCRIPT_URL;
+            tempForm.style.display = 'none';
+            
+            // Tambahkan fields
+            const addField = (name, value) => {
+                const input = document.createElement('input');
+                input.name = name;
+                input.value = value;
+                tempForm.appendChild(input);
+            };
+            
+            addField('action', 'kirim_komentar');
+            addField('id_aspirasi', aspirasiId);
+            addField('modal_nama', currentUser.nama);
+            addField('modal_nim', currentUser.nim);
+            addField('modal_isi', isi);
+            
+            document.body.appendChild(tempForm);
+            
+            // Submit form
+            tempForm.submit();
+            
+            // Optimistic update
+            showStatus('Komentar berhasil dikirim!');
+            form.reset();
+            toggleReplyForm(aspirasiId);
+            
+            // Reload data setelah delay
+            setTimeout(() => {
+                loadData();
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Kirim Komentar';
+                document.body.removeChild(tempForm);
+            }, 1500);
+        }
+
+        // Handle welcome form
+        function handleWelcomeForm(event) {
+            event.preventDefault();
+            
+            const nama = document.getElementById('welcomeNama').value.trim();
+            const nim = document.getElementById('welcomeNIM').value.trim();
+            
+            if (!nama || !nim) {
+                showStatus('Harap isi nama dan NIM', 'error', 'welcomeStatus');
+                return;
+            }
+
+            if (nama.length < 2 || nama.length > 50) {
+                showStatus('Nama harus 2-50 karakter', 'error', 'welcomeStatus');
+                return;
+            }
+
+            if (!/^[A-Za-z0-9]{5,15}$/.test(nim)) {
+                showStatus('NIM harus 5-15 karakter alfanumerik', 'error', 'welcomeStatus');
+                return;
+            }
+
+            saveUser(nama, nim);
+            hideWelcomeModal();
+            loadData();
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
-            loadCurrentUser();
+            if (!initializeUser()) {
+                showWelcomeModal();
+            }
+            
+            const aspirasiForm = document.getElementById('aspirasiForm');
+            if (aspirasiForm) {
+                aspirasiForm.addEventListener('submit', submitAspirasi);
+            }
+            
+            const welcomeForm = document.getElementById('welcomeForm');
+            if (welcomeForm) {
+                welcomeForm.addEventListener('submit', handleWelcomeForm);
+            }
+            
+            setupFileUpload();
+            setupImageModal();
+            setupCharCounter();
             loadData();
         });
     </script>
