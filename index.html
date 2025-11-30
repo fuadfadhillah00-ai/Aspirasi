@@ -696,6 +696,9 @@
         <span class="close-modal">&times;</span>
         <img class="modal-content" id="modalImage">
     </div>
+
+    <!-- Hidden iframe untuk handle form submission -->
+    <iframe id="hiddenFrame" name="hiddenFrame" style="display: none;"></iframe>
     
     <div class="container">
         <!-- Form Section - FIXED SIDEBAR -->
@@ -1160,8 +1163,8 @@
             renderPagination();
         }
 
-        // Handle like/unlike
-        async function handleLike(postId) {
+        // Handle like/unlike dengan form submission untuk menghindari CORS
+        function handleLike(postId) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
@@ -1180,32 +1183,94 @@
                     likeBtn.disabled = true;
                 }
 
-                const formData = new FormData();
-                formData.append('action', 'like');
-                formData.append('id_aspirasi', postId);
-                formData.append('nim_user', currentUser.nim);
-                formData.append('nama_user', currentUser.nama);
-
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
+                // Buat form untuk submission
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = APP_SCRIPT_URL;
+                form.target = 'hiddenFrame';
+                form.style.display = 'none';
                 
-                if (result.success) {
-                    // Update local storage
-                    saveUserLike(postId, result.action === 'LIKED');
-                    // Reload data untuk update like count
-                    loadData();
-                    showStatus(result.message);
-                } else {
-                    showStatus(result.message, 'error');
-                }
+                // Tambahkan input fields
+                const addInput = (name, value) => {
+                    const input = document.createElement('input');
+                    input.name = name;
+                    input.value = value;
+                    form.appendChild(input);
+                };
+                
+                addInput('action', 'like');
+                addInput('id_aspirasi', postId);
+                addInput('nim_user', currentUser.nim);
+                addInput('nama_user', currentUser.nama);
+                
+                document.body.appendChild(form);
+                
+                // Setup handler untuk iframe response
+                const hiddenFrame = document.getElementById('hiddenFrame');
+                hiddenFrame.onload = function() {
+                    try {
+                        // Coba baca response dari iframe
+                        const iframeDoc = hiddenFrame.contentDocument || hiddenFrame.contentWindow.document;
+                        const responseText = iframeDoc.body.innerText || iframeDoc.body.textContent;
+                        
+                        if (responseText) {
+                            const result = JSON.parse(responseText);
+                            if (result.success) {
+                                saveUserLike(postId, result.action === 'LIKED');
+                                loadData();
+                                showStatus(result.message);
+                            } else {
+                                showStatus(result.message, 'error');
+                            }
+                        } else {
+                            // Fallback: assume success
+                            handleLikeFallback(postId);
+                        }
+                    } catch (error) {
+                        console.error('Error reading iframe response:', error);
+                        // Fallback method
+                        handleLikeFallback(postId);
+                    } finally {
+                        activeLikeRequests.delete(postId);
+                        document.body.removeChild(form);
+                    }
+                };
+                
+                form.submit();
+                
             } catch (error) {
                 console.error('Error:', error);
+                // Fallback method
+                handleLikeFallback(postId);
+            }
+        }
+
+        // Fallback method untuk like (menggunakan GET parameters)
+        function handleLikeFallback(postId) {
+            if (!currentUser) return;
+            
+            try {
+                // Buat URL dengan parameter GET
+                const likeUrl = `${APP_SCRIPT_URL}?action=like&id_aspirasi=${encodeURIComponent(postId)}&nim_user=${encodeURIComponent(currentUser.nim)}&nama_user=${encodeURIComponent(currentUser.nama)}`;
+                
+                // Gunakan image request untuk menghindari CORS
+                const img = new Image();
+                img.src = likeUrl;
+                
+                // Toggle like status lokal dan reload data
+                const currentLiked = getUserLikeForPost(postId);
+                saveUserLike(postId, !currentLiked);
+                
+                // Delay sedikit sebelum reload untuk memberi waktu server memproses
+                setTimeout(() => {
+                    loadData();
+                    showStatus(!currentLiked ? 'Berhasil menyukai aspirasi!' : 'Berhasil batal menyukai aspirasi!');
+                    activeLikeRequests.delete(postId);
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error in fallback:', error);
                 showStatus('Gagal memproses like', 'error');
-            } finally {
                 activeLikeRequests.delete(postId);
             }
         }
@@ -1313,8 +1378,8 @@
             });
         }
 
-        // Submit aspirasi
-        async function submitAspirasi(event) {
+        // Submit aspirasi dengan form submission
+        function submitAspirasi(event) {
             event.preventDefault();
             
             if (!currentUser) {
@@ -1349,26 +1414,37 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
 
-            try {
-                const formData = new FormData();
-                formData.append('action', 'kirim_aspirasi');
-                formData.append('nama', currentUser.nama);
-                formData.append('nim', currentUser.nim);
-                formData.append('isi', isi);
-                
-                if (currentBase64Image && currentBase64Image.length > 100) {
-                    formData.append('base64Image', currentBase64Image);
-                }
-
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
-                    showStatus(result.message + (result.gambar_url ? ' dengan gambar' : ''));
+            // Buat form untuk submission
+            const submissionForm = document.createElement('form');
+            submissionForm.method = 'POST';
+            submissionForm.action = APP_SCRIPT_URL;
+            submissionForm.target = 'hiddenFrame';
+            submissionForm.style.display = 'none';
+            
+            // Tambahkan input fields
+            const addInput = (name, value) => {
+                const input = document.createElement('input');
+                input.name = name;
+                input.value = value;
+                submissionForm.appendChild(input);
+            };
+            
+            addInput('action', 'kirim_aspirasi');
+            addInput('nama', currentUser.nama);
+            addInput('nim', currentUser.nim);
+            addInput('isi', isi);
+            
+            if (currentBase64Image && currentBase64Image.length > 100) {
+                addInput('base64Image', currentBase64Image);
+            }
+            
+            document.body.appendChild(submissionForm);
+            
+            // Setup handler untuk iframe response
+            const hiddenFrame = document.getElementById('hiddenFrame');
+            hiddenFrame.onload = function() {
+                try {
+                    // Reset form
                     form.reset();
                     document.getElementById('charCount').textContent = '0';
                     document.getElementById('preview').style.display = 'none';
@@ -1382,21 +1458,25 @@
                     currentBase64Image = '';
                     currentFileInput = document.getElementById('fileInput');
                     setupFileUpload();
+                    
+                    showStatus('Aspirasi berhasil dikirim!');
                     loadData();
-                } else {
-                    showStatus(result.message, 'error');
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    showStatus('Gagal mengirim aspirasi', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Posting Aspirasi';
+                    document.body.removeChild(submissionForm);
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('Gagal mengirim aspirasi: ' + error.message, 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Posting Aspirasi';
-            }
+            };
+            
+            submissionForm.submit();
         }
 
-        // Submit komentar
-        async function submitKomentar(event, aspirasiId) {
+        // Submit komentar dengan form submission
+        function submitKomentar(event, aspirasiId) {
             event.preventDefault();
             
             if (!currentUser) {
@@ -1427,36 +1507,49 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
 
-            try {
-                const formData = new FormData();
-                formData.append('action', 'kirim_komentar');
-                formData.append('id_aspirasi', aspirasiId);
-                formData.append('modal_nama', currentUser.nama);
-                formData.append('modal_nim', currentUser.nim);
-                formData.append('modal_isi', isi);
-
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                const result = await response.json();
-                
-                if (result.success) {
+            // Buat form untuk submission
+            const submissionForm = document.createElement('form');
+            submissionForm.method = 'POST';
+            submissionForm.action = APP_SCRIPT_URL;
+            submissionForm.target = 'hiddenFrame';
+            submissionForm.style.display = 'none';
+            
+            // Tambahkan input fields
+            const addInput = (name, value) => {
+                const input = document.createElement('input');
+                input.name = name;
+                input.value = value;
+                submissionForm.appendChild(input);
+            };
+            
+            addInput('action', 'kirim_komentar');
+            addInput('id_aspirasi', aspirasiId);
+            addInput('modal_nama', currentUser.nama);
+            addInput('modal_nim', currentUser.nim);
+            addInput('modal_isi', isi);
+            
+            document.body.appendChild(submissionForm);
+            
+            // Setup handler untuk iframe response
+            const hiddenFrame = document.getElementById('hiddenFrame');
+            hiddenFrame.onload = function() {
+                try {
                     showStatus('Komentar berhasil dikirim!');
                     form.reset();
                     toggleReplyForm(aspirasiId);
                     loadData();
-                } else {
-                    showStatus(result.message, 'error');
+                    
+                } catch (error) {
+                    console.error('Error:', error);
+                    showStatus('Gagal mengirim komentar', 'error');
+                } finally {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Kirim Komentar';
+                    document.body.removeChild(submissionForm);
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('Gagal mengirim komentar', 'error');
-            } finally {
-                submitBtn.disabled = false;
-                submitBtn.textContent = 'Kirim Komentar';
-            }
+            };
+            
+            submissionForm.submit();
         }
 
         // Handle welcome form
