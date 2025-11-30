@@ -12,8 +12,7 @@
             --light-bg: #f7f9fa;
             --border: #ccd6dd;
             --text-light: #536471;
-            --upvote: #1da1f2;
-            --downvote: #f91880;
+            --like-color: #f91880;
             --success: #00ba7c;
             --warning: #f7b955;
             --error: #f91880;
@@ -290,40 +289,29 @@
         .post-image:hover {
             transform: scale(1.02);
         }
-        /* Like Icon */
-        .like-icon {
-            font-size: 18px;
-            transition: all 0.3s ease;
-            display: inline-block;
-        }
-        .like-icon.liked {
-            color: var(--downvote); /* Merah untuk disukai */
-        }
-        .like-icon.not-liked {
-            color: var(--text-light); /* Abu-abu untuk belum disukai */
-        }
-        /* Voting Styles - Clean Twitter Style */
-        .post-voting {
+        /* Like Styles */
+        .post-like {
             display: flex;
             align-items: center;
-            gap: 15px;
-            margin-right: auto;
+            gap: 8px;
         }
         .like-btn {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             background: none;
             border: none;
             cursor: pointer;
             padding: 8px 12px;
-            border-radius: 6px;
+            border-radius: 20px;
             transition: all 0.3s;
             font-weight: 600;
             font-size: 14px;
+            color: var(--text-light);
         }
         .like-btn:hover:not(:disabled) {
-            background: #f8f9fa;
+            background: rgba(249, 24, 128, 0.1);
+            color: var(--like-color);
         }
         .like-btn:disabled {
             cursor: not-allowed;
@@ -331,6 +319,24 @@
         }
         .like-btn:disabled:hover {
             background: none;
+            color: var(--text-light);
+        }
+        .like-btn.liked {
+            color: var(--like-color);
+        }
+        .like-btn.loading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        .like-icon {
+            font-size: 18px;
+            transition: transform 0.2s ease;
+        }
+        .like-btn:hover .like-icon {
+            transform: scale(1.2);
+        }
+        .like-btn.liked .like-icon {
+            animation: heartBeat 0.3s ease;
         }
         .like-count {
             font-weight: bold;
@@ -338,8 +344,13 @@
             text-align: center;
             transition: color 0.3s ease;
         }
-        .like-btn.active .like-count {
-            color: var(--downvote); /* Warna jumlah like saat aktif */
+        .like-btn.liked .like-count {
+            color: var(--like-color);
+        }
+        @keyframes heartBeat {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); }
+            100% { transform: scale(1); }
         }
         .post-actions {
             display: flex;
@@ -590,24 +601,6 @@
             background: var(--primary);
             transition: width 0.3s ease;
         }
-        /* Vote Loading State */
-        .vote-loading {
-            opacity: 0.7;
-            position: relative;
-        }
-        .vote-loading::after {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 16px;
-            height: 16px;
-            margin: -8px 0 0 -8px;
-            border: 2px solid transparent;
-            border-top: 2px solid var(--primary);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
         /* Responsive */
         @media (max-width: 768px) {
             body {
@@ -662,8 +655,8 @@
             .post {
                 padding: 20px;
             }
-            .post-voting {
-                gap: 10px;
+            .post-like {
+                gap: 6px;
             }
             .like-btn {
                 padding: 6px 8px;
@@ -697,11 +690,13 @@
             <div id="welcomeStatus"></div>
         </div>
     </div>
+    
     <!-- Modal untuk gambar full size -->
     <div id="imageModal" class="image-modal">
         <span class="close-modal">&times;</span>
         <img class="modal-content" id="modalImage">
     </div>
+    
     <div class="container">
         <!-- Form Section - FIXED SIDEBAR -->
         <div class="form-section">
@@ -749,11 +744,12 @@
                 <div id="formStatus"></div>
             </div>
         </div>
+        
         <!-- Posts Section - SCROLLABLE MAIN CONTENT -->
         <div class="posts-section">
             <div class="filters">
-                <button class="filter-btn active" onclick="setSort('votes')">🔥 Terpopuler</button>
-                <button class="filter-btn" onclick="setSort('time')">🕒 Terbaru</button>
+                <button class="filter-btn active" onclick="setSort('time')">🕒 Terbaru</button>
+                <button class="filter-btn" onclick="setSort('likes')">❤️ Terbanyak Like</button>
             </div>
             <div id="postsContainer">
                 <div class="loading-container">
@@ -764,22 +760,26 @@
             <div id="paginationContainer"></div>
         </div>
     </div>
+
     <script>
+        // === GANTI DENGAN URL APPS SCRIPT ANDA ===
         const APP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyvC_idFMawvb3g9TbvDnp4YWitI58GVAxlb6B0pB_U3Zc0NFYyKe4QBirhMcsjBIf3/exec';
+        
         // State management
         let allAspirasi = [];
         let allKomentar = [];
-        let allVoting = [];
-        let currentSort = 'votes';
+        let allLike = [];
+        let currentSort = 'time';
         let currentPage = 1;
         const postsPerPage = 10;
         let isLoading = false;
         let currentUser = null;
-        // Voting system yang diperbaiki
-        let activeVoteRequests = new Map(); // Untuk track dan cancel pending requests
+        let activeLikeRequests = new Map();
+        
         // Global variables untuk file handling
         let currentFileInput = null;
         let currentBase64Image = '';
+
         // Fungsi bantu
         function showStatus(message, type = 'success', elementId = 'formStatus') {
             const element = document.getElementById(elementId);
@@ -790,9 +790,11 @@
                 }
             }
         }
+
         function maskName(nama) {
             return nama ? `${nama.charAt(0).toUpperCase()}***` : 'Anonim';
         }
+
         // User Management
         function initializeUser() {
             const savedUser = localStorage.getItem('aspirasiFEB_user');
@@ -804,65 +806,78 @@
             }
             return false;
         }
+
         function saveUser(nama, nim) {
             currentUser = { nama, nim };
             localStorage.setItem('aspirasiFEB_user', JSON.stringify(currentUser));
             document.getElementById('nama').value = nama;
             document.getElementById('nim').value = nim;
         }
-        // Like Management dengan Local Storage - FIXED VERSION
-        function getUserLikes() {
-            if (!currentUser) return {};
-            const likes = localStorage.getItem(`aspirasiFEB_likes_${currentUser.nim}`);
-            return likes ? JSON.parse(likes) : {};
-        }
-        function saveUserLike(postId, likeState) {
-            if (!currentUser) return;
-            const likes = getUserLikes();
-            // Hanya boleh ada satu like per post: 'like', atau tidak ada
-            if (likeState === 'none') {
-                delete likes[postId];
-            } else {
-                likes[postId] = likeState; // 'like'
-            }
-            localStorage.setItem(`aspirasiFEB_likes_${currentUser.nim}`, JSON.stringify(likes));
-        }
-        function getUserLikeForPost(postId) {
-            const likes = getUserLikes();
-            return likes[postId] || null; // 'like' atau null
-        }
+
         function showWelcomeModal() {
             const modal = document.getElementById('welcomeModal');
             if (modal) {
                 modal.style.display = 'block';
             }
         }
+
         function hideWelcomeModal() {
             const modal = document.getElementById('welcomeModal');
             if (modal) {
                 modal.style.display = 'none';
             }
         }
+
+        // Like Management
+        function getUserLikes() {
+            return JSON.parse(localStorage.getItem('aspirasiFEB_likes') || '{}');
+        }
+
+        function saveUserLike(postId, liked) {
+            const likes = getUserLikes();
+            if (liked) {
+                likes[postId] = true;
+            } else {
+                delete likes[postId];
+            }
+            localStorage.setItem('aspirasiFEB_likes', JSON.stringify(likes));
+        }
+
+        function getUserLikeForPost(postId) {
+            const likes = getUserLikes();
+            return !!likes[postId];
+        }
+
+        function getUserLikeFromServer(postId) {
+            return allLike.some(like => 
+                like.id_aspirasi === postId && like.nim_user === currentUser?.nim
+            );
+        }
+
         // Image Modal Functions
         function setupImageModal() {
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImage');
             const closeBtn = document.querySelector('.close-modal');
             if (!modal || !modalImg || !closeBtn) return;
+            
             closeBtn.onclick = function() {
                 modal.style.display = 'none';
             }
+            
             modal.onclick = function(event) {
                 if (event.target === modal) {
                     modal.style.display = 'none';
                 }
             }
+            
             document.addEventListener('keydown', function(event) {
                 if (event.key === 'Escape') {
                     modal.style.display = 'none';
                 }
             });
         }
+
         function openImageModal(src) {
             const modal = document.getElementById('imageModal');
             const modalImg = document.getElementById('modalImage');
@@ -871,6 +886,7 @@
                 modalImg.src = src;
             }
         }
+
         // Character counter untuk textarea
         function setupCharCounter() {
             const textarea = document.getElementById('isi');
@@ -888,30 +904,33 @@
                 });
             }
         }
-        // Load data dengan pagination
+
+        // Load data dengan JSONP
         function loadData() {
             if (isLoading) return;
             isLoading = true;
+            
             const container = document.getElementById('postsContainer');
-            // Show loading spinner
             container.innerHTML = `
                 <div class="loading-container">
                     <div class="loading-spinner"></div>
                     <div class="loading-text">Memuat aspirasi...</div>
                 </div>
             `;
+
             const timestamp = Date.now();
             const callbackName = `handleData_${timestamp}`;
+            
             window[callbackName] = function(response) {
                 isLoading = false;
                 if (response && response.success) {
                     allAspirasi = response.data.aspirasi || [];
                     allKomentar = response.data.komentar || [];
-                    allVoting = response.data.voting || [];
+                    allLike = response.data.like || [];
                     renderPosts();
                     renderPagination();
                 } else {
-                    console.error('Failed to load ', response);
+                    console.error('Failed to load data:', response);
                     container.innerHTML = `
                         <div class="empty-state">
                             <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
@@ -923,6 +942,7 @@
                 }
                 delete window[callbackName];
             };
+
             const script = document.createElement('script');
             script.src = `${APP_SCRIPT_URL}?callback=${callbackName}&page=${currentPage}&limit=${postsPerPage}`;
             script.onerror = function() {
@@ -940,22 +960,27 @@
             };
             document.head.appendChild(script);
         }
+
         // Get current page posts
         function getCurrentPagePosts() {
             let sortedAspirasi = [...allAspirasi];
-            // Sort berdasarkan pilihan
-            if (currentSort === 'votes') {
-                sortedAspirasi.sort((a, b) => (b.like_count || 0) - (a.like_count || 0)); // Urutkan berdasarkan like count
-            } else {
+            
+            if (currentSort === 'time') {
                 sortedAspirasi.sort((a, b) => new Date(b.waktu) - new Date(a.waktu));
+            } else if (currentSort === 'likes') {
+                sortedAspirasi.sort((a, b) => (b.like_count || 0) - (a.like_count || 0));
             }
+            
             return sortedAspirasi;
         }
+
         // Render posts dengan pagination
         function renderPosts() {
             const container = document.getElementById('postsContainer');
             if (!container) return;
+            
             const currentPosts = getCurrentPagePosts();
+            
             if (currentPosts.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
@@ -966,6 +991,7 @@
                 `;
                 return;
             }
+
             let postsHTML = currentPosts.map((aspirasi, index) => {
                 const waktu = new Date(aspirasi.waktu);
                 const tanggal = waktu.toLocaleDateString('id-ID');
@@ -973,12 +999,12 @@
                 const namaTersamarkan = maskName(aspirasi.nama);
                 const inisial = namaTersamarkan.charAt(0);
                 const komentar = allKomentar.filter(k => k.id_aspirasi === aspirasi.id);
-                // Cek like user dari Local Storage
-                let userLike = getUserLikeForPost(aspirasi.id);
-                // Gunakan data asli dari server untuk count
+                
+                // Determine like status
+                const userLiked = currentUser ? getUserLikeFromServer(aspirasi.id) : false;
                 const likeCount = aspirasi.like_count || 0;
-                // Cek apakah post sedang dalam proses voting
-                const isCurrentlyVoting = activeVoteRequests.has(aspirasi.id);
+                const isProcessing = activeLikeRequests.has(aspirasi.id);
+                
                 return `
                     <div class="post" id="post-${aspirasi.id}">
                         <div class="post-header">
@@ -999,12 +1025,11 @@
                             </div>
                         ` : ''}
                         <div class="post-actions">
-                            <div class="post-voting">
-                                <button class="like-btn ${userLike === 'like' ? 'active' : ''} ${isCurrentlyVoting ? 'vote-loading' : ''}" 
-                                        onclick="handleLike('${aspirasi.id}')"
-                                        ${!currentUser || isCurrentlyVoting ? 'disabled' : ''}
-                                        id="like-${aspirasi.id}">
-                                    <span class="like-icon ${userLike === 'like' ? 'liked' : 'not-liked'}">❤️</span>
+                            <div class="post-like">
+                                <button class="like-btn ${userLiked ? 'liked' : ''} ${isProcessing ? 'loading' : ''}" 
+                                        onclick="handleLike('${aspirasi.id}')" 
+                                        ${!currentUser || isProcessing ? 'disabled' : ''}>
+                                    <span class="like-icon">${userLiked ? '❤️' : '🤍'}</span>
                                     <span class="like-count">${likeCount}</span>
                                 </button>
                             </div>
@@ -1039,38 +1064,48 @@
                     </div>
                 `;
             }).join('');
+            
             container.innerHTML = postsHTML;
         }
+
         // Render pagination
         function renderPagination() {
             const container = document.getElementById('paginationContainer');
             if (!container) return;
+            
             const totalPosts = allAspirasi.length;
             const totalPages = Math.ceil(totalPosts / postsPerPage);
+            
             if (totalPages <= 1) {
                 container.innerHTML = '';
                 return;
             }
+
             let paginationHTML = '<div class="pagination">';
+            
             // Previous button
             if (currentPage > 1) {
                 paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage - 1})">‹</button>`;
             } else {
                 paginationHTML += `<button class="page-btn disabled">‹</button>`;
             }
+            
             // Page numbers
             const maxVisiblePages = 5;
             let startPage = Math.max(1, currentPage - Math.floor(maxVisiblePages / 2));
             let endPage = Math.min(totalPages, startPage + maxVisiblePages - 1);
+            
             if (endPage - startPage + 1 < maxVisiblePages) {
                 startPage = Math.max(1, endPage - maxVisiblePages + 1);
             }
+            
             if (startPage > 1) {
                 paginationHTML += `<button class="page-btn" onclick="goToPage(1)">1</button>`;
                 if (startPage > 2) {
                     paginationHTML += `<span class="page-dots">...</span>`;
                 }
             }
+            
             for (let i = startPage; i <= endPage; i++) {
                 if (i === currentPage) {
                     paginationHTML += `<button class="page-btn active">${i}</button>`;
@@ -1078,29 +1113,33 @@
                     paginationHTML += `<button class="page-btn" onclick="goToPage(${i})">${i}</button>`;
                 }
             }
+            
             if (endPage < totalPages) {
                 if (endPage < totalPages - 1) {
                     paginationHTML += `<span class="page-dots">...</span>`;
                 }
                 paginationHTML += `<button class="page-btn" onclick="goToPage(${totalPages})">${totalPages}</button>`;
             }
+            
             // Next button
             if (currentPage < totalPages) {
                 paginationHTML += `<button class="page-btn" onclick="goToPage(${currentPage + 1})">›</button>`;
             } else {
                 paginationHTML += `<button class="page-btn disabled">›</button>`;
             }
+            
             paginationHTML += '</div>';
             container.innerHTML = paginationHTML;
         }
+
         // Pagination functions
         function goToPage(page) {
             currentPage = page;
             renderPosts();
             renderPagination();
-            // Scroll to top of posts
             document.getElementById('postsContainer').scrollIntoView({ behavior: 'smooth' });
         }
+
         // Toggle reply form
         function toggleReplyForm(id) {
             const form = document.getElementById(`reply-form-${id}`);
@@ -1108,10 +1147,11 @@
                 form.style.display = form.style.display === 'block' ? 'none' : 'block';
             }
         }
+
         // Set sort type
         function setSort(sortType) {
             currentSort = sortType;
-            currentPage = 1; // Reset to first page
+            currentPage = 1;
             document.querySelectorAll('.filter-btn').forEach(btn => {
                 btn.classList.remove('active');
             });
@@ -1119,53 +1159,57 @@
             renderPosts();
             renderPagination();
         }
-        // Handle like dengan system yang diperbaiki - FIXED TOGGLE LOGIC
+
+        // Handle like/unlike
         async function handleLike(postId) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
-            // Prevent multiple simultaneous votes untuk post yang sama
-            if (activeVoteRequests.has(postId)) {
-                console.log('Like request already in progress for post:', postId);
+
+            if (activeLikeRequests.has(postId)) {
                 return;
             }
-            // Set loading state
-            activeVoteRequests.set(postId, true);
-            renderPosts(); // Re-render untuk show loading state
+            
+            activeLikeRequests.set(postId, true);
+
             try {
-                const requestId = Date.now().toString();
+                const likeBtn = document.querySelector(`#post-${postId} .like-btn`);
+                if (likeBtn) {
+                    likeBtn.classList.add('loading');
+                    likeBtn.disabled = true;
+                }
+
                 const formData = new FormData();
-                formData.append('action', 'vote');
+                formData.append('action', 'like');
                 formData.append('id_aspirasi', postId);
                 formData.append('nim_user', currentUser.nim);
-                formData.append('vote_type', 'like'); // Kirim vote_type 'like'
-                formData.append('request_id', requestId);
-                console.log('Mengirim like ke server...', { postId, voteType: 'like', requestId });
+                formData.append('nama_user', currentUser.nama);
+
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
+
                 const result = await response.json();
+                
                 if (result.success) {
-                    console.log('Server response:', result);
-                    // Update local storage berdasarkan final state dari server
-                    saveUserLike(postId, result.final_state);
-                    // Reload data untuk sync count dengan server
-                    await loadData();
-                    showStatus(`Like berhasil ${result.action === 'REMOVED' ? 'dihapus' : 'disimpan'}!`);
+                    // Update local storage
+                    saveUserLike(postId, result.action === 'LIKED');
+                    // Reload data untuk update like count
+                    loadData();
+                    showStatus(result.message);
                 } else {
-                    throw new Error(result.message);
+                    showStatus(result.message, 'error');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                showStatus('Gagal menyimpan like: ' + error.message, 'error');
+                showStatus('Gagal memproses like', 'error');
             } finally {
-                // Clear loading state
-                activeVoteRequests.delete(postId);
-                renderPosts();
+                activeLikeRequests.delete(postId);
             }
         }
+
         // File upload handling
         function setupFileUpload() {
             const uploadArea = document.getElementById('uploadArea');
@@ -1173,16 +1217,20 @@
             const preview = document.getElementById('preview');
             const progressBar = document.getElementById('uploadProgress');
             const progressFill = document.getElementById('progressFill');
+            
             if (!uploadArea || !fileInput || !preview) {
                 console.error('File upload elements not found');
                 return;
             }
+            
             currentFileInput = fileInput;
+            
             uploadArea.addEventListener('click', () => {
                 if (currentFileInput) {
                     currentFileInput.click();
                 }
             });
+
             fileInput.addEventListener('change', (e) => {
                 const file = e.target.files[0];
                 if (file && file.type.startsWith('image/')) {
@@ -1190,27 +1238,32 @@
                         showStatus('File terlalu besar. Maksimal 5MB', 'error');
                         return;
                     }
-                    // Show progress bar
+                    
                     progressBar.style.display = 'block';
                     progressFill.style.width = '0%';
+                    
                     const reader = new FileReader();
                     reader.onloadstart = () => {
                         progressFill.style.width = '30%';
                     };
+                    
                     reader.onprogress = (e) => {
                         if (e.lengthComputable) {
                             const percent = (e.loaded / e.total) * 100;
                             progressFill.style.width = percent + '%';
                         }
                     };
+                    
                     reader.onload = (e) => {
                         progressFill.style.width = '100%';
                         setTimeout(() => {
                             progressBar.style.display = 'none';
                         }, 500);
+                        
                         preview.src = e.target.result;
                         preview.style.display = 'block';
                         currentBase64Image = e.target.result;
+                        
                         uploadArea.innerHTML = `
                             <div>✅ Gambar terpilih</div>
                             <div style="font-size: 12px; color: var(--text-light); margin-top: 5px;">
@@ -1218,32 +1271,39 @@
                             </div>
                         `;
                     };
+                    
                     reader.onerror = () => {
                         progressBar.style.display = 'none';
                         showStatus('Gagal membaca file', 'error');
                     };
+                    
                     reader.readAsDataURL(file);
                 } else {
                     showStatus('File harus berupa gambar (JPG, PNG, GIF, WebP)', 'error');
                 }
             });
+
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, preventDefaults, false);
             });
+
             function preventDefaults(e) {
                 e.preventDefault();
                 e.stopPropagation();
             }
+
             ['dragenter', 'dragover'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, () => {
                     uploadArea.classList.add('dragover');
                 }, false);
             });
+
             ['dragleave', 'drop'].forEach(eventName => {
                 uploadArea.addEventListener(eventName, () => {
                     uploadArea.classList.remove('dragover');
                 }, false);
             });
+
             uploadArea.addEventListener('drop', (e) => {
                 const files = e.dataTransfer.files;
                 if (files.length > 0 && currentFileInput) {
@@ -1252,49 +1312,61 @@
                 }
             });
         }
+
         // Submit aspirasi
         async function submitAspirasi(event) {
             event.preventDefault();
+            
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
+
             const submitBtn = document.getElementById('submitBtn');
             const form = document.getElementById('aspirasiForm');
+            
             if (!submitBtn || !form) {
                 console.error('Form elements not found');
                 return;
             }
+
             const isi = document.getElementById('isi')?.value.trim();
             if (!isi) {
                 showStatus('Harap isi aspirasi', 'error');
                 return;
             }
+
             if (isi.length < 10) {
                 showStatus('Aspirasi minimal 10 karakter', 'error');
                 return;
             }
+
             if (isi.length > 1000) {
                 showStatus('Aspirasi maksimal 1000 karakter', 'error');
                 return;
             }
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
+
             try {
-                let base64Image = currentBase64Image;
                 const formData = new FormData();
                 formData.append('action', 'kirim_aspirasi');
                 formData.append('nama', currentUser.nama);
                 formData.append('nim', currentUser.nim);
                 formData.append('isi', isi);
-                if (base64Image && base64Image.length > 100) {
-                    formData.append('base64Image', base64Image);
+                
+                if (currentBase64Image && currentBase64Image.length > 100) {
+                    formData.append('base64Image', currentBase64Image);
                 }
+
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
+
                 const result = await response.json();
+                
                 if (result.success) {
                     showStatus(result.message + (result.gambar_url ? ' dengan gambar' : ''));
                     form.reset();
@@ -1310,7 +1382,7 @@
                     currentBase64Image = '';
                     currentFileInput = document.getElementById('fileInput');
                     setupFileUpload();
-                    loadData(); // Reload untuk menampilkan postingan baru
+                    loadData();
                 } else {
                     showStatus(result.message, 'error');
                 }
@@ -1322,31 +1394,39 @@
                 submitBtn.textContent = 'Posting Aspirasi';
             }
         }
+
         // Submit komentar
         async function submitKomentar(event, aspirasiId) {
             event.preventDefault();
+            
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
             }
+
             const form = event.target;
             const submitBtn = form.querySelector('button[type="submit"]');
             const isiInput = form.querySelector('textarea[name="isi"]');
+            
             if (!submitBtn || !isiInput) {
                 showStatus('Form komentar tidak lengkap', 'error');
                 return;
             }
+
             const isi = isiInput.value.trim();
             if (!isi) {
                 showStatus('Harap isi komentar', 'error');
                 return;
             }
+
             if (isi.length > 500) {
                 showStatus('Komentar maksimal 500 karakter', 'error');
                 return;
             }
+
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
+
             try {
                 const formData = new FormData();
                 formData.append('action', 'kirim_komentar');
@@ -1354,16 +1434,19 @@
                 formData.append('modal_nama', currentUser.nama);
                 formData.append('modal_nim', currentUser.nim);
                 formData.append('modal_isi', isi);
+
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
                     body: formData
                 });
+
                 const result = await response.json();
+                
                 if (result.success) {
                     showStatus('Komentar berhasil dikirim!');
                     form.reset();
                     toggleReplyForm(aspirasiId);
-                    loadData(); // Reload untuk menampilkan komentar baru
+                    loadData();
                 } else {
                     showStatus(result.message, 'error');
                 }
@@ -1375,40 +1458,50 @@
                 submitBtn.textContent = 'Kirim Komentar';
             }
         }
+
         // Handle welcome form
         function handleWelcomeForm(event) {
             event.preventDefault();
+            
             const nama = document.getElementById('welcomeNama').value.trim();
             const nim = document.getElementById('welcomeNIM').value.trim();
+            
             if (!nama || !nim) {
                 showStatus('Harap isi nama dan NIM', 'error', 'welcomeStatus');
                 return;
             }
+
             if (nama.length < 2 || nama.length > 50) {
                 showStatus('Nama harus 2-50 karakter', 'error', 'welcomeStatus');
                 return;
             }
+
             if (!/^[A-Za-z0-9]{5,15}$/.test(nim)) {
                 showStatus('NIM harus 5-15 karakter alfanumerik', 'error', 'welcomeStatus');
                 return;
             }
+
             saveUser(nama, nim);
             hideWelcomeModal();
             loadData();
         }
+
         // Initialize
         document.addEventListener('DOMContentLoaded', function() {
             if (!initializeUser()) {
                 showWelcomeModal();
             }
+            
             const aspirasiForm = document.getElementById('aspirasiForm');
             if (aspirasiForm) {
                 aspirasiForm.addEventListener('submit', submitAspirasi);
             }
+            
             const welcomeForm = document.getElementById('welcomeForm');
             if (welcomeForm) {
                 welcomeForm.addEventListener('submit', handleWelcomeForm);
             }
+            
             setupFileUpload();
             setupImageModal();
             setupCharCounter();
