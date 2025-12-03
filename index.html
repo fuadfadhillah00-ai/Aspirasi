@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>🐦 AspirasiFEB</title>
     <style>
+        /* CSS SAMA PERSIS SEPERTI SEBELUMNYA */
         :root {
             --primary: #1da1f2;
             --primary-dark: #0d8bd9;
@@ -922,7 +923,7 @@
             }
         }
 
-        // Load data dengan FETCH API (FIXED - no JSONP)
+        // Load data dengan FETCH API (bukan JSONP)
         async function loadData() {
             if (isLoading) return;
             isLoading = true;
@@ -936,98 +937,96 @@
             `;
 
             try {
-                // Gunakan URL dengan parameter
-                const url = new URL(APP_SCRIPT_URL);
-                url.searchParams.append('page', currentPage);
-                url.searchParams.append('limit', postsPerPage);
-                
-                // Tambahkan timestamp untuk cache busting
-                url.searchParams.append('_', Date.now());
-                
-                console.log('Loading data from:', url.toString());
-                
-                const response = await fetch(url.toString(), {
+                // Gunakan fetch dengan mode 'no-cors' untuk Google Apps Script
+                const response = await fetch(`${APP_SCRIPT_URL}?action=get_data&page=${currentPage}&limit=${postsPerPage}&_=${Date.now()}`, {
                     method: 'GET',
-                    mode: 'no-cors', // Mode no-cors untuk Google Apps Script
+                    mode: 'cors', // Ubah ke 'cors'
                     headers: {
-                        'Content-Type': 'text/plain;charset=utf-8'
+                        'Accept': 'application/json',
                     }
                 });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
                 
-                // Karena mode 'no-cors', kita tidak bisa membaca response langsung
-                // Kita perlu menggunakan teknik lain
-                
-                // SOLUSI ALTERNATIF: Gunakan JSONP untuk GET requests
-                await loadDataWithJsonp();
-                
+                if (result && result.success) {
+                    allAspirasi = result.data.aspirasi || [];
+                    allKomentar = result.data.komentar || [];
+                    allLike = result.data.like || [];
+                    renderPosts();
+                    renderPagination();
+                } else {
+                    console.error('Failed to load data:', result);
+                    showErrorMessage();
+                }
             } catch (error) {
                 console.error('Error loading data:', error);
+                
+                // Fallback ke JSONP jika fetch gagal
+                console.log('Trying JSONP fallback...');
+                loadDataWithJSONP();
+                return;
+            } finally {
                 isLoading = false;
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
-                        <h3>Gagal memuat data</h3>
-                        <p>Periksa koneksi internet Anda</p>
-                        <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
-                    </div>
-                `;
             }
         }
 
-        // Fungsi JSONP untuk load data
-        function loadDataWithJsonp() {
-            return new Promise((resolve, reject) => {
-                const callbackName = `jsonp_callback_${Date.now()}`;
-                
-                window[callbackName] = function(response) {
-                    isLoading = false;
-                    if (response && response.success) {
-                        allAspirasi = response.data.aspirasi || [];
-                        allKomentar = response.data.komentar || [];
-                        allLike = response.data.like || [];
-                        renderPosts();
-                        renderPagination();
-                        resolve(response);
-                    } else {
-                        console.error('Failed to load data:', response);
-                        const container = document.getElementById('postsContainer');
-                        container.innerHTML = `
-                            <div class="empty-state">
-                                <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
-                                <h3>Gagal memuat data</h3>
-                                <p>${response?.message || 'Silakan refresh halaman'}</p>
-                                <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
-                            </div>
-                        `;
-                        reject(new Error('Failed to load data'));
-                    }
-                    delete window[callbackName];
-                    document.getElementById('jsonpScript')?.remove();
-                };
+        // JSONP fallback function
+        function loadDataWithJSONP() {
+            const timestamp = Date.now();
+            const callbackName = `jsonpCallback_${timestamp}`;
+            
+            window[callbackName] = function(response) {
+                isLoading = false;
+                if (response && response.success) {
+                    allAspirasi = response.data.aspirasi || [];
+                    allKomentar = response.data.komentar || [];
+                    allLike = response.data.like || [];
+                    renderPosts();
+                    renderPagination();
+                } else {
+                    console.error('Failed to load data via JSONP:', response);
+                    showErrorMessage();
+                }
+                // Cleanup
+                delete window[callbackName];
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+            };
 
-                // Buat script element
-                const script = document.createElement('script');
-                script.id = 'jsonpScript';
-                script.src = `${APP_SCRIPT_URL}?callback=${callbackName}&page=${currentPage}&limit=${postsPerPage}&_=${Date.now()}`;
-                script.onerror = function() {
-                    isLoading = false;
-                    console.error('JSONP script failed to load');
-                    const container = document.getElementById('postsContainer');
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
-                            <h3>Gagal memuat data</h3>
-                            <p>Periksa koneksi internet Anda</p>
-                            <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
-                        </div>
-                    `;
-                    delete window[callbackName];
-                    document.getElementById('jsonpScript')?.remove();
-                    reject(new Error('Script load failed'));
-                };
-                
-                document.head.appendChild(script);
-            });
+            const script = document.createElement('script');
+            script.src = `${APP_SCRIPT_URL}?callback=${callbackName}&action=get_data&page=${currentPage}&limit=${postsPerPage}&_=${timestamp}`;
+            
+            script.onerror = function() {
+                isLoading = false;
+                console.error('JSONP script failed to load');
+                showErrorMessage();
+                // Cleanup
+                delete window[callbackName];
+                if (script.parentNode) {
+                    script.parentNode.removeChild(script);
+                }
+            };
+            
+            document.head.appendChild(script);
+        }
+
+        function showErrorMessage() {
+            const container = document.getElementById('postsContainer');
+            if (!container) return;
+            
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                    <h3>Gagal memuat data</h3>
+                    <p>Silakan refresh halaman atau coba lagi nanti</p>
+                    <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
+                </div>
+            `;
         }
 
         // Get current page posts
@@ -1040,7 +1039,11 @@
                 sortedAspirasi.sort((a, b) => (b.like_count || 0) - (a.like_count || 0));
             }
             
-            return sortedAspirasi;
+            // Implementasi pagination sederhana
+            const startIndex = (currentPage - 1) * postsPerPage;
+            const endIndex = startIndex + postsPerPage;
+            
+            return sortedAspirasi.slice(startIndex, endIndex);
         }
 
         // Render posts dengan pagination
@@ -1262,8 +1265,8 @@
                     return;
                 }
 
-                // Kirim like menggunakan FormData
-                const formData = new URLSearchParams();
+                // Kirim like menggunakan fetch API dengan FormData
+                const formData = new FormData();
                 formData.append('action', 'like');
                 formData.append('id_aspirasi', postId);
                 formData.append('nim_user', currentUser.nim);
@@ -1271,12 +1274,9 @@
 
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
+                    body: formData
                 });
-                
+
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1312,10 +1312,6 @@
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Gagal memproses like', 'error');
-                if (likeBtn) {
-                    likeBtn.classList.remove('loading');
-                    likeBtn.disabled = false;
-                }
             } finally {
                 activeLikeRequests.delete(postId);
             }
@@ -1461,8 +1457,8 @@
             submitBtn.textContent = 'Mengirim...';
 
             try {
-                // Kirim data menggunakan FormData
-                const formData = new URLSearchParams();
+                // Kirim data menggunakan fetch API dengan FormData
+                const formData = new FormData();
                 formData.append('action', 'kirim_aspirasi');
                 formData.append('nama', currentUser.nama);
                 formData.append('nim', currentUser.nim);
@@ -1474,12 +1470,9 @@
 
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
+                    body: formData
                 });
-                
+
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1550,8 +1543,8 @@
             submitBtn.textContent = 'Mengirim...';
 
             try {
-                // Kirim data menggunakan FormData
-                const formData = new URLSearchParams();
+                // Kirim data menggunakan fetch API dengan FormData
+                const formData = new FormData();
                 formData.append('action', 'kirim_komentar');
                 formData.append('id_aspirasi', aspirasiId);
                 formData.append('modal_nama', currentUser.nama);
@@ -1560,12 +1553,9 @@
 
                 const response = await fetch(APP_SCRIPT_URL, {
                     method: 'POST',
-                    body: formData,
-                    headers: {
-                        'Content-Type': 'application/x-www-form-urlencoded'
-                    }
+                    body: formData
                 });
-                
+
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1637,6 +1627,13 @@
             setupImageModal();
             setupCharCounter();
             loadData();
+            
+            // Auto-refresh setiap 30 detik
+            setInterval(() => {
+                if (!isLoading) {
+                    loadData();
+                }
+            }, 30000);
         });
     </script>
 </body>
