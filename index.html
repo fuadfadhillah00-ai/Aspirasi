@@ -4,8 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>🐦 AspirasiFEB</title>
+    <!-- CSS SAMA PERSIS TIDAK DIUBAH -->
     <style>
-        /* CSS SAMA PERSIS SEPERTI SEBELUMNYA */
+        /* CSS SAMA SEPERTI SEBELUMNYA */
         :root {
             --primary: #1da1f2;
             --primary-dark: #0d8bd9;
@@ -921,7 +922,7 @@
             }
         }
 
-        // Load data dengan fetch API untuk menghindari CORS
+        // Load data dengan JSONP untuk menghindari CORS
         function loadData() {
             if (isLoading) return;
             isLoading = true;
@@ -934,35 +935,40 @@
                 </div>
             `;
 
-            // Gunakan fetch dengan JSONP fallback
-            const params = new URLSearchParams({
-                page: currentPage,
-                limit: postsPerPage,
-                nim_user: currentUser ? currentUser.nim : ''
-            }).toString();
+            // Buat callback name unik
+            const callbackName = `handleData_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            
+            // Define callback function
+            window[callbackName] = function(response) {
+                isLoading = false;
+                const container = document.getElementById('postsContainer');
+                
+                if (response && response.success) {
+                    allAspirasi = response.data.aspirasi || [];
+                    allKomentar = response.data.komentar || [];
+                    renderPosts();
+                    renderPagination();
+                } else {
+                    console.error('Failed to load data:', response);
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+                            <h3>Gagal memuat data</h3>
+                            <p>${response ? response.message : 'Terjadi kesalahan'}</p>
+                            <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
+                        </div>
+                    `;
+                }
+                // Cleanup
+                delete window[callbackName];
+            };
 
-            fetch(`${APP_SCRIPT_URL}?${params}`, {
-                method: 'GET',
-                mode: 'no-cors' // Mode no-cors untuk menghindari CORS
-            })
-            .then(response => {
-                // Karena no-cors, kita tidak bisa membaca response body
-                // Gunakan JSONP sebagai fallback
-                loadDataWithJSONP();
-            })
-            .catch(error => {
-                console.error('Fetch error, trying JSONP:', error);
-                loadDataWithJSONP();
-            });
-        }
-
-        // Load data dengan JSONP (fallback)
-        function loadDataWithJSONP() {
+            // Build URL dengan parameter
             const params = new URLSearchParams({
                 page: currentPage,
                 limit: postsPerPage,
                 nim_user: currentUser ? currentUser.nim : '',
-                callback: 'handleData'
+                callback: callbackName
             }).toString();
 
             const script = document.createElement('script');
@@ -974,36 +980,14 @@
                     <div class="empty-state">
                         <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
                         <h3>Gagal memuat data</h3>
-                        <p>Silakan refresh halaman</p>
+                        <p>Periksa koneksi internet Anda</p>
                         <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
                     </div>
                 `;
+                delete window[callbackName];
             };
             document.head.appendChild(script);
         }
-
-        // Callback untuk JSONP
-        window.handleData = function(response) {
-            isLoading = false;
-            const container = document.getElementById('postsContainer');
-            
-            if (response && response.success) {
-                allAspirasi = response.data.aspirasi || [];
-                allKomentar = response.data.komentar || [];
-                renderPosts();
-                renderPagination();
-            } else {
-                console.error('Failed to load data:', response);
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
-                        <h3>Gagal memuat data</h3>
-                        <p>${response ? response.message : 'Terjadi kesalahan'}</p>
-                        <button onclick="loadData()" class="btn" style="margin-top: 15px; width: auto;">Coba Lagi</button>
-                    </div>
-                `;
-            }
-        };
 
         // Get current page posts
         function getCurrentPagePosts() {
@@ -1204,8 +1188,60 @@
             renderPagination();
         }
 
-        // Handle like PERMANEN - tanpa redirect
-        async function handleLike(postId) {
+        // Fungsi untuk mengirim POST data menggunakan JSONP (iframe method)
+        function sendPostData(action, data, onSuccess, onError) {
+            const callbackName = `jsonpCallback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            window[callbackName] = function(response) {
+                if (response && response.success) {
+                    onSuccess(response);
+                } else {
+                    onError(response ? response.message : 'Gagal memproses');
+                }
+                delete window[callbackName];
+                
+                // Remove iframe
+                const iframe = document.getElementById(`jsonpIframe_${callbackName}`);
+                if (iframe) {
+                    document.body.removeChild(iframe);
+                }
+            };
+
+            // Tambahkan callback ke data
+            data.callback = callbackName;
+            
+            // Buat iframe untuk mengirim POST data
+            const iframe = document.createElement('iframe');
+            iframe.id = `jsonpIframe_${callbackName}`;
+            iframe.style.display = 'none';
+            iframe.style.width = '0';
+            iframe.style.height = '0';
+            iframe.style.border = '0';
+            
+            // Buat form di dalam iframe
+            iframe.onload = function() {
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                const form = iframeDoc.createElement('form');
+                form.method = 'POST';
+                form.action = APP_SCRIPT_URL;
+                
+                // Tambahkan input untuk setiap data
+                Object.keys(data).forEach(key => {
+                    const input = iframeDoc.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = data[key];
+                    form.appendChild(input);
+                });
+                
+                iframeDoc.body.appendChild(form);
+                form.submit();
+            };
+            
+            document.body.appendChild(iframe);
+        }
+
+        // Handle like PERMANEN menggunakan JSONP
+        function handleLike(postId) {
             if (!currentUser) {
                 showStatus('Silakan isi data diri terlebih dahulu', 'error');
                 return;
@@ -1224,69 +1260,61 @@
                     likeBtn.disabled = true;
                 }
 
-                // Kirim like menggunakan FormData
-                const formData = new FormData();
-                formData.append('action', 'like');
-                formData.append('id_aspirasi', postId);
-                formData.append('nim_user', currentUser.nim);
-                formData.append('nama_user', currentUser.nama);
+                // Kirim like menggunakan JSONP
+                const data = {
+                    action: 'like',
+                    id_aspirasi: postId,
+                    nim_user: currentUser.nim,
+                    nama_user: currentUser.nama
+                };
 
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                // Parse response sebagai text terlebih dahulu
-                const responseText = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Failed to parse JSON:', responseText);
-                    throw new Error('Invalid response from server');
-                }
-
-                if (result.success) {
-                    // OPTIMISTIC UPDATE: Langsung update UI
-                    if (likeBtn) {
-                        likeBtn.classList.add('liked');
-                        likeBtn.classList.remove('loading');
-                        likeBtn.disabled = true; // DISABLED PERMANEN setelah like
-                        likeBtn.querySelector('.like-icon').textContent = '❤️';
+                sendPostData('like', data, 
+                    function(result) {
+                        // OPTIMISTIC UPDATE: Langsung update UI
+                        if (likeBtn) {
+                            likeBtn.classList.add('liked');
+                            likeBtn.classList.remove('loading');
+                            likeBtn.disabled = true; // DISABLED PERMANEN setelah like
+                            likeBtn.querySelector('.like-icon').textContent = '❤️';
+                            
+                            // Update like count
+                            const likeCountElem = likeBtn.querySelector('.like-count');
+                            likeCountElem.textContent = result.new_like_count || (parseInt(likeCountElem.textContent) + 1);
+                        }
                         
-                        // Update like count
-                        const likeCountElem = likeBtn.querySelector('.like-count');
-                        likeCountElem.textContent = result.new_like_count || (parseInt(likeCountElem.textContent) + 1);
+                        showStatus('Berhasil menyukai aspirasi! Like bersifat permanen.', 'success');
+                        
+                        // Simpan status like di localStorage
+                        saveUserLike(postId, true);
+                        
+                        // Reload data untuk sync dengan server
+                        setTimeout(() => {
+                            loadData();
+                        }, 1000);
+                    },
+                    function(error) {
+                        showStatus(error || 'Gagal menyukai aspirasi', 'error');
+                        if (likeBtn) {
+                            likeBtn.classList.remove('loading');
+                            likeBtn.disabled = false;
+                        }
                     }
-                    
-                    showStatus('Berhasil menyukai aspirasi! Like bersifat permanen.', 'success');
-                    
-                    // Simpan status like di localStorage
-                    saveUserLike(postId, true);
-                    
-                    // Reload data untuk sync dengan server
-                    setTimeout(() => {
-                        loadData();
-                    }, 1000);
-                    
-                } else {
-                    showStatus(result.message || 'Gagal menyukai aspirasi', 'error');
-                    if (likeBtn) {
-                        likeBtn.classList.remove('loading');
-                        // Jika sudah pernah like, tetap disabled
-                        likeBtn.disabled = result.already_liked || false;
-                    }
-                }
+                );
+                
             } catch (error) {
                 console.error('Error:', error);
                 showStatus('Gagal memproses like', 'error');
+                activeLikeRequests.delete(postId);
+                
                 const likeBtn = document.querySelector(`#post-${postId} .like-btn`);
                 if (likeBtn) {
                     likeBtn.classList.remove('loading');
                     likeBtn.disabled = false;
                 }
             } finally {
-                activeLikeRequests.delete(postId);
+                setTimeout(() => {
+                    activeLikeRequests.delete(postId);
+                }, 1000);
             }
         }
 
@@ -1393,8 +1421,8 @@
             });
         }
 
-        // Submit aspirasi tanpa redirect
-        async function submitAspirasi(event) {
+        // Submit aspirasi menggunakan JSONP
+        function submitAspirasi(event) {
             event.preventDefault();
             
             if (!currentUser) {
@@ -1429,34 +1457,21 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
 
-            try {
-                // Kirim data menggunakan FormData
-                const formData = new FormData();
-                formData.append('action', 'kirim_aspirasi');
-                formData.append('nama', currentUser.nama);
-                formData.append('nim', currentUser.nim);
-                formData.append('isi', isi);
-                
-                if (currentBase64Image && currentBase64Image.length > 100) {
-                    formData.append('base64Image', currentBase64Image);
-                }
+            // Siapkan data untuk dikirim
+            const data = {
+                action: 'kirim_aspirasi',
+                nama: currentUser.nama,
+                nim: currentUser.nim,
+                isi: isi
+            };
+            
+            if (currentBase64Image && currentBase64Image.length > 100) {
+                data.base64Image = currentBase64Image;
+            }
 
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                // Parse response sebagai text terlebih dahulu
-                const responseText = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Failed to parse JSON:', responseText);
-                    throw new Error('Invalid response from server');
-                }
-
-                if (result.success) {
+            // Kirim menggunakan JSONP
+            sendPostData('kirim_aspirasi', data, 
+                function(result) {
                     showStatus('Aspirasi berhasil dikirim!', 'success');
                     
                     // Reset form
@@ -1478,21 +1493,18 @@
                     setTimeout(() => {
                         loadData();
                     }, 1500);
-                    
-                } else {
-                    showStatus(result.message || 'Gagal mengirim aspirasi', 'error');
+                },
+                function(error) {
+                    showStatus(error || 'Gagal mengirim aspirasi', 'error');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('Gagal mengirim aspirasi', 'error');
-            } finally {
+            ).finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Posting Aspirasi';
-            }
+            });
         }
 
-        // Submit komentar tanpa redirect
-        async function submitKomentar(event, aspirasiId) {
+        // Submit komentar menggunakan JSONP
+        function submitKomentar(event, aspirasiId) {
             event.preventDefault();
             
             if (!currentUser) {
@@ -1523,31 +1535,18 @@
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengirim...';
 
-            try {
-                // Kirim data menggunakan FormData
-                const formData = new FormData();
-                formData.append('action', 'kirim_komentar');
-                formData.append('id_aspirasi', aspirasiId);
-                formData.append('modal_nama', currentUser.nama);
-                formData.append('modal_nim', currentUser.nim);
-                formData.append('modal_isi', isi);
+            // Siapkan data untuk dikirim
+            const data = {
+                action: 'kirim_komentar',
+                id_aspirasi: aspirasiId,
+                modal_nama: currentUser.nama,
+                modal_nim: currentUser.nim,
+                modal_isi: isi
+            };
 
-                const response = await fetch(APP_SCRIPT_URL, {
-                    method: 'POST',
-                    body: formData
-                });
-
-                // Parse response sebagai text terlebih dahulu
-                const responseText = await response.text();
-                let result;
-                try {
-                    result = JSON.parse(responseText);
-                } catch (e) {
-                    console.error('Failed to parse JSON:', responseText);
-                    throw new Error('Invalid response from server');
-                }
-
-                if (result.success) {
+            // Kirim menggunakan JSONP
+            sendPostData('kirim_komentar', data, 
+                function(result) {
                     showStatus('Komentar berhasil dikirim!', 'success');
                     form.reset();
                     toggleReplyForm(aspirasiId);
@@ -1556,17 +1555,14 @@
                     setTimeout(() => {
                         loadData();
                     }, 1000);
-                    
-                } else {
-                    showStatus(result.message || 'Gagal mengirim komentar', 'error');
+                },
+                function(error) {
+                    showStatus(error || 'Gagal mengirim komentar', 'error');
                 }
-            } catch (error) {
-                console.error('Error:', error);
-                showStatus('Gagal mengirim komentar', 'error');
-            } finally {
+            ).finally(() => {
                 submitBtn.disabled = false;
                 submitBtn.textContent = 'Kirim Komentar';
-            }
+            });
         }
 
         // Handle welcome form
